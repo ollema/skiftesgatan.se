@@ -8,7 +8,7 @@ export default defineConfig(
 				schema: './src/lib/server/db/schema.ts',
 				dialect: 'postgresql',
 				driver: 'pglite',
-				dbCredentials: { url: '.pglite' },
+				dbCredentials: { url: process.env.PGLITE_PATH || '.pglite' },
 				verbose: true,
 				strict: true
 			}

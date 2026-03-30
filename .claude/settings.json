@@ -1,0 +1,16 @@
+{
+	"hooks": {
+		"Stop": [
+			{
+				"matcher": "",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "pnpm format && pnpm lint && pnpm check && pnpm test 2>&1 | tail -20",
+						"timeout": 120
+					}
+				]
+			}
+		]
+	}
+}

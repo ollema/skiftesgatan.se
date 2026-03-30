@@ -25,4 +25,4 @@ vite.config.ts.timestamp-*
 test-results
 
 # PGLite local database
-.pglite
+.pglite*
