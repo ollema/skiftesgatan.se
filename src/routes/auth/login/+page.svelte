@@ -1,42 +1,58 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import type { ActionData } from './$types';
-
-	let { form }: { form: ActionData } = $props();
+	import { login, signup } from '$lib/api/auth.remote';
 </script>
 
 <h1>Login</h1>
-<form method="post" action="?/signInEmail" use:enhance>
+<form {...login}>
 	<label>
 		Email
 		<input
-			type="email"
-			name="email"
+			{...login.fields.email.as('email')}
 			class="mt-1 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 		/>
 	</label>
 	<label>
 		Password
 		<input
-			type="password"
-			name="password"
-			class="mt-1 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-		/>
-	</label>
-	<label>
-		Name (for registration)
-		<input
-			name="name"
+			{...login.fields._password.as('password')}
 			class="mt-1 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 		/>
 	</label>
 	<button class="rounded-md bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
 		>Login</button
 	>
-	<button
-		formaction="?/signUpEmail"
-		class="rounded-md bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
+	{#each login.fields.allIssues() as issue (issue.message)}
+		<p class="text-red-500">{issue.message}</p>
+	{/each}
+</form>
+
+<h2>Or register</h2>
+<form {...signup}>
+	<label>
+		Email
+		<input
+			{...signup.fields.email.as('email')}
+			class="mt-1 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+		/>
+	</label>
+	<label>
+		Password
+		<input
+			{...signup.fields._password.as('password')}
+			class="mt-1 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+		/>
+	</label>
+	<label>
+		Name
+		<input
+			{...signup.fields.name.as('text')}
+			class="mt-1 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+		/>
+	</label>
+	<button class="rounded-md bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
 		>Register</button
 	>
+	{#each signup.fields.allIssues() as issue (issue.message)}
+		<p class="text-red-500">{issue.message}</p>
+	{/each}
 </form>
-<p class="text-red-500">{form?.message ?? ''}</p>

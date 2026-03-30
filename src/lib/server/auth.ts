@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth/minimal';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
+import { redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
@@ -14,3 +15,9 @@ export const auth = betterAuth({
 		sveltekitCookies(getRequestEvent) // make sure this is the last plugin in the array
 	]
 });
+
+export function requireAuth() {
+	const { locals } = getRequestEvent();
+	if (!locals.user) redirect(307, '/auth/login');
+	return locals.user;
+}
