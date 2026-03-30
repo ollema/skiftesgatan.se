@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CalendarDate, today, getLocalTimeZone } from '@internationalized/date';
+import { today, getLocalTimeZone } from '@internationalized/date';
 import { validateBookingDate } from './booking';
 
 describe('validateBookingDate', () => {
