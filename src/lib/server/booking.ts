@@ -1,7 +1,7 @@
-import { CalendarDate, today, getLocalTimeZone } from '@internationalized/date';
+import { type CalendarDate, today, getLocalTimeZone } from '@internationalized/date';
 import { eq, and, gte } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { apartment, booking, timeslot } from '$lib/server/db/schema';
+import { booking, timeslot } from '$lib/server/db/schema';
 
 const MAX_ADVANCE_DAYS = 30;
 
@@ -26,7 +26,7 @@ export async function getAvailableSlots(date: CalendarDate, resource: Resource) 
 			startHour: timeslot.startHour,
 			endHour: timeslot.endHour,
 			bookingId: booking.id,
-			apartmentId: booking.apartmentId
+			userId: booking.userId
 		})
 		.from(timeslot)
 		.leftJoin(
@@ -42,7 +42,7 @@ export async function getAvailableSlots(date: CalendarDate, resource: Resource) 
 }
 
 export async function hasExistingFutureBooking(
-	apartmentId: number,
+	userId: string,
 	resource: Resource
 ): Promise<boolean> {
 	const todayStr = today(getLocalTimeZone()).toString();
@@ -50,54 +50,29 @@ export async function hasExistingFutureBooking(
 		.select({ id: booking.id })
 		.from(booking)
 		.where(
-			and(
-				eq(booking.apartmentId, apartmentId),
-				eq(booking.resource, resource),
-				gte(booking.date, todayStr)
-			)
+			and(eq(booking.userId, userId), eq(booking.resource, resource), gte(booking.date, todayStr))
 		)
 		.limit(1);
 	return result.length > 0;
 }
 
-export async function getOrCreateApartment(userId: string): Promise<number> {
-	const existing = await db
-		.select({ id: apartment.id })
-		.from(apartment)
-		.where(eq(apartment.userId, userId))
-		.limit(1);
-
-	if (existing.length > 0) {
-		return existing[0].id;
-	}
-
-	const [created] = await db.insert(apartment).values({ userId }).returning();
-	return created.id;
-}
-
 export async function createBooking(
-	apartmentId: number,
+	userId: string,
 	timeslotId: number,
 	resource: Resource,
 	date: CalendarDate
 ) {
 	return await db
 		.insert(booking)
-		.values({ apartmentId, timeslotId, resource, date: date.toString() })
+		.values({ userId, timeslotId, resource, date: date.toString() })
 		.returning();
 }
 
-export async function cancelBooking(bookingId: number, apartmentId: number): Promise<boolean> {
+export async function cancelBooking(bookingId: number, userId: string): Promise<boolean> {
 	const todayStr = today(getLocalTimeZone()).toString();
 	const result = await db
 		.delete(booking)
-		.where(
-			and(
-				eq(booking.id, bookingId),
-				eq(booking.apartmentId, apartmentId),
-				gte(booking.date, todayStr)
-			)
-		)
+		.where(and(eq(booking.id, bookingId), eq(booking.userId, userId), gte(booking.date, todayStr)))
 		.returning();
 	return result.length > 0;
 }

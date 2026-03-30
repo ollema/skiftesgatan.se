@@ -13,14 +13,6 @@ import { user } from './auth.schema';
 
 export const resourceEnum = pgEnum('resource', ['laundry_room', 'outdoor_area']);
 
-export const apartment = pgTable('apartment', {
-	id: serial('id').primaryKey(),
-	userId: text('user_id')
-		.notNull()
-		.unique()
-		.references(() => user.id, { onDelete: 'cascade' })
-});
-
 export const timeslot = pgTable(
 	'timeslot',
 	{
@@ -38,9 +30,9 @@ export const booking = pgTable(
 	'booking',
 	{
 		id: serial('id').primaryKey(),
-		apartmentId: integer('apartment_id')
+		userId: text('user_id')
 			.notNull()
-			.references(() => apartment.id),
+			.references(() => user.id, { onDelete: 'cascade' }),
 		timeslotId: integer('timeslot_id')
 			.notNull()
 			.references(() => timeslot.id),
@@ -53,11 +45,7 @@ export const booking = pgTable(
 	]
 );
 
-export const apartmentRelations = relations(apartment, ({ one, many }) => ({
-	user: one(user, {
-		fields: [apartment.userId],
-		references: [user.id]
-	}),
+export const userBookingRelations = relations(user, ({ many }) => ({
 	bookings: many(booking)
 }));
 
@@ -66,9 +54,9 @@ export const timeslotRelations = relations(timeslot, ({ many }) => ({
 }));
 
 export const bookingRelations = relations(booking, ({ one }) => ({
-	apartment: one(apartment, {
-		fields: [booking.apartmentId],
-		references: [apartment.id]
+	user: one(user, {
+		fields: [booking.userId],
+		references: [user.id]
 	}),
 	timeslot: one(timeslot, {
 		fields: [booking.timeslotId],

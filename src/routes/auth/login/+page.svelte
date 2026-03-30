@@ -5,9 +5,9 @@
 <h1>Login</h1>
 <form {...login}>
 	<label>
-		Email
+		Apartment
 		<input
-			{...login.fields.email.as('email')}
+			{...login.fields.username.as('text')}
 			class="mt-1 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 		/>
 	</label>
@@ -29,9 +29,9 @@
 <h2>Or register</h2>
 <form {...signup}>
 	<label>
-		Email
+		Apartment
 		<input
-			{...signup.fields.email.as('email')}
+			{...signup.fields.username.as('text')}
 			class="mt-1 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 		/>
 	</label>
@@ -39,13 +39,6 @@
 		Password
 		<input
 			{...signup.fields._password.as('password')}
-			class="mt-1 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-		/>
-	</label>
-	<label>
-		Name
-		<input
-			{...signup.fields.name.as('text')}
 			class="mt-1 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 		/>
 	</label>

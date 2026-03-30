@@ -6,7 +6,6 @@ import { requireAuth } from '$lib/server/auth';
 import {
 	getAvailableSlots,
 	hasExistingFutureBooking,
-	getOrCreateApartment,
 	createBooking as createBookingDb,
 	cancelBooking as cancelBookingDb,
 	validateBookingDate
@@ -32,18 +31,17 @@ export const book = command(
 	}),
 	async ({ timeslotId, resource, date }) => {
 		const user = requireAuth();
-		const apartmentId = await getOrCreateApartment(user.id);
 		const calDate = parseDate(date);
 
 		validateBookingDate(calDate);
 
-		const alreadyBooked = await hasExistingFutureBooking(apartmentId, resource);
+		const alreadyBooked = await hasExistingFutureBooking(user.id, resource);
 		if (alreadyBooked) {
 			error(409, 'You already have a future booking for this resource');
 		}
 
 		try {
-			const [result] = await createBookingDb(apartmentId, timeslotId, resource, calDate);
+			const [result] = await createBookingDb(user.id, timeslotId, resource, calDate);
 			await getSlots({ date, resource }).refresh();
 			return result;
 		} catch (e: unknown) {
@@ -57,9 +55,8 @@ export const book = command(
 
 export const cancelBooking = command(v.object({ bookingId: v.number() }), async ({ bookingId }) => {
 	const user = requireAuth();
-	const apartmentId = await getOrCreateApartment(user.id);
 
-	const success = await cancelBookingDb(bookingId, apartmentId);
+	const success = await cancelBookingDb(bookingId, user.id);
 	if (!success) {
 		error(404, 'Booking not found or cannot be cancelled');
 	}

@@ -1,9 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 const TEST_USER = {
-	email: `test-${Date.now()}@example.com`,
-	password: 'TestPassword123!',
-	name: 'Test User'
+	username: `A${1000 + (Date.now() % 9000)}`,
+	password: 'TestPassword123!'
 };
 
 test.describe('auth flow', () => {
@@ -14,14 +13,13 @@ test.describe('auth flow', () => {
 
 		// Register a new user (second form on the page)
 		const signupForm = page.locator('form').nth(1);
-		await signupForm.getByLabel('Email').fill(TEST_USER.email);
+		await signupForm.getByLabel('Apartment').fill(TEST_USER.username);
 		await signupForm.getByLabel('Password').fill(TEST_USER.password);
-		await signupForm.getByLabel('Name').fill(TEST_USER.name);
 		await signupForm.getByRole('button', { name: 'Register' }).click();
 
 		// Should redirect to protected page, showing user name
 		await expect(page).toHaveURL('/auth');
-		await expect(page.locator('h1')).toContainText(TEST_USER.name);
+		await expect(page.locator('h1')).toContainText(TEST_USER.username);
 
 		// Sign out
 		await page.getByRole('button', { name: 'Sign out' }).click();
@@ -29,19 +27,19 @@ test.describe('auth flow', () => {
 
 		// Login with same credentials (first form on the page)
 		const loginForm = page.locator('form').nth(0);
-		await loginForm.getByLabel('Email').fill(TEST_USER.email);
+		await loginForm.getByLabel('Apartment').fill(TEST_USER.username);
 		await loginForm.getByLabel('Password').fill(TEST_USER.password);
 		await loginForm.getByRole('button', { name: 'Login' }).click();
 
 		// Should be back on protected page
 		await expect(page).toHaveURL('/auth');
-		await expect(page.locator('h1')).toContainText(TEST_USER.name);
+		await expect(page.locator('h1')).toContainText(TEST_USER.username);
 	});
 
 	test('login with wrong password shows error', async ({ page }) => {
 		await page.goto('/auth/login');
 		const loginForm = page.locator('form').nth(0);
-		await loginForm.getByLabel('Email').fill(TEST_USER.email);
+		await loginForm.getByLabel('Apartment').fill(TEST_USER.username);
 		await loginForm.getByLabel('Password').fill('wrong-password');
 		await loginForm.getByRole('button', { name: 'Login' }).click();
 

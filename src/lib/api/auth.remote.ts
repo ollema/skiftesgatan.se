@@ -8,19 +8,19 @@ export const getUser = query(() => requireAuth());
 
 export const login = form(
 	v.object({
-		email: v.pipe(v.string(), v.nonEmpty()),
+		username: v.pipe(v.string(), v.nonEmpty()),
 		_password: v.pipe(v.string(), v.nonEmpty())
 	}),
-	async ({ email, _password }) => {
+	async ({ username, _password }) => {
 		const { request } = getRequestEvent();
 		try {
-			await auth.api.signInEmail({
-				body: { email, password: _password },
+			await auth.api.signInUsername({
+				body: { username, password: _password },
 				headers: request.headers
 			});
 		} catch (e) {
 			if (e instanceof APIError) {
-				invalid(e.message || 'Invalid email or password');
+				invalid(e.message || 'Invalid username or password');
 			}
 			throw e;
 		}
@@ -30,15 +30,19 @@ export const login = form(
 
 export const signup = form(
 	v.object({
-		email: v.pipe(v.string(), v.nonEmpty()),
-		_password: v.pipe(v.string(), v.nonEmpty()),
-		name: v.pipe(v.string(), v.nonEmpty())
+		username: v.pipe(v.string(), v.nonEmpty()),
+		_password: v.pipe(v.string(), v.nonEmpty())
 	}),
-	async ({ email, _password, name }) => {
+	async ({ username, _password }) => {
 		const { request } = getRequestEvent();
 		try {
 			await auth.api.signUpEmail({
-				body: { email, password: _password, name },
+				body: {
+					email: `${username}@skiftesgatan.local`,
+					password: _password,
+					name: username,
+					username
+				},
 				headers: request.headers
 			});
 		} catch (e) {

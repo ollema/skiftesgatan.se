@@ -1,9 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 const TEST_USER = {
-	email: `booking-${Date.now()}@example.com`,
-	password: 'TestPassword123!',
-	name: 'Booking Tester'
+	username: `B${1000 + (Date.now() % 9000)}`,
+	password: 'TestPassword123!'
 };
 
 const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
@@ -18,9 +17,8 @@ test.describe('booking flow', () => {
 		// Register a new user
 		await page.goto('/auth/login');
 		const signupForm = page.locator('form').nth(1);
-		await signupForm.getByLabel('Email').fill(TEST_USER.email);
+		await signupForm.getByLabel('Apartment').fill(TEST_USER.username);
 		await signupForm.getByLabel('Password').fill(TEST_USER.password);
-		await signupForm.getByLabel('Name').fill(TEST_USER.name);
 		await signupForm.getByRole('button', { name: 'Register' }).click();
 		await expect(page).toHaveURL('/auth');
 
