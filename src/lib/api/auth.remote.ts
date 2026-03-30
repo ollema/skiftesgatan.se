@@ -36,7 +36,7 @@ export const signup = form(
 	v.object({
 		username: v.pipe(v.string(), v.nonEmpty()),
 		email: v.pipe(v.string(), v.email()),
-		_password: v.pipe(v.string(), v.nonEmpty())
+		_password: v.pipe(v.string(), v.minLength(8))
 	}),
 	async ({ username, email, _password }) => {
 		const { request } = getRequestEvent();

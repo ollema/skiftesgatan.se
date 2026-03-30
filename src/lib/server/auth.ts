@@ -38,6 +38,9 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 		requireEmailVerification: true,
+		minPasswordLength: 8,
+		maxPasswordLength: 256,
+		revokeSessionsOnPasswordReset: true,
 		sendResetPassword: async ({ user, url }) => {
 			writeTestEmail(`reset-${user.email.replace(/[@.]/g, '-')}`, { url });
 			sendEmail({

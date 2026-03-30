@@ -127,10 +127,11 @@ describe('cancelBooking', () => {
 	});
 
 	it('returns false for a past booking', async () => {
-		const result = await db.execute(
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result: any = await db.execute(
 			sql`INSERT INTO booking (user_id, timeslot_id, resource, date) VALUES ('user1', 1, 'laundry_room', ${yesterday.toString()}) RETURNING id`
 		);
-		const bookingId = (result.rows[0] as { id: number }).id;
+		const bookingId = (result.rows ?? result)[0].id as number;
 		expect(await cancelBooking(bookingId, 'user1')).toBe(false);
 	});
 });
