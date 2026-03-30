@@ -1,10 +1,16 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
 import * as schema from './schema';
-import { env } from '$env/dynamic/private';
 
-if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
+const createDb = async () => {
+	if (!process.env.DATABASE_URL) {
+		const { PGlite } = await import('@electric-sql/pglite');
+		const { drizzle } = await import('drizzle-orm/pglite');
+		const client = new PGlite('.pglite');
+		return drizzle({ client, schema });
+	}
+	const postgres = (await import('postgres')).default;
+	const { drizzle } = await import('drizzle-orm/postgres-js');
+	const client = postgres(process.env.DATABASE_URL);
+	return drizzle(client, { schema });
+};
 
-const client = postgres(env.DATABASE_URL);
-
-export const db = drizzle(client, { schema });
+export const db = await createDb();
