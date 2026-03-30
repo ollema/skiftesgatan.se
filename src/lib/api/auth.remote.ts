@@ -20,7 +20,11 @@ export const login = form(
 			});
 		} catch (e) {
 			if (e instanceof APIError) {
-				invalid(e.message || 'Invalid username or password');
+				if (e.status === 403) {
+					invalid('Please verify your email address before logging in');
+				} else {
+					invalid(e.message || 'Invalid username or password');
+				}
 			}
 			throw e;
 		}
@@ -31,14 +35,15 @@ export const login = form(
 export const signup = form(
 	v.object({
 		username: v.pipe(v.string(), v.nonEmpty()),
+		email: v.pipe(v.string(), v.email()),
 		_password: v.pipe(v.string(), v.nonEmpty())
 	}),
-	async ({ username, _password }) => {
+	async ({ username, email, _password }) => {
 		const { request } = getRequestEvent();
 		try {
 			await auth.api.signUpEmail({
 				body: {
-					email: `${username}@skiftesgatan.local`,
+					email,
 					password: _password,
 					name: username,
 					username
@@ -51,7 +56,7 @@ export const signup = form(
 			}
 			throw e;
 		}
-		redirect(303, '/auth');
+		redirect(303, '/auth/verify-email');
 	}
 );
 
@@ -60,3 +65,82 @@ export const signout = form(async () => {
 	await auth.api.signOut({ headers: request.headers });
 	redirect(303, '/auth/login');
 });
+
+export const requestPasswordReset = form(
+	v.object({
+		email: v.pipe(v.string(), v.email())
+	}),
+	async ({ email }) => {
+		try {
+			await auth.api.requestPasswordReset({
+				body: { email, redirectTo: '/auth/reset-password' }
+			});
+		} catch {
+			// Always redirect to prevent email enumeration
+		}
+		redirect(303, '/auth/forgot-password/sent');
+	}
+);
+
+export const resetPassword = form(
+	v.object({
+		_newPassword: v.pipe(v.string(), v.minLength(8)),
+		token: v.pipe(v.string(), v.nonEmpty())
+	}),
+	async ({ _newPassword, token }) => {
+		try {
+			await auth.api.resetPassword({
+				body: { newPassword: _newPassword, token }
+			});
+		} catch (e) {
+			if (e instanceof APIError) {
+				invalid(e.message || 'Password reset failed. The link may have expired.');
+			}
+			throw e;
+		}
+		redirect(303, '/auth/login');
+	}
+);
+
+export const changePassword = form(
+	v.object({
+		_currentPassword: v.pipe(v.string(), v.nonEmpty()),
+		_newPassword: v.pipe(v.string(), v.minLength(8))
+	}),
+	async ({ _currentPassword, _newPassword }) => {
+		const { request } = getRequestEvent();
+		requireAuth();
+		try {
+			await auth.api.changePassword({
+				body: { currentPassword: _currentPassword, newPassword: _newPassword },
+				headers: request.headers
+			});
+		} catch (e) {
+			if (e instanceof APIError) {
+				invalid(e.message || 'Password change failed');
+			}
+			throw e;
+		}
+	}
+);
+
+export const changeEmail = form(
+	v.object({
+		email: v.pipe(v.string(), v.email())
+	}),
+	async ({ email }) => {
+		const { request } = getRequestEvent();
+		requireAuth();
+		try {
+			await auth.api.changeEmail({
+				body: { newEmail: email },
+				headers: request.headers
+			});
+		} catch (e) {
+			if (e instanceof APIError) {
+				invalid(e.message || 'Email change failed');
+			}
+			throw e;
+		}
+	}
+);

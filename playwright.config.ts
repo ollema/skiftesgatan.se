@@ -5,7 +5,7 @@ export default defineConfig({
 		command:
 			'rm -rf .pglite-test && pnpm exec drizzle-kit push --force && pnpx tsx src/lib/server/db/seed.ts && npm run build && npm run preview',
 		port: 4173,
-		env: { PGLITE_PATH: '.pglite-test' }
+		env: { PGLITE_PATH: '.pglite-test', TEST_MODE: '1', RESEND_API_KEY: '' }
 	},
 	testDir: 'e2e',
 	testMatch: '**/*.e2e.{ts,js}'
