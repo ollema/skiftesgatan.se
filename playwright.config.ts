@@ -7,5 +7,6 @@ export default defineConfig({
 		port: 4173,
 		env: { PGLITE_PATH: '.pglite-test' }
 	},
+	testDir: 'e2e',
 	testMatch: '**/*.e2e.{ts,js}'
 });
