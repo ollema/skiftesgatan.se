@@ -26,3 +26,6 @@ test-results
 
 # PGLite local database
 .pglite*
+
+# Test email tokens
+.test-emails

@@ -1,3 +1,4 @@
+import { writeFileSync, mkdirSync } from 'node:fs';
 import { betterAuth } from 'better-auth/minimal';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { username } from 'better-auth/plugins';
@@ -8,12 +9,23 @@ import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
 import { sendEmail } from '$lib/server/email';
 
+function writeTestEmail(filename: string, data: { url: string }) {
+	if (!env.TEST_MODE) return;
+	try {
+		mkdirSync('.test-emails', { recursive: true });
+		writeFileSync(`.test-emails/${filename}.json`, JSON.stringify(data));
+	} catch (e) {
+		console.error('[TEST] Failed to write test email file:', filename, e);
+	}
+}
+
 export const auth = betterAuth({
 	baseURL: env.ORIGIN,
 	secret: env.BETTER_AUTH_SECRET,
 	database: drizzleAdapter(db, { provider: 'pg' }),
 	emailVerification: {
 		sendVerificationEmail: async ({ user, url }) => {
+			writeTestEmail(`verify-${user.name.toLowerCase()}`, { url });
 			sendEmail({
 				to: user.email,
 				subject: 'Verify your email address',
@@ -27,6 +39,7 @@ export const auth = betterAuth({
 		enabled: true,
 		requireEmailVerification: true,
 		sendResetPassword: async ({ user, url }) => {
+			writeTestEmail(`reset-${user.email.replace(/[@.]/g, '-')}`, { url });
 			sendEmail({
 				to: user.email,
 				subject: 'Reset your password',

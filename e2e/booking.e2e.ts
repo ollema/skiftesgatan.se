@@ -1,36 +1,7 @@
 import { test, expect } from '@playwright/test';
-
-const TEST_USER = {
-	username: `B${1000 + (Date.now() % 9000)}`,
-	password: 'TestPassword123!',
-	email: `test-booking-${Date.now()}@resend.dev`
-};
+import { uniqueUser, registerAndVerify } from './helpers';
 
 const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-
-async function registerAndVerify(page: import('@playwright/test').Page) {
-	await page.goto('/auth/login');
-	const signupForm = page.locator('form').nth(1);
-	await signupForm.getByLabel('Apartment').fill(TEST_USER.username);
-	await signupForm.getByLabel('Email').fill(TEST_USER.email);
-	await signupForm.getByLabel('Password').fill(TEST_USER.password);
-	await signupForm.getByRole('button', { name: 'Register' }).click();
-	await expect(page).toHaveURL('/auth/verify-email');
-
-	// Verify the user (test-only endpoint)
-	const response = await page.request.post('/api/test/verify-user', {
-		data: { username: TEST_USER.username }
-	});
-	expect(response.ok()).toBe(true);
-
-	// Login
-	await page.goto('/auth/login');
-	const loginForm = page.locator('form').nth(0);
-	await loginForm.getByLabel('Apartment').fill(TEST_USER.username);
-	await loginForm.getByLabel('Password').fill(TEST_USER.password);
-	await loginForm.getByRole('button', { name: 'Login' }).click();
-	await expect(page).toHaveURL('/auth');
-}
 
 test.describe('booking flow', () => {
 	test('redirects to login when not authenticated', async ({ page }) => {
@@ -39,10 +10,9 @@ test.describe('booking flow', () => {
 	});
 
 	test('register, view slots, book, fail double-book, cancel, rebook', async ({ page }) => {
-		// Register and verify a new user
-		await registerAndVerify(page);
+		const user = uniqueUser('B');
+		await registerAndVerify(page, user);
 
-		// Navigate to laundry page and set date
 		await page.goto('/laundry');
 		await page.getByTestId('date-input').fill(tomorrow);
 
@@ -72,5 +42,43 @@ test.describe('booking flow', () => {
 		// Should have 1 Cancel and 4 Book
 		await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(1);
 		await expect(page.getByRole('button', { name: 'Book' })).toHaveCount(4);
+	});
+
+	test('outdoor area booking flow', async ({ page }) => {
+		const user = uniqueUser('C');
+		await registerAndVerify(page, user);
+
+		await page.goto('/outdoor');
+		await page.getByTestId('date-input').fill(tomorrow);
+
+		// Outdoor has 1 slot (7-22)
+		await expect(page.getByRole('button', { name: 'Book' })).toHaveCount(1);
+
+		// Book it
+		await page.getByRole('button', { name: 'Book' }).click();
+		await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(1);
+		await expect(page.getByRole('button', { name: 'Book' })).toHaveCount(0);
+
+		// Cancel
+		await page.getByRole('button', { name: 'Cancel' }).click();
+		await expect(page.getByRole('button', { name: 'Book' })).toHaveCount(1);
+
+		// Rebook
+		await page.getByRole('button', { name: 'Book' }).click();
+		await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(1);
+	});
+
+	test('rejects booking beyond 30-day window', async ({ page }) => {
+		const user = uniqueUser('B');
+		await registerAndVerify(page, user);
+
+		await page.goto('/laundry');
+
+		// Set date to 31 days from now
+		const tooFar = new Date(Date.now() + 31 * 86400000).toISOString().slice(0, 10);
+		await page.getByTestId('date-input').fill(tooFar);
+
+		// Should show an error in the slots area
+		await expect(page.getByText(/30 days|Error loading/)).toBeVisible();
 	});
 });
