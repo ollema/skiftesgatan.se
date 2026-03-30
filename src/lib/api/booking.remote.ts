@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import { parseDate } from '@internationalized/date';
-import { invalid } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { query, command } from '$app/server';
 import { requireAuth } from '$lib/server/auth';
 import {
@@ -39,15 +39,16 @@ export const book = command(
 
 		const alreadyBooked = await hasExistingFutureBooking(apartmentId, resource);
 		if (alreadyBooked) {
-			invalid('You already have a future booking for this resource');
+			error(409, 'You already have a future booking for this resource');
 		}
 
 		try {
 			const [result] = await createBookingDb(apartmentId, timeslotId, resource, calDate);
+			await getSlots({ date, resource }).refresh();
 			return result;
 		} catch (e: unknown) {
 			if (e instanceof Error && 'code' in e && (e as { code: string }).code === '23505') {
-				invalid('This slot is already booked');
+				error(409, 'This slot is already booked');
 			}
 			throw e;
 		}
@@ -60,6 +61,6 @@ export const cancelBooking = command(v.object({ bookingId: v.number() }), async 
 
 	const success = await cancelBookingDb(bookingId, apartmentId);
 	if (!success) {
-		invalid('Booking not found or cannot be cancelled');
+		error(404, 'Booking not found or cannot be cancelled');
 	}
 });
