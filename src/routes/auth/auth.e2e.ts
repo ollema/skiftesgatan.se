@@ -9,7 +9,7 @@ const TEST_USER = {
 test.describe('auth flow', () => {
 	test('register, access protected page, sign out, login again', async ({ page }) => {
 		// Visit protected page → should redirect to login
-		await page.goto('/demo/better-auth');
+		await page.goto('/auth');
 		await expect(page).toHaveURL(/\/login/);
 
 		// Register a new user
@@ -19,7 +19,7 @@ test.describe('auth flow', () => {
 		await page.getByRole('button', { name: 'Register' }).click();
 
 		// Should redirect to protected page, showing user name
-		await expect(page).toHaveURL('/demo/better-auth');
+		await expect(page).toHaveURL('/auth');
 		await expect(page.locator('h1')).toContainText(TEST_USER.name);
 
 		// Sign out
@@ -32,12 +32,12 @@ test.describe('auth flow', () => {
 		await page.getByRole('button', { name: 'Login' }).click();
 
 		// Should be back on protected page
-		await expect(page).toHaveURL('/demo/better-auth');
+		await expect(page).toHaveURL('/auth');
 		await expect(page.locator('h1')).toContainText(TEST_USER.name);
 	});
 
 	test('login with wrong password shows error', async ({ page }) => {
-		await page.goto('/demo/better-auth/login');
+		await page.goto('/auth/login');
 		await page.getByLabel('Email').fill(TEST_USER.email);
 		await page.getByLabel('Password').fill('wrong-password');
 		await page.getByRole('button', { name: 'Login' }).click();
