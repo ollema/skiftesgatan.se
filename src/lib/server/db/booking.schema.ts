@@ -26,9 +26,12 @@ export const timeslot = pgTable(
 	{
 		id: serial('id').primaryKey(),
 		startHour: integer('start_hour').notNull(),
-		endHour: integer('end_hour').notNull()
+		endHour: integer('end_hour').notNull(),
+		resource: resourceEnum().notNull()
 	},
-	(table) => [unique('timeslot_hours_unique').on(table.startHour, table.endHour)]
+	(table) => [
+		unique('timeslot_hours_resource_unique').on(table.startHour, table.endHour, table.resource)
+	]
 );
 
 export const booking = pgTable(

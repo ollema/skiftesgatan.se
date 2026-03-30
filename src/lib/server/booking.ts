@@ -37,6 +37,7 @@ export async function getAvailableSlots(date: CalendarDate, resource: Resource) 
 				eq(booking.resource, resource)
 			)
 		)
+		.where(eq(timeslot.resource, resource))
 		.orderBy(timeslot.startHour);
 }
 
