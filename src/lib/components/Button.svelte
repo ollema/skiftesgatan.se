@@ -11,8 +11,10 @@
 	let { variant = 'primary', children, class: className, ...rest }: Props = $props();
 
 	const variantClasses: Record<string, string> = {
-		primary: 'rounded-md bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700',
-		destructive: 'rounded-md bg-red-600 px-4 py-2 text-white transition hover:bg-red-700'
+		primary:
+			'rounded-[3px] bg-accent px-6 py-2 text-surface text-sm font-body uppercase tracking-widest transition-colors duration-[120ms] hover:bg-accent-hover',
+		destructive:
+			'rounded-[3px] bg-error px-6 py-2 text-surface text-sm font-body uppercase tracking-widest transition-colors duration-[120ms] hover:bg-error-hover'
 	};
 </script>
 

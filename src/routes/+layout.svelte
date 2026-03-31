@@ -8,29 +8,51 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-<div class="min-h-screen bg-gray-50">
-	<nav class="bg-white shadow-sm">
-		<div class="mx-auto max-w-4xl px-4">
-			<div class="flex h-14 items-center justify-between">
-				<a href={resolve('/')} class="text-lg font-semibold text-gray-900">Skiftesgatan</a>
-				<div class="flex gap-4">
-					<a href={resolve('/news')} class="text-sm text-gray-600 hover:text-gray-900">News</a>
-					<a href={resolve('/information')} class="text-sm text-gray-600 hover:text-gray-900"
+<div class="min-h-screen bg-bg font-body text-text-primary">
+	<nav class="border-b border-border-subtle bg-surface">
+		<div class="mx-auto max-w-[960px] px-4 lg:px-10">
+			<div class="flex h-16 items-center justify-between">
+				<a
+					href={resolve('/')}
+					class="font-heading text-xl font-normal text-text-primary no-underline">Skiftesgatan</a
+				>
+				<div class="flex gap-6">
+					<a
+						href={resolve('/news')}
+						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
+						>News</a
+					>
+					<a
+						href={resolve('/information')}
+						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
 						>Information</a
 					>
-					<a href={resolve('/laundry')} class="text-sm text-gray-600 hover:text-gray-900">Laundry</a
+					<a
+						href={resolve('/laundry')}
+						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
+						>Laundry</a
 					>
-					<a href={resolve('/outdoor')} class="text-sm text-gray-600 hover:text-gray-900">Outdoor</a
+					<a
+						href={resolve('/outdoor')}
+						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
+						>Outdoor</a
 					>
-					<a href={resolve('/contact')} class="text-sm text-gray-600 hover:text-gray-900">Contact</a
+					<a
+						href={resolve('/contact')}
+						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
+						>Contact</a
 					>
-					<a href={resolve('/auth')} class="text-sm text-gray-600 hover:text-gray-900">Account</a>
+					<a
+						href={resolve('/auth')}
+						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
+						>Account</a
+					>
 				</div>
 			</div>
 		</div>
 	</nav>
 
-	<main class="mx-auto max-w-4xl px-4 py-8">
+	<main class="mx-auto max-w-[960px] px-4 py-16 lg:px-10">
 		{@render children()}
 	</main>
 </div>

@@ -47,9 +47,9 @@
 <svelte:boundary>
 	{@const user = await getOptionalUser()}
 
-	<h1 class="text-xl font-semibold">Outdoor Area</h1>
+	<h1 class="font-heading text-2xl font-normal">Outdoor Area</h1>
 	{#if user}
-		<p class="mt-1 text-gray-600">Hi, {user.name}!</p>
+		<p class="mt-2 text-text-secondary">Hi, {user.name}!</p>
 	{/if}
 
 	<svelte:boundary>
@@ -58,19 +58,19 @@
 		{@const timeslotIds = slots.map((s) => s.id)}
 		{@const dots = buildDots(upcomingBookings, user?.id ?? '', timeslotIds)}
 
-		<div class="mt-4">
+		<div class="mt-6">
 			<Calendar bind:date minValue={minDate} maxValue={maxDate} {dots} {slotCount} />
 		</div>
 
 		{#if error}
-			<p class="mt-2 text-red-500" data-testid="booking-error">{error}</p>
+			<p class="mt-3 text-error" data-testid="booking-error">{error}</p>
 		{/if}
 
-		<div class="mt-4 grid grid-cols-1 gap-2">
+		<div class="mt-6 grid grid-cols-1 gap-2">
 			{#each slots as slot (slot.id)}
 				{#if slot.bookingId === null}
 					<button
-						class="rounded-lg bg-slot-free p-3 text-center text-sm font-medium text-white transition hover:opacity-90"
+						class="rounded-[3px] bg-slot-free p-3 text-center text-sm font-medium text-surface transition-colors duration-[120ms] hover:opacity-90"
 						onclick={async () => {
 							if (!user) {
 								showLoginDialog = true;
@@ -103,7 +103,7 @@
 					</button>
 				{:else if user && slot.userId === user.id}
 					<button
-						class="rounded-lg bg-slot-mine p-3 text-center text-sm font-medium text-white transition hover:opacity-90"
+						class="rounded-[3px] bg-slot-mine p-3 text-center text-sm font-medium text-surface transition-colors duration-[120ms] hover:opacity-90"
 						onclick={() => {
 							cancelBookingId = slot.bookingId;
 						}}
@@ -118,7 +118,7 @@
 					</button>
 				{:else}
 					<button
-						class="cursor-not-allowed rounded-lg bg-slot-booked p-3 text-center text-sm font-medium text-white opacity-90"
+						class="cursor-not-allowed rounded-[3px] bg-slot-booked p-3 text-center text-sm font-medium text-surface opacity-90"
 						disabled
 					>
 						<div>
@@ -160,7 +160,7 @@
 				title="Replace your booking?"
 				description="You already have a booking on {pendingBooking?.replaceDate}. This will cancel it and book the new slot instead."
 				confirmLabel="Replace"
-				confirmClass="bg-blue-600 hover:bg-blue-700"
+				confirmClass="bg-accent hover:bg-accent-hover"
 				onConfirm={async () => {
 					if (pendingBooking === null) return;
 					error = '';
@@ -185,22 +185,22 @@
 			title="Login required"
 			description="You need to log in to book a slot."
 			confirmLabel="Log in"
-			confirmClass="bg-blue-600 hover:bg-blue-700"
+			confirmClass="bg-accent hover:bg-accent-hover"
 			onConfirm={() => {
 				window.location.href = '/auth/login';
 			}}
 		/>
 
 		{#snippet pending()}
-			<p>Loading slots...</p>
+			<p class="mt-6 text-text-secondary">Loading slots...</p>
 		{/snippet}
 
 		{#snippet failed(err)}
-			<p class="text-red-500">Error loading slots: {String(err)}</p>
+			<p class="mt-3 text-error">Error loading slots: {String(err)}</p>
 		{/snippet}
 	</svelte:boundary>
 
 	{#snippet pending()}
-		<p>Loading...</p>
+		<p class="text-text-secondary">Loading...</p>
 	{/snippet}
 </svelte:boundary>

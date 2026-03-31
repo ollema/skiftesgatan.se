@@ -3,7 +3,118 @@
 @plugin '@tailwindcss/typography';
 
 @theme {
-	--color-slot-free: #22c55e;
-	--color-slot-booked: #ef4444;
-	--color-slot-mine: #3b82f6;
+	/* Surfaces */
+	--color-bg: #f5f0e8;
+	--color-bg-alt: #ede7db;
+	--color-surface: #fdfbf7;
+
+	/* Text */
+	--color-text-primary: #2c2a25;
+	--color-text-secondary: #6b6560;
+	--color-text-muted: #9c9590;
+
+	/* Accent */
+	--color-accent: #4a6741;
+	--color-accent-hover: #3b5334;
+	--color-accent-subtle: #e8eedf;
+
+	/* Warm (sparingly) */
+	--color-warm: #8b7355;
+
+	/* Borders */
+	--color-border: #ddd7cc;
+	--color-border-subtle: #e8e3da;
+
+	/* Functional */
+	--color-error: #a0413c;
+	--color-error-hover: #8a3530;
+	--color-success: #4a6741;
+
+	/* Slot colors (booking system) */
+	--color-slot-free: #5a8a52;
+	--color-slot-booked: #b84a45;
+	--color-slot-mine: #8b7355;
+
+	/* Typography */
+	--font-heading: 'DM Serif Display', 'Georgia', serif;
+	--font-body: 'Source Serif 4', 'Georgia', serif;
+	--font-mono: 'JetBrains Mono', monospace;
+
+	/* Radii */
+	--radius-sm: 3px;
+	--radius-md: 5px;
+	--radius-none: 0px;
+}
+
+@layer base {
+	html {
+		font-family: var(--font-body);
+		color: var(--color-text-primary);
+		background-color: var(--color-bg);
+		line-height: 1.6;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		font-family: var(--font-heading);
+		font-weight: 400;
+		color: var(--color-text-primary);
+	}
+
+	a {
+		color: var(--color-accent);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+		text-decoration-thickness: 1px;
+		transition: color 120ms ease;
+	}
+
+	a:hover {
+		color: var(--color-accent-hover);
+	}
+
+	/* Prose customization for markdown content */
+	.prose {
+		--tw-prose-body: var(--color-text-primary);
+		--tw-prose-headings: var(--color-text-primary);
+		--tw-prose-links: var(--color-accent);
+		--tw-prose-bold: var(--color-text-primary);
+		--tw-prose-counters: var(--color-text-secondary);
+		--tw-prose-bullets: var(--color-text-muted);
+		--tw-prose-quotes: var(--color-text-secondary);
+		--tw-prose-quote-borders: var(--color-border);
+		--tw-prose-code: var(--color-text-primary);
+		--tw-prose-hr: var(--color-border-subtle);
+		font-family: var(--font-body);
+		max-width: 680px;
+	}
+
+	.prose :where(h1, h2, h3, h4):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+		font-family: var(--font-heading);
+		font-weight: 400;
+	}
+}
+
+@layer components {
+	.input-field {
+		background-color: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		padding: 0.5rem 1rem;
+		font-family: var(--font-body);
+		font-size: 1rem;
+		color: var(--color-text-primary);
+		width: 100%;
+		transition: border-color 120ms ease;
+	}
+
+	.input-field:focus {
+		border-color: var(--color-accent);
+		outline: 2px solid var(--color-accent-subtle);
+		outline-offset: 1px;
+	}
 }

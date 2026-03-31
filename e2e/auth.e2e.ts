@@ -42,7 +42,7 @@ test.describe('auth flow', () => {
 		await loginForm.getByRole('button', { name: 'Login' }).click();
 
 		await expect(page).toHaveURL(/\/login/);
-		await expect(page.locator('.text-red-500')).toContainText('Invalid');
+		await expect(page.locator('.text-error')).toContainText('Invalid');
 	});
 
 	test('login with unverified email shows error', async ({ page }) => {
@@ -59,7 +59,7 @@ test.describe('auth flow', () => {
 		await loginForm.getByRole('button', { name: 'Login' }).click();
 
 		await expect(page).toHaveURL(/\/login/);
-		await expect(page.locator('.text-red-500')).toContainText('not verified');
+		await expect(page.locator('.text-error')).toContainText('not verified');
 	});
 
 	test('change password', async ({ page }) => {

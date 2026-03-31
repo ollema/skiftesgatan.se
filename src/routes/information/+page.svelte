@@ -7,15 +7,12 @@
 	);
 </script>
 
-<h1 class="mb-6 text-2xl font-bold text-gray-900">Information</h1>
+<h1 class="mb-12 font-heading text-3xl font-normal">Information</h1>
 
-<div class="grid gap-4 sm:grid-cols-2">
+<div class="flex flex-col gap-6">
 	{#each informationPages as page (page._meta.path)}
-		<a
-			href={resolve(`/${page._meta.path}` as `/information/${string}`)}
-			class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
-		>
-			<h2 class="text-lg font-semibold text-gray-900">{page.title}</h2>
+		<a href={resolve(`/${page._meta.path}` as `/information/${string}`)} class="text-lg">
+			{page.title}
 		</a>
 	{/each}
 </div>

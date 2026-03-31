@@ -10,9 +10,9 @@
 	}
 </script>
 
-<h1 class="mb-2 text-2xl font-bold text-gray-900">{article.title}</h1>
+<h1 class="mb-3 font-heading text-2xl font-normal">{article.title}</h1>
 
-<p class="mb-6 text-sm text-gray-500">
+<p class="mb-10 text-xs tracking-widest text-text-muted uppercase">
 	{new Date(article.date).toLocaleDateString('sv-SE', {
 		year: 'numeric',
 		month: 'long',
@@ -21,6 +21,6 @@
 </p>
 
 <!-- eslint-disable svelte/no-at-html-tags -- build-time compiled markdown -->
-<div class="prose">
+<div class="prose max-w-[680px]">
 	{@html article.html}
 </div>

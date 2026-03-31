@@ -20,7 +20,7 @@
 		description,
 		confirmLabel = 'Confirm',
 		cancelLabel = 'Go back',
-		confirmClass = 'bg-red-600 hover:bg-red-700'
+		confirmClass = 'bg-error hover:bg-error-hover'
 	}: Props = $props();
 </script>
 
@@ -31,22 +31,22 @@
 	}}
 >
 	<AlertDialog.Portal>
-		<AlertDialog.Overlay class="fixed inset-0 z-40 bg-black/50" />
+		<AlertDialog.Overlay class="fixed inset-0 z-40 bg-text-primary/40" />
 		<AlertDialog.Content
-			class="fixed inset-0 z-50 m-auto flex h-fit max-w-sm flex-col rounded-lg bg-white p-6 shadow-lg"
+			class="fixed inset-0 z-50 m-auto flex h-fit max-w-sm flex-col border border-border bg-surface p-8"
 		>
-			<AlertDialog.Title class="mb-2 text-lg font-semibold">{title}</AlertDialog.Title>
-			<AlertDialog.Description class="mb-6 text-sm text-gray-600">
+			<AlertDialog.Title class="mb-3 font-heading text-xl font-normal">{title}</AlertDialog.Title>
+			<AlertDialog.Description class="mb-8 text-sm text-text-secondary">
 				{description}
 			</AlertDialog.Description>
 			<div class="flex justify-end gap-3">
 				<AlertDialog.Cancel
-					class="rounded-md border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+					class="rounded-[3px] border border-border px-6 py-2 text-sm tracking-widest uppercase transition-colors duration-[120ms] hover:bg-bg-alt"
 				>
 					{cancelLabel}
 				</AlertDialog.Cancel>
 				<AlertDialog.Action
-					class="rounded-md px-4 py-2 text-sm text-white {confirmClass}"
+					class="rounded-[3px] px-6 py-2 text-sm tracking-widest text-surface uppercase transition-colors duration-[120ms] {confirmClass}"
 					onclick={onConfirm}
 				>
 					{confirmLabel}
