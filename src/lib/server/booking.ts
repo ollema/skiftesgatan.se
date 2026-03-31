@@ -53,10 +53,13 @@ export async function getUpcomingBookings(resource: Resource) {
 			date: booking.date,
 			bookingId: booking.id,
 			userId: booking.userId,
-			username: user.username
+			username: user.username,
+			startHour: timeslot.startHour,
+			endHour: timeslot.endHour
 		})
 		.from(booking)
 		.innerJoin(user, eq(booking.userId, user.id))
+		.innerJoin(timeslot, eq(booking.timeslotId, timeslot.id))
 		.where(
 			and(eq(booking.resource, resource), gte(booking.date, startDate), lte(booking.date, endDate))
 		);

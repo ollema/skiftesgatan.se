@@ -31,9 +31,8 @@
 	--color-success: #4a6741;
 
 	/* Slot colors (booking system) */
-	--color-slot-free: #5a8a52;
-	--color-slot-booked: #b84a45;
-	--color-slot-mine: #8b7355;
+	--color-slot-occupied: #9c9590;
+	--color-slot-mine: #b8634b;
 
 	/* Typography */
 	--font-heading: 'DM Serif Display', 'Georgia', serif;

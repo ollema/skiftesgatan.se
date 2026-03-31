@@ -256,19 +256,22 @@ outline-offset: 1px;
 
 The booking calendar uses status-indicator colors that must remain visually distinct from each other. These are functional, not decorative.
 
-| Status | Color       | Hex       | Usage                                    |
-| ------ | ----------- | --------- | ---------------------------------------- |
-| Free   | Muted green | `#5a8a52` | Available time slots                     |
-| Mine   | Warm brown  | `#8b7355` | User's own booking (matches warm accent) |
-| Booked | Warm red    | `#b84a45` | Slots booked by others                   |
+| Status | Treatment              | Color/Hex                    | Usage                |
+| ------ | ---------------------- | ---------------------------- | -------------------- |
+| Free   | Outline only (no fill) | `--color-border` (`#ddd7cc`) | Available time slots |
+| Mine   | Filled — terracotta    | `#b8634b`                    | User's own booking   |
+| Booked | Filled — muted stone   | `#9c9590`                    | Booked by others     |
 
-These colors appear as small slot buttons and calendar dots. They use white text for labels. The dots on the calendar are 6px circles.
+The visual hierarchy is inverted: free slots are lightweight outlines (absence of weight = available). Booked slots have a muted fill. The user's own booking uses a distinctive terracotta fill.
+
+These colors appear as small slot buttons and calendar dot squares.
 
 ### Rules
 
-- These are the only places where saturated color fills are acceptable
-- The slot buttons use `--radius-sm` (3px), not fully rounded
-- Slot buttons should have no shadow, just the colored background
+- Free slots are **outline only** — the absence of fill is the signal
+- Booked/mine slots are filled — visual weight means "taken"
+- The slot buttons use `--radius-sm` (3px), no shadow
+- Buttons show only the time range (e.g. "10–16"), no action labels
 
 ---
 

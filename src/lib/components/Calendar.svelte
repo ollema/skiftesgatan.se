@@ -27,9 +27,9 @@
 	});
 
 	const statusColorMap: Record<SlotStatus, string> = {
-		free: 'bg-slot-free',
+		free: 'border border-border',
 		mine: 'bg-slot-mine',
-		other: 'bg-slot-booked'
+		other: 'bg-slot-occupied'
 	};
 
 	function onValueChange(newValue: DateValue | undefined) {
@@ -44,26 +44,31 @@
 	}
 </script>
 
-<div class="w-full border border-border bg-surface p-4">
+<div class="w-full">
 	<Calendar.Root
 		type="single"
 		{value}
 		{onValueChange}
 		{minValue}
 		{maxValue}
+		locale="sv-SE"
 		weekdayFormat="short"
 		fixedWeeks
 		disableDaysOutsideMonth={false}
 	>
 		{#snippet children({ months, weekdays })}
-			<Calendar.Header class="flex items-center justify-between pb-2">
+			<Calendar.Header class="flex items-center justify-center gap-1 pb-2">
 				<Calendar.PrevButton
 					class="inline-flex h-8 w-8 items-center justify-center transition-colors duration-[120ms] hover:bg-bg-alt"
 				>
 					&lt;
 				</Calendar.PrevButton>
 
-				<Calendar.Heading class="font-heading text-sm font-normal" />
+				<Calendar.Heading class="w-[10ch] text-center font-heading text-sm font-normal">
+					{new Date(months[0].value.year, months[0].value.month - 1).toLocaleDateString('sv-SE', {
+						month: 'long'
+					})}
+				</Calendar.Heading>
 
 				<Calendar.NextButton
 					class="inline-flex h-8 w-8 items-center justify-center transition-colors duration-[120ms] hover:bg-bg-alt"
@@ -73,9 +78,9 @@
 			</Calendar.Header>
 
 			{#each months as month (month.value.toString())}
-				<Calendar.Grid class="w-full border-collapse">
-					<Calendar.GridHead>
-						<Calendar.GridRow>
+				<Calendar.Grid class="grid w-full grid-cols-7">
+					<Calendar.GridHead class="contents">
+						<Calendar.GridRow class="contents">
 							{#each weekdays as weekday (weekday)}
 								<Calendar.HeadCell class="text-center text-xs font-normal text-text-muted">
 									{weekday}
@@ -84,18 +89,17 @@
 						</Calendar.GridRow>
 					</Calendar.GridHead>
 
-					<Calendar.GridBody>
+					<Calendar.GridBody class="contents">
 						{#each month.weeks as week, weekIndex (weekIndex)}
-							<Calendar.GridRow>
+							<Calendar.GridRow class="contents">
 								{#each week as day (day.toString())}
 									<Calendar.Cell date={day} month={month.value} class="p-0">
 										<Calendar.Day
-											class="inline-flex w-full flex-col items-center justify-center py-1 text-sm
-												hover:bg-bg-alt
-												data-disabled:cursor-not-allowed data-disabled:text-border data-disabled:hover:bg-transparent
-												data-outside-month:text-text-muted data-selected:bg-accent data-selected:text-surface
-												data-selected:hover:bg-accent-hover
-												data-today:font-semibold"
+											class="inline-flex w-full flex-col items-center justify-center py-1 text-sm hover:bg-bg-alt
+												data-disabled:cursor-not-allowed
+												data-disabled:text-border data-disabled:hover:bg-transparent data-outside-month:text-text-muted
+												data-selected:ring-2 data-selected:ring-text-primary/20 data-selected:ring-inset data-today:font-semibold
+												sm:py-2.5"
 										>
 											{day.day}
 											{#if dots && dotLength}
@@ -104,9 +108,9 @@
 													(!maxValue || day.compare(maxValue) <= 0)}
 												{@const dayDots = inRange ? getDotsForDay(day.toString()) : undefined}
 												{@const fallbackDots: SlotStatus[] = Array(dotLength).fill('free')}
-												<div class="mt-0.5 flex h-1.5 w-3/4 gap-px" class:invisible={!dayDots}>
+												<div class="mt-0.5 flex gap-[2px]" class:invisible={!dayDots}>
 													{#each dayDots ?? fallbackDots as status, i (i)}
-														<span class="h-full flex-1 {statusColorMap[status]}"></span>
+														<span class="box-border size-[6px] {statusColorMap[status]}"></span>
 													{/each}
 												</div>
 											{/if}

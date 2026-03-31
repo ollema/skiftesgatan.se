@@ -20,24 +20,18 @@ test.describe('concurrent booking', () => {
 		// Both navigate to laundry and set date
 		await page1.goto('/laundry');
 		await selectCalendarDate(page1, testDate);
-		await expect(page1.getByRole('button', { name: /\bBook$/ })).toHaveCount(5);
+		await expect(page1.locator('button[data-slot-status="free"]')).toHaveCount(5);
 
 		await page2.goto('/laundry');
 		await selectCalendarDate(page2, testDate);
-		await expect(page2.getByRole('button', { name: /\bBook$/ })).toHaveCount(5);
+		await expect(page2.locator('button[data-slot-status="free"]')).toHaveCount(5);
 
 		// User1 books the first slot
-		await page1
-			.getByRole('button', { name: /\bBook$/ })
-			.first()
-			.click();
-		await expect(page1.getByRole('button', { name: /Your booking/ })).toHaveCount(1);
+		await page1.locator('button[data-slot-status="free"]').first().click();
+		await expect(page1.locator('button[data-slot-status="mine"]')).toHaveCount(1);
 
 		// User2 tries to book the same slot (stale page still shows it as available)
-		await page2
-			.getByRole('button', { name: /\bBook$/ })
-			.first()
-			.click();
+		await page2.locator('button[data-slot-status="free"]').first().click();
 		// The server should reject with a conflict error — the booking-error element should be visible
 		await expect(page2.getByTestId('booking-error')).toBeVisible();
 

@@ -22,8 +22,10 @@ export const getSlots = query(
 		validateBookingDate(calDate);
 		const slots = await getAvailableSlots(calDate, resource);
 		const user = getAuthUser();
-		if (!user) return slots.map((s) => ({ ...s, username: null, userId: null }));
-		return slots;
+		const fetchedAt = new Date().toISOString();
+		if (!user)
+			return { slots: slots.map((s) => ({ ...s, username: null, userId: null })), fetchedAt };
+		return { slots, fetchedAt };
 	}
 );
 

@@ -7,19 +7,16 @@ test.describe('booking flow', () => {
 	test('shows calendar and login dialog when not authenticated', async ({ page }) => {
 		await page.goto('/laundry');
 		await expect(page).toHaveURL('/laundry');
-		await expect(page.getByText('Laundry Room')).toBeVisible();
+		await expect(page.getByText('Tvättstuga')).toBeVisible();
 
 		// Clicking a book button should show login dialog
-		const bookButtons = page.getByRole('button', { name: /\bBook$/ });
+		const bookButtons = page.locator('button[data-slot-status="free"]');
 		await selectCalendarDate(page, tomorrow);
 		await bookButtons.first().click();
 		const loginDialog = page.getByRole('alertdialog');
-		await expect(loginDialog).toContainText('Login required');
+		await expect(loginDialog).toContainText('Inloggning krävs');
 		await loginDialog.getByRole('button', { name: 'Go back' }).click();
 		await expect(loginDialog).not.toBeVisible();
-
-		// Booked slots should show "Booked" not usernames
-		// (this is implicitly tested — no username visible without auth)
 	});
 
 	test('register, view slots, book, fail double-book, cancel, rebook', async ({ page }) => {
@@ -29,16 +26,16 @@ test.describe('booking flow', () => {
 		await page.goto('/laundry');
 		await selectCalendarDate(page, tomorrow);
 
-		const bookButtons = page.getByRole('button', { name: /\bBook$/ });
-		const myButtons = page.getByRole('button', { name: /Your booking/ });
+		const bookButtons = page.locator('button[data-slot-status="free"]');
+		const myButtons = page.locator('button[data-slot-status="mine"]');
 
-		// Should see 5 Book buttons (all slots available)
+		// Should see 5 free slots (all available)
 		await expect(bookButtons).toHaveCount(5);
 
 		// Book the first available slot
 		await bookButtons.first().click();
 
-		// Should now have 1 "Your booking" and 4 Book buttons
+		// Should now have 1 mine and 4 free
 		await expect(myButtons).toHaveCount(1);
 		await expect(bookButtons).toHaveCount(4);
 
@@ -46,7 +43,7 @@ test.describe('booking flow', () => {
 		await bookButtons.first().click();
 		const replaceDialog = page.getByRole('alertdialog');
 		await expect(replaceDialog).toBeVisible();
-		await expect(replaceDialog).toContainText('Replace your booking?');
+		await expect(replaceDialog).toContainText('Ersätt din bokning?');
 
 		// Dismiss the replace dialog
 		await replaceDialog.getByRole('button', { name: 'Go back' }).click();
@@ -59,13 +56,13 @@ test.describe('booking flow', () => {
 		// Replace the booking via the dialog
 		await bookButtons.last().click();
 		await expect(replaceDialog).toBeVisible();
-		await replaceDialog.getByRole('button', { name: 'Replace' }).click();
+		await replaceDialog.getByRole('button', { name: 'Ersätt' }).click();
 
 		// Should now have the new booking
 		await expect(myButtons).toHaveCount(1);
 		await expect(bookButtons).toHaveCount(4);
 
-		// Cancel the existing booking (click "Your booking" then confirm)
+		// Cancel the existing booking (click mine then confirm)
 		await myButtons.first().click();
 		await confirmCancelDialog(page);
 
@@ -75,7 +72,7 @@ test.describe('booking flow', () => {
 		// Book the last slot
 		await bookButtons.last().click();
 
-		// Should have 1 "Your booking" and 4 Book
+		// Should have 1 mine and 4 free
 		await expect(myButtons).toHaveCount(1);
 		await expect(bookButtons).toHaveCount(4);
 	});
@@ -87,8 +84,8 @@ test.describe('booking flow', () => {
 		await page.goto('/outdoor');
 		await selectCalendarDate(page, tomorrow);
 
-		const bookButtons = page.getByRole('button', { name: /\bBook$/ });
-		const myButtons = page.getByRole('button', { name: /Your booking/ });
+		const bookButtons = page.locator('button[data-slot-status="free"]');
+		const myButtons = page.locator('button[data-slot-status="mine"]');
 
 		// Outdoor has 1 slot (7-22)
 		await expect(bookButtons).toHaveCount(1);
