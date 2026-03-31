@@ -3,12 +3,16 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { allPages, allNews } from 'content-collections';
+	import { parseDate, DateFormatter, getLocalTimeZone } from '@internationalized/date';
 
 	const informationPages = allPages.filter((p) => p._meta.directory.startsWith('information'));
 
 	const latestNews = allNews
-		.toSorted((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+		.toSorted((a, b) => parseDate(b.date).compare(parseDate(a.date)))
 		.slice(0, 3);
+
+	const df = new DateFormatter('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' });
+	const tz = getLocalTimeZone();
 
 	const linkClass =
 		'text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent data-active:text-accent';
@@ -52,11 +56,7 @@
 											class="block text-xs tracking-widest text-text-muted uppercase"
 											datetime={item.date}
 										>
-											{new Date(item.date).toLocaleDateString('sv-SE', {
-												year: 'numeric',
-												month: 'long',
-												day: 'numeric'
-											})}
+											{df.format(parseDate(item.date).toDate(tz))}
 										</time>
 										<span class="text-sm text-text-primary">{item.title}</span>
 									</NavigationMenu.Link>

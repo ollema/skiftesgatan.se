@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { afterNavigate } from '$app/navigation';
 	import { allPages, allNews } from 'content-collections';
+	import { parseDate } from '@internationalized/date';
 
 	interface Props {
 		user: { username?: string | null } | null;
@@ -20,7 +21,7 @@
 	const informationPages = allPages.filter((p) => p._meta.directory.startsWith('information'));
 
 	const latestNews = allNews
-		.toSorted((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+		.toSorted((a, b) => parseDate(b.date).compare(parseDate(a.date)))
 		.slice(0, 3);
 
 	const linkClass =

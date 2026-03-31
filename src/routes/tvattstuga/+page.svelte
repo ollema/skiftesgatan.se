@@ -1,5 +1,11 @@
 <script lang="ts">
-	import { today, getLocalTimeZone } from '@internationalized/date';
+	import {
+		today,
+		getLocalTimeZone,
+		CalendarDate,
+		CalendarDateTime,
+		DateFormatter
+	} from '@internationalized/date';
 	import { toast } from 'svelte-sonner';
 	import { getOptionalUser } from '$lib/api/auth.remote';
 	import { getSlots, getUpcomingSlots, book, cancelBooking } from '$lib/api/booking.remote';
@@ -12,34 +18,42 @@
 	const tz = getLocalTimeZone();
 	const minDate = today(tz);
 	const maxDate = today(tz).add({ months: 1 });
-	let date = $state(new Date().toISOString().slice(0, 10));
+	let date = $state(today(tz));
 	let error = $state('');
 	let cancelBookingId = $state<number | null>(null);
 	let pendingBooking = $state<{
 		timeslotId: number;
 		replaceBookingId: number;
-		replaceDate: string;
+		replaceDescription: string;
 	} | null>(null);
 	let showLoginDialog = $state(false);
 
-	function formatDate(d: string) {
-		return new Date(d + 'T00:00').toLocaleDateString('sv-SE', {
-			weekday: 'long',
-			day: 'numeric',
-			month: 'long'
-		});
+	const dateFormatter = new DateFormatter('sv-SE', {
+		weekday: 'long',
+		day: 'numeric',
+		month: 'long'
+	});
+	const hourFormatter = new DateFormatter('sv-SE', { hour: '2-digit', minute: '2-digit' });
+
+	function formatDate(d: CalendarDate | CalendarDateTime) {
+		return dateFormatter.format(d.toDate(tz));
+	}
+
+	function formatHour(d: CalendarDateTime) {
+		return hourFormatter.format(d.toDate(tz));
 	}
 
 	function buildDots(
-		monthBookings: Array<{ timeslotId: number; date: string; userId: string | null }>,
+		monthBookings: Array<{ timeslotId: number; start: CalendarDateTime; userId: string | null }>,
 		currentUserId: string,
 		timeslotIds: number[]
 	): DotsByDate {
 		const result: DotsByDate = {};
 		const byDate: Record<string, Record<number, string | null>> = {};
 		for (const b of monthBookings) {
-			if (!byDate[b.date]) byDate[b.date] = {};
-			byDate[b.date][b.timeslotId] = b.userId;
+			const dateKey = new CalendarDate(b.start.year, b.start.month, b.start.day).toString();
+			if (!byDate[dateKey]) byDate[dateKey] = {};
+			byDate[dateKey][b.timeslotId] = b.userId;
 		}
 		for (const dateStr in byDate) {
 			const slotMap = byDate[dateStr];
@@ -59,7 +73,7 @@
 	<svelte:boundary>
 		{@const slotsData = await getSlots({ date, resource })}
 		{@const slots = slotsData.slots}
-		{@const fetchedAt = new Date(slotsData.fetchedAt)}
+		{@const fetchedAt = slotsData.fetchedAt}
 		{@const upcomingBookings = await getUpcomingSlots({ resource })}
 		{@const timeslotIds = slots.map((s) => s.id)}
 		{@const dots = buildDots(upcomingBookings, user?.id ?? '', timeslotIds)}
@@ -71,10 +85,9 @@
 		{/if}
 		{#if myBooking}
 			<p class="mt-2 text-text-secondary">
-				Du har bokat en tvättid {formatDate(myBooking.date)}, {String(myBooking.startHour).padStart(
-					2,
-					'0'
-				)}:00&ndash;{String(myBooking.endHour).padStart(2, '0')}:00.
+				Du har bokat en tvättid {formatDate(myBooking.start)}, {formatHour(
+					myBooking.start
+				)}&ndash;{formatHour(myBooking.end)}.
 			</p>
 		{:else if user}
 			<p class="mt-2 text-text-muted">Du har inte bokat någon tvättid.</p>
@@ -95,11 +108,7 @@
 				{formatDate(date)}
 			</h2>
 			<p class="text-xs text-text-muted">
-				Uppdaterades {fetchedAt.toLocaleTimeString('sv-SE', {
-					hour: '2-digit',
-					minute: '2-digit',
-					second: '2-digit'
-				})}.
+				Uppdaterades {fetchedAt.toString()}.
 				<button
 					class="text-text-muted underline decoration-1 underline-offset-2"
 					onclick={async () => {
@@ -127,7 +136,7 @@
 								pendingBooking = {
 									timeslotId: slot.id,
 									replaceBookingId: existing.bookingId,
-									replaceDate: existing.date
+									replaceDescription: `${formatDate(existing.start)}, ${formatHour(existing.start)}–${formatHour(existing.end)}`
 								};
 								return;
 							}
@@ -139,7 +148,7 @@
 							}
 						}}
 					>
-						{String(slot.startHour).padStart(2, '0')}&ndash;{String(slot.endHour).padStart(2, '0')}
+						{formatHour(slot.start)}&ndash;{formatHour(slot.end)}
 					</button>
 				{:else if user && slot.userId === user.id}
 					<button
@@ -149,7 +158,7 @@
 							cancelBookingId = slot.bookingId;
 						}}
 					>
-						{String(slot.startHour).padStart(2, '0')}&ndash;{String(slot.endHour).padStart(2, '0')}
+						{formatHour(slot.start)}&ndash;{formatHour(slot.end)}
 					</button>
 				{:else}
 					<button
@@ -157,7 +166,7 @@
 						class="cursor-not-allowed rounded-sm bg-slot-occupied px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface sm:text-sm"
 						disabled
 					>
-						{String(slot.startHour).padStart(2, '0')}&ndash;{String(slot.endHour).padStart(2, '0')}
+						{formatHour(slot.start)}&ndash;{formatHour(slot.end)}
 					</button>
 				{/if}
 			{/each}
@@ -189,7 +198,7 @@
 				open={pendingBooking !== null}
 				onClose={() => (pendingBooking = null)}
 				title="Ersätt din bokning?"
-				description="Du har redan en bokning den {pendingBooking?.replaceDate}. Den avbokas och ersätts med den nya tiden."
+				description="Du har redan en bokning {pendingBooking?.replaceDescription}. Den avbokas och ersätts med den nya tiden."
 				confirmLabel="Ersätt"
 				confirmClass="bg-accent hover:bg-accent-hover"
 				onConfirm={async () => {

@@ -2,22 +2,21 @@
 	import { allNews } from 'content-collections';
 	import { page } from '$app/state';
 	import { error } from '@sveltejs/kit';
+	import { parseDate, DateFormatter, getLocalTimeZone } from '@internationalized/date';
 
 	const article = allNews.find((n) => n._meta.path === page.params.slug);
 
 	if (!article) {
 		error(404, 'Not found');
 	}
+
+	const df = new DateFormatter('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' });
 </script>
 
 <h1 class="mb-3 font-heading text-2xl font-normal">{article.title}</h1>
 
 <p class="mb-6 text-xs tracking-widest text-text-muted uppercase">
-	{new Date(article.date).toLocaleDateString('sv-SE', {
-		year: 'numeric',
-		month: 'long',
-		day: 'numeric'
-	})}
+	{df.format(parseDate(article.date).toDate(getLocalTimeZone()))}
 </p>
 
 <!-- eslint-disable svelte/no-at-html-tags -- build-time compiled markdown -->

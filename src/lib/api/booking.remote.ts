@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { parseDate } from '@internationalized/date';
+import { CalendarDate, CalendarDateTime, Time, now, parseDate } from '@internationalized/date';
 import { error } from '@sveltejs/kit';
 import { query, command } from '$app/server';
 import { requireAuth, getAuthUser } from '$lib/server/auth';
@@ -13,17 +13,27 @@ import {
 } from '$lib/server/booking';
 
 const resourceSchema = v.picklist(['laundry_room', 'outdoor_area']);
-const dateSchema = v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/));
+const calendarDateSchema = v.instance(CalendarDate);
+
+function toCalendarDateTime(date: CalendarDate, hour: number) {
+	return new CalendarDateTime(date.year, date.month, date.day, hour);
+}
 
 export const getSlots = query(
-	v.object({ date: dateSchema, resource: resourceSchema }),
+	v.object({ date: calendarDateSchema, resource: resourceSchema }),
 	async ({ date, resource }) => {
-		const calDate = parseDate(date);
-		const slots = await getAvailableSlots(calDate, resource);
+		const rawSlots = await getAvailableSlots(date, resource);
 		const user = getAuthUser();
-		const fetchedAt = new Date().toISOString();
-		if (!user)
-			return { slots: slots.map((s) => ({ ...s, username: null, userId: null })), fetchedAt };
+		const zdt = now('Europe/Stockholm');
+		const fetchedAt = new Time(zdt.hour, zdt.minute, zdt.second);
+		const slots = rawSlots.map((s) => ({
+			id: s.id,
+			start: toCalendarDateTime(date, s.startHour),
+			end: toCalendarDateTime(date, s.endHour),
+			bookingId: s.bookingId,
+			userId: user ? s.userId : null,
+			username: user ? s.username : null
+		}));
 		return { slots, fetchedAt };
 	}
 );
@@ -31,10 +41,19 @@ export const getSlots = query(
 export const getUpcomingSlots = query(
 	v.object({ resource: resourceSchema }),
 	async ({ resource }) => {
-		const bookings = await getUpcomingBookings(resource);
+		const rawBookings = await getUpcomingBookings(resource);
 		const user = getAuthUser();
-		if (!user) return bookings.map((b) => ({ ...b, username: null, userId: null }));
-		return bookings;
+		return rawBookings.map((b) => {
+			const date = parseDate(b.date);
+			return {
+				timeslotId: b.timeslotId,
+				start: toCalendarDateTime(date, b.startHour),
+				end: toCalendarDateTime(date, b.endHour),
+				bookingId: b.bookingId,
+				userId: user ? b.userId : null,
+				username: user ? b.username : null
+			};
+		});
 	}
 );
 
@@ -42,14 +61,13 @@ export const book = command(
 	v.object({
 		timeslotId: v.number(),
 		resource: resourceSchema,
-		date: dateSchema,
+		date: calendarDateSchema,
 		replaceBookingId: v.optional(v.number())
 	}),
 	async ({ timeslotId, resource, date, replaceBookingId }) => {
 		const user = requireAuth();
-		const calDate = parseDate(date);
 
-		validateBookingDate(calDate);
+		validateBookingDate(date);
 
 		if (replaceBookingId !== undefined) {
 			const cancelled = await cancelBookingDb(replaceBookingId, user.id);
@@ -64,7 +82,7 @@ export const book = command(
 		}
 
 		try {
-			const [result] = await createBookingDb(user.id, timeslotId, resource, calDate);
+			const [result] = await createBookingDb(user.id, timeslotId, resource, date);
 			await getSlots({ date, resource }).refresh();
 			await getUpcomingSlots({ resource }).refresh();
 			return result;

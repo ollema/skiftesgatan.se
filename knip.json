@@ -2,6 +2,7 @@
 	"$schema": "https://unpkg.com/knip@6/schema.json",
 	"tags": ["-lintignore"],
 	"entry": [
+		"src/hooks.ts",
 		"src/lib/server/db/seed/timeslots.ts",
 		"src/lib/server/db/seed/accounts.ts",
 		"src/lib/server/db/seed/bookings.ts",

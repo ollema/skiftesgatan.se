@@ -1,3 +1,4 @@
+import { today, getLocalTimeZone } from '@internationalized/date';
 import { db } from '../index';
 import { user } from '../auth.schema';
 import { timeslot, booking } from '../booking.schema';
@@ -7,14 +8,10 @@ function randomInt(min: number, max: number) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function formatDate(d: Date) {
-	return d.toISOString().split('T')[0];
-}
-
 function randomFutureDate() {
-	const date = new Date();
-	date.setDate(date.getDate() + randomInt(1, 30));
-	return formatDate(date);
+	return today(getLocalTimeZone())
+		.add({ days: randomInt(1, 30) })
+		.toString();
 }
 
 async function seedBookings() {

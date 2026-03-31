@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { today, getLocalTimeZone } from '@internationalized/date';
 import { uniqueUser, login, selectCalendarDate } from './helpers';
 
 // Use 3 days out to avoid collisions with other test files that book on "tomorrow"
-const testDate = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+const testDate = today(getLocalTimeZone()).add({ days: 3 }).toString();
 
 test.describe('concurrent booking', () => {
 	test('two users competing for the same slot', async ({ browser }) => {

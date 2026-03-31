@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { allNews } from 'content-collections';
 	import { resolve } from '$app/paths';
+	import { parseDate, DateFormatter, getLocalTimeZone } from '@internationalized/date';
 
-	const sorted = allNews.toSorted(
-		(a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-	);
+	const sorted = allNews.toSorted((a, b) => parseDate(b.date).compare(parseDate(a.date)));
+
+	const df = new DateFormatter('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' });
+	const tz = getLocalTimeZone();
 </script>
 
 <h1 class="mb-12 font-heading text-3xl font-normal">Nyheter</h1>
@@ -19,11 +21,7 @@
 				class="mb-2 block text-xs tracking-widest text-text-muted uppercase"
 				datetime={item.date}
 			>
-				{new Date(item.date).toLocaleDateString('sv-SE', {
-					year: 'numeric',
-					month: 'long',
-					day: 'numeric'
-				})}
+				{df.format(parseDate(item.date).toDate(tz))}
 			</time>
 			<h2 class="mb-2 font-heading text-xl font-normal text-text-primary">{item.title}</h2>
 			<p class="text-sm text-text-secondary">{item.summary}</p>

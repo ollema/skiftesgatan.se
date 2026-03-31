@@ -5,10 +5,17 @@
 
 <script lang="ts">
 	import { Calendar } from 'bits-ui';
-	import { parseDate, type CalendarDate, type DateValue } from '@internationalized/date';
+	import {
+		DateFormatter,
+		getLocalTimeZone,
+		type CalendarDate,
+		type DateValue
+	} from '@internationalized/date';
+
+	const monthFormatter = new DateFormatter('sv-SE', { month: 'long' });
 
 	interface Props {
-		date: string;
+		date: CalendarDate;
 		minValue?: CalendarDate;
 		maxValue?: CalendarDate;
 		dots?: DotsByDate;
@@ -16,8 +23,6 @@
 	}
 
 	let { date = $bindable(), minValue, maxValue, dots, slotCount }: Props = $props();
-
-	let value: CalendarDate | undefined = $derived(date ? parseDate(date) : undefined);
 
 	let dotLength: number | undefined = $derived.by(() => {
 		if (!dots) return undefined;
@@ -34,7 +39,7 @@
 
 	function onValueChange(newValue: DateValue | undefined) {
 		if (newValue) {
-			date = newValue.toString();
+			date = newValue as CalendarDate;
 		}
 	}
 
@@ -47,7 +52,7 @@
 <div class="w-full">
 	<Calendar.Root
 		type="single"
-		{value}
+		value={date}
 		{onValueChange}
 		{minValue}
 		{maxValue}
@@ -65,9 +70,7 @@
 				</Calendar.PrevButton>
 
 				<Calendar.Heading class="w-[10ch] text-center font-heading text-sm font-normal">
-					{new Date(months[0].value.year, months[0].value.month - 1).toLocaleDateString('sv-SE', {
-						month: 'long'
-					})}
+					{monthFormatter.format(months[0].value.toDate(getLocalTimeZone()))}
 				</Calendar.Heading>
 
 				<Calendar.NextButton
