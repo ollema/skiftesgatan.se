@@ -32,7 +32,7 @@ export function uniqueUser(prefix: string) {
 	return {
 		username,
 		password: `password-${username}`,
-		email: `delivered+${username}@resend.dev`
+		email: `${username.toLowerCase()}@resend.dev`
 	};
 }
 

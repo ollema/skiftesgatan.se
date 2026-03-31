@@ -27,7 +27,7 @@ async function seedAccounts() {
 		try {
 			await seedAuth.api.signUpEmail({
 				body: {
-					email: `delivered+${apt}@resend.dev`,
+					email: `${apt.toLowerCase()}@resend.dev`,
 					password: `password-${apt}`,
 					name: apt,
 					username: apt
