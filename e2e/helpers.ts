@@ -78,9 +78,13 @@ export async function selectCalendarDate(page: Page, isoDate: string) {
 		const headingDate = new Date(heading + ' 1');
 		if (headingDate.getMonth() + 1 === month) break;
 		if (headingDate.getMonth() + 1 < month) {
-			await calendar.locator('[data-calendar-next-button]').click();
+			const btn = calendar.locator('[data-calendar-next-button]');
+			if ((await btn.getAttribute('data-disabled')) !== null) break;
+			await btn.click();
 		} else {
-			await calendar.locator('[data-calendar-prev-button]').click();
+			const btn = calendar.locator('[data-calendar-prev-button]');
+			if ((await btn.getAttribute('data-disabled')) !== null) break;
+			await btn.click();
 		}
 	}
 

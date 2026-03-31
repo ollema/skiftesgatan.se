@@ -16,33 +16,36 @@ test.describe('booking flow', () => {
 		await page.goto('/laundry');
 		await selectCalendarDate(page, tomorrow);
 
+		const bookButtons = page.getByRole('button', { name: /\bBook$/ });
+		const myButtons = page.getByRole('button', { name: /Your booking/ });
+
 		// Should see 5 Book buttons (all slots available)
-		await expect(page.getByRole('button', { name: 'Book' })).toHaveCount(5);
+		await expect(bookButtons).toHaveCount(5);
 
 		// Book the first available slot
-		await page.getByRole('button', { name: 'Book' }).first().click();
+		await bookButtons.first().click();
 
-		// Should now have 1 Cancel and 4 Book buttons
-		await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(1);
-		await expect(page.getByRole('button', { name: 'Book' })).toHaveCount(4);
+		// Should now have 1 "Your booking" and 4 Book buttons
+		await expect(myButtons).toHaveCount(1);
+		await expect(bookButtons).toHaveCount(4);
 
 		// Try to book another slot — should fail (one future booking per resource)
-		await page.getByRole('button', { name: 'Book' }).first().click();
+		await bookButtons.first().click();
 		await expect(page.getByTestId('booking-error')).toContainText('already have a future booking');
 
-		// Cancel the existing booking (now requires confirmation dialog)
-		await page.getByRole('button', { name: 'Cancel' }).click();
+		// Cancel the existing booking (click "Your booking" then confirm)
+		await myButtons.first().click();
 		await confirmCancelDialog(page);
 
 		// All 5 slots should be available again
-		await expect(page.getByRole('button', { name: 'Book' })).toHaveCount(5);
+		await expect(bookButtons).toHaveCount(5);
 
 		// Book the last slot
-		await page.getByRole('button', { name: 'Book' }).last().click();
+		await bookButtons.last().click();
 
-		// Should have 1 Cancel and 4 Book
-		await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(1);
-		await expect(page.getByRole('button', { name: 'Book' })).toHaveCount(4);
+		// Should have 1 "Your booking" and 4 Book
+		await expect(myButtons).toHaveCount(1);
+		await expect(bookButtons).toHaveCount(4);
 	});
 
 	test('outdoor area booking flow', async ({ page }) => {
@@ -52,22 +55,25 @@ test.describe('booking flow', () => {
 		await page.goto('/outdoor');
 		await selectCalendarDate(page, tomorrow);
 
+		const bookButtons = page.getByRole('button', { name: /\bBook$/ });
+		const myButtons = page.getByRole('button', { name: /Your booking/ });
+
 		// Outdoor has 1 slot (7-22)
-		await expect(page.getByRole('button', { name: 'Book' })).toHaveCount(1);
+		await expect(bookButtons).toHaveCount(1);
 
 		// Book it
-		await page.getByRole('button', { name: 'Book' }).click();
-		await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(1);
-		await expect(page.getByRole('button', { name: 'Book' })).toHaveCount(0);
+		await bookButtons.click();
+		await expect(myButtons).toHaveCount(1);
+		await expect(bookButtons).toHaveCount(0);
 
 		// Cancel
-		await page.getByRole('button', { name: 'Cancel' }).click();
+		await myButtons.click();
 		await confirmCancelDialog(page);
-		await expect(page.getByRole('button', { name: 'Book' })).toHaveCount(1);
+		await expect(bookButtons).toHaveCount(1);
 
 		// Rebook
-		await page.getByRole('button', { name: 'Book' }).click();
-		await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(1);
+		await bookButtons.click();
+		await expect(myButtons).toHaveCount(1);
 	});
 
 	test('rejects booking beyond 30-day window', async ({ page }) => {

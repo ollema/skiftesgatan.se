@@ -1,3 +1,9 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+@theme {
+	--color-slot-free: #22c55e;
+	--color-slot-booked: #ef4444;
+	--color-slot-mine: #3b82f6;
+}

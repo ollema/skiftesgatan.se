@@ -1,7 +1,7 @@
 import { type CalendarDate, today, getLocalTimeZone } from '@internationalized/date';
-import { eq, and, gte } from 'drizzle-orm';
+import { eq, and, gte, lt } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { booking, timeslot } from '$lib/server/db/schema';
+import { booking, timeslot, user } from '$lib/server/db/schema';
 
 const MAX_ADVANCE_DAYS = 30;
 
@@ -26,7 +26,8 @@ export async function getAvailableSlots(date: CalendarDate, resource: Resource) 
 			startHour: timeslot.startHour,
 			endHour: timeslot.endHour,
 			bookingId: booking.id,
-			userId: booking.userId
+			userId: booking.userId,
+			username: user.username
 		})
 		.from(timeslot)
 		.leftJoin(
@@ -37,8 +38,29 @@ export async function getAvailableSlots(date: CalendarDate, resource: Resource) 
 				eq(booking.resource, resource)
 			)
 		)
+		.leftJoin(user, eq(booking.userId, user.id))
 		.where(eq(timeslot.resource, resource))
 		.orderBy(timeslot.startHour);
+}
+
+export async function getMonthBookings(year: number, month: number, resource: Resource) {
+	const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+	const endDate =
+		month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, '0')}-01`;
+
+	return await db
+		.select({
+			timeslotId: booking.timeslotId,
+			date: booking.date,
+			bookingId: booking.id,
+			userId: booking.userId,
+			username: user.username
+		})
+		.from(booking)
+		.innerJoin(user, eq(booking.userId, user.id))
+		.where(
+			and(eq(booking.resource, resource), gte(booking.date, startDate), lt(booking.date, endDate))
+		);
 }
 
 export async function hasExistingFutureBooking(

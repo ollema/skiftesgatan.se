@@ -1,3 +1,8 @@
+<script module lang="ts">
+	export type SlotStatus = 'free' | 'mine' | 'other';
+	export type DotsByDate = Record<string, SlotStatus[]>;
+</script>
+
 <script lang="ts">
 	import { Calendar } from 'bits-ui';
 	import { parseDate, type CalendarDate, type DateValue } from '@internationalized/date';
@@ -6,24 +11,50 @@
 		date: string;
 		minValue?: CalendarDate;
 		maxValue?: CalendarDate;
+		dots?: DotsByDate;
+		slotCount?: number;
+		onMonthChange?: (year: number, month: number) => void;
 	}
 
-	let { date = $bindable(), minValue, maxValue }: Props = $props();
+	let { date = $bindable(), minValue, maxValue, dots, slotCount, onMonthChange }: Props = $props();
 
 	let value: CalendarDate | undefined = $derived(date ? parseDate(date) : undefined);
+
+	let dotLength: number | undefined = $derived.by(() => {
+		if (!dots) return undefined;
+		const entries = Object.values(dots);
+		if (entries.length > 0) return entries[0].length;
+		return slotCount;
+	});
+
+	const statusColorMap: Record<SlotStatus, string> = {
+		free: 'bg-slot-free',
+		mine: 'bg-slot-mine',
+		other: 'bg-slot-booked'
+	};
 
 	function onValueChange(newValue: DateValue | undefined) {
 		if (newValue) {
 			date = newValue.toString();
 		}
 	}
+
+	function onPlaceholderChange(newPlaceholder: DateValue) {
+		onMonthChange?.(newPlaceholder.year, newPlaceholder.month);
+	}
+
+	function getDotsForDay(dayStr: string): SlotStatus[] | undefined {
+		if (!dots || dotLength === undefined) return undefined;
+		return dots[dayStr] ?? Array(dotLength).fill('free' as SlotStatus);
+	}
 </script>
 
-<div class="inline-block rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+<div class="w-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
 	<Calendar.Root
 		type="single"
 		{value}
 		{onValueChange}
+		{onPlaceholderChange}
 		{minValue}
 		{maxValue}
 		weekdayFormat="short"
@@ -51,7 +82,7 @@
 					<Calendar.GridHead>
 						<Calendar.GridRow>
 							{#each weekdays as weekday (weekday)}
-								<Calendar.HeadCell class="w-10 text-center text-xs font-medium text-gray-500">
+								<Calendar.HeadCell class="text-center text-xs font-medium text-gray-500">
 									{weekday}
 								</Calendar.HeadCell>
 							{/each}
@@ -64,7 +95,7 @@
 								{#each week as day (day.toString())}
 									<Calendar.Cell date={day} month={month.value} class="p-0">
 										<Calendar.Day
-											class="inline-flex h-10 w-10 items-center justify-center rounded text-sm
+											class="inline-flex w-full flex-col items-center justify-center rounded py-1 text-sm
 												hover:bg-gray-100
 												data-disabled:cursor-not-allowed data-disabled:text-gray-300 data-disabled:hover:bg-transparent
 												data-outside-month:text-gray-400 data-selected:bg-blue-600 data-selected:text-white
@@ -72,6 +103,17 @@
 												data-today:font-bold"
 										>
 											{day.day}
+											{#if dots && dotLength && day.month === month.value.month}
+												{@const dayDots = getDotsForDay(day.toString())}
+												{#if dayDots}
+													<div class="mt-0.5 flex gap-0.5">
+														{#each dayDots as status, i (i)}
+															<span class="h-1.5 w-1.5 rounded-full {statusColorMap[status]}"
+															></span>
+														{/each}
+													</div>
+												{/if}
+											{/if}
 										</Calendar.Day>
 									</Calendar.Cell>
 								{/each}

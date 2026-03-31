@@ -5,6 +5,7 @@ import { query, command } from '$app/server';
 import { requireAuth } from '$lib/server/auth';
 import {
 	getAvailableSlots,
+	getMonthBookings,
 	hasExistingFutureBooking,
 	createBooking as createBookingDb,
 	cancelBooking as cancelBookingDb,
@@ -20,6 +21,13 @@ export const getSlots = query(
 		const calDate = parseDate(date);
 		validateBookingDate(calDate);
 		return await getAvailableSlots(calDate, resource);
+	}
+);
+
+export const getMonthSlots = query(
+	v.object({ year: v.number(), month: v.number(), resource: resourceSchema }),
+	async ({ year, month, resource }) => {
+		return await getMonthBookings(year, month, resource);
 	}
 );
 
@@ -43,6 +51,7 @@ export const book = command(
 		try {
 			const [result] = await createBookingDb(user.id, timeslotId, resource, calDate);
 			await getSlots({ date, resource }).refresh();
+			await getMonthSlots({ year: calDate.year, month: calDate.month, resource }).refresh();
 			return result;
 		} catch (e: unknown) {
 			if (e instanceof Error && 'code' in e && (e as { code: string }).code === '23505') {
