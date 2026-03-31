@@ -18,6 +18,10 @@ export function readResetPasswordUrl(email: string): string {
 	return readEmailUrl('reset', email);
 }
 
+export function readVerificationUrl(email: string): string {
+	return readEmailUrl('verify', email);
+}
+
 const VALID_SUFFIXES = ['1001', '1002', '1101', '1102', '1201', '1202', '1301', '1302'];
 const counters: Record<string, number> = {};
 
