@@ -115,7 +115,7 @@
 				{#if slot.bookingId === null}
 					<button
 						data-slot-status="free"
-						class="rounded-[3px] border border-border px-2 py-1.5 text-center text-xs whitespace-nowrap text-text-primary transition-colors duration-[120ms] hover:bg-bg-alt sm:text-sm"
+						class="rounded-sm border border-border px-2 py-1.5 text-center text-xs whitespace-nowrap text-text-primary transition-colors duration-120 hover:bg-bg-alt sm:text-sm"
 						onclick={async () => {
 							if (!user) {
 								showLoginDialog = true;
@@ -144,7 +144,7 @@
 				{:else if user && slot.userId === user.id}
 					<button
 						data-slot-status="mine"
-						class="rounded-[3px] bg-slot-mine px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface transition-colors duration-[120ms] hover:opacity-90 sm:text-sm"
+						class="rounded-sm bg-slot-mine px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface transition-colors duration-120 hover:opacity-90 sm:text-sm"
 						onclick={() => {
 							cancelBookingId = slot.bookingId;
 						}}
@@ -154,7 +154,7 @@
 				{:else}
 					<button
 						data-slot-status="booked"
-						class="cursor-not-allowed rounded-[3px] bg-slot-occupied px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface sm:text-sm"
+						class="cursor-not-allowed rounded-sm bg-slot-occupied px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface sm:text-sm"
 						disabled
 					>
 						{String(slot.startHour).padStart(2, '0')}&ndash;{String(slot.endHour).padStart(2, '0')}

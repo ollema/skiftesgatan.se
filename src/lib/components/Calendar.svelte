@@ -59,7 +59,7 @@
 		{#snippet children({ months, weekdays })}
 			<Calendar.Header class="flex items-center justify-center gap-1 pb-2">
 				<Calendar.PrevButton
-					class="inline-flex h-8 w-8 items-center justify-center transition-colors duration-[120ms] hover:bg-bg-alt"
+					class="inline-flex size-8 items-center justify-center transition-colors duration-120 hover:bg-bg-alt"
 				>
 					&lt;
 				</Calendar.PrevButton>
@@ -71,7 +71,7 @@
 				</Calendar.Heading>
 
 				<Calendar.NextButton
-					class="inline-flex h-8 w-8 items-center justify-center transition-colors duration-[120ms] hover:bg-bg-alt"
+					class="inline-flex size-8 items-center justify-center transition-colors duration-120 hover:bg-bg-alt"
 				>
 					&gt;
 				</Calendar.NextButton>

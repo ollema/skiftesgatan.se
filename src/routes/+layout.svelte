@@ -22,32 +22,32 @@
 				<div class="flex gap-6">
 					<a
 						href={resolve('/nyheter')}
-						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
+						class="text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent"
 						>Nyheter</a
 					>
 					<a
 						href={resolve('/information')}
-						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
+						class="text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent"
 						>Information</a
 					>
 					<a
 						href={resolve('/tvattstuga')}
-						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
+						class="text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent"
 						>Tvättstuga</a
 					>
 					<a
 						href={resolve('/uteplats')}
-						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
+						class="text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent"
 						>Uteplats</a
 					>
 					<a
 						href={resolve('/kontakt')}
-						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
+						class="text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent"
 						>Kontakt</a
 					>
 					<a
 						href={resolve('/konto')}
-						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
+						class="text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent"
 						>Konto</a
 					>
 				</div>

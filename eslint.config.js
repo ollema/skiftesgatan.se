@@ -2,6 +2,7 @@ import prettier from 'eslint-config-prettier';
 import path from 'node:path';
 import { includeIgnoreFile } from '@eslint/compat';
 import js from '@eslint/js';
+import betterTailwindcss from 'eslint-plugin-better-tailwindcss';
 import svelte from 'eslint-plugin-svelte';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
@@ -34,6 +35,19 @@ export default defineConfig(
 				parser: ts.parser,
 				svelteConfig
 			}
+		}
+	},
+	{
+		extends: [betterTailwindcss.configs.recommended],
+		files: ['**/*.svelte'],
+		settings: {
+			'better-tailwindcss': {
+				entryPoint: 'src/routes/layout.css'
+			}
+		},
+		rules: {
+			'better-tailwindcss/no-unknown-classes': ['error', { detectComponentClasses: true }],
+			'better-tailwindcss/enforce-consistent-line-wrapping': 'off'
 		}
 	}
 );
