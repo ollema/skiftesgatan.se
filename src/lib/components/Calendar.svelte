@@ -108,9 +108,9 @@
 													(!maxValue || day.compare(maxValue) <= 0)}
 												{@const dayDots = inRange ? getDotsForDay(day.toString()) : undefined}
 												{@const fallbackDots: SlotStatus[] = Array(dotLength).fill('free')}
-												<div class="mt-0.5 flex gap-[2px]" class:invisible={!dayDots}>
+												<div class="mt-0.5 flex gap-0.5" class:invisible={!dayDots}>
 													{#each dayDots ?? fallbackDots as status, i (i)}
-														<span class="box-border size-[6px] {statusColorMap[status]}"></span>
+														<span class="box-border size-1.5 {statusColorMap[status]}"></span>
 													{/each}
 												</div>
 											{/if}

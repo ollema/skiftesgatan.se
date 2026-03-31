@@ -13,7 +13,7 @@
 
 <div class="min-h-screen bg-bg font-body text-text-primary">
 	<nav class="border-b border-border-subtle bg-surface">
-		<div class="mx-auto max-w-[960px] px-4 lg:px-10">
+		<div class="mx-auto max-w-240 px-4 lg:px-10">
 			<div class="flex h-16 items-center justify-between">
 				<a
 					href={resolve('/')}
@@ -55,7 +55,7 @@
 		</div>
 	</nav>
 
-	<main class="mx-auto max-w-[960px] px-4 py-16 lg:px-10">
+	<main class="mx-auto max-w-240 px-4 py-16 lg:px-10">
 		{@render children()}
 	</main>
 </div>
