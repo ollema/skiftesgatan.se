@@ -1,10 +1,12 @@
 import * as v from 'valibot';
 import { invalid, redirect } from '@sveltejs/kit';
 import { getRequestEvent, query, form } from '$app/server';
-import { auth, requireAuth } from '$lib/server/auth';
+import { auth, requireAuth, getAuthUser } from '$lib/server/auth';
 import { APIError } from 'better-auth/api';
 
 export const getUser = query(() => requireAuth());
+
+export const getOptionalUser = query(() => getAuthUser());
 
 export const login = form(
 	v.object({

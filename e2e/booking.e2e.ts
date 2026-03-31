@@ -4,9 +4,22 @@ import { uniqueUser, registerAndVerify, selectCalendarDate, confirmCancelDialog 
 const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 
 test.describe('booking flow', () => {
-	test('redirects to login when not authenticated', async ({ page }) => {
+	test('shows calendar and login dialog when not authenticated', async ({ page }) => {
 		await page.goto('/laundry');
-		await expect(page).toHaveURL(/\/auth\/login/);
+		await expect(page).toHaveURL('/laundry');
+		await expect(page.getByText('Laundry Room')).toBeVisible();
+
+		// Clicking a book button should show login dialog
+		const bookButtons = page.getByRole('button', { name: /\bBook$/ });
+		await selectCalendarDate(page, tomorrow);
+		await bookButtons.first().click();
+		const loginDialog = page.getByRole('alertdialog');
+		await expect(loginDialog).toContainText('Login required');
+		await loginDialog.getByRole('button', { name: 'Go back' }).click();
+		await expect(loginDialog).not.toBeVisible();
+
+		// Booked slots should show "Booked" not usernames
+		// (this is implicitly tested — no username visible without auth)
 	});
 
 	test('register, view slots, book, fail double-book, cancel, rebook', async ({ page }) => {
@@ -29,9 +42,28 @@ test.describe('booking flow', () => {
 		await expect(myButtons).toHaveCount(1);
 		await expect(bookButtons).toHaveCount(4);
 
-		// Try to book another slot — should fail (one future booking per resource)
+		// Try to book another slot — should show replace dialog
 		await bookButtons.first().click();
-		await expect(page.getByTestId('booking-error')).toContainText('already have a future booking');
+		const replaceDialog = page.getByRole('alertdialog');
+		await expect(replaceDialog).toBeVisible();
+		await expect(replaceDialog).toContainText('Replace your booking?');
+
+		// Dismiss the replace dialog
+		await replaceDialog.getByRole('button', { name: 'Go back' }).click();
+		await expect(replaceDialog).not.toBeVisible();
+
+		// Still have the original booking
+		await expect(myButtons).toHaveCount(1);
+		await expect(bookButtons).toHaveCount(4);
+
+		// Replace the booking via the dialog
+		await bookButtons.last().click();
+		await expect(replaceDialog).toBeVisible();
+		await replaceDialog.getByRole('button', { name: 'Replace' }).click();
+
+		// Should now have the new booking
+		await expect(myButtons).toHaveCount(1);
+		await expect(bookButtons).toHaveCount(4);
 
 		// Cancel the existing booking (click "Your booking" then confirm)
 		await myButtons.first().click();

@@ -6,16 +6,16 @@ test.describe('navigation', () => {
 		const nav = page.locator('nav');
 		await expect(nav).toBeVisible();
 
-		// Navigate to laundry (redirects to login since not authenticated)
+		// Navigate to laundry (accessible without auth)
 		await nav.getByRole('link', { name: 'Laundry' }).click();
-		await expect(page).toHaveURL(/\/auth\/login/);
+		await expect(page).toHaveURL('/laundry');
 
-		// Navigate to outdoor (also redirects)
+		// Navigate to outdoor (accessible without auth)
 		await page.goto('/');
 		await nav.getByRole('link', { name: 'Outdoor' }).click();
-		await expect(page).toHaveURL(/\/auth\/login/);
+		await expect(page).toHaveURL('/outdoor');
 
-		// Navigate to account (also redirects)
+		// Navigate to account (redirects to login since not authenticated)
 		await page.goto('/');
 		await nav.getByRole('link', { name: 'Account' }).click();
 		await expect(page).toHaveURL(/\/auth\/login/);

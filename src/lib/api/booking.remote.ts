@@ -2,10 +2,10 @@ import * as v from 'valibot';
 import { parseDate } from '@internationalized/date';
 import { error } from '@sveltejs/kit';
 import { query, command } from '$app/server';
-import { requireAuth } from '$lib/server/auth';
+import { requireAuth, getAuthUser } from '$lib/server/auth';
 import {
 	getAvailableSlots,
-	getMonthBookings,
+	getUpcomingBookings,
 	hasExistingFutureBooking,
 	createBooking as createBookingDb,
 	cancelBooking as cancelBookingDb,
@@ -20,14 +20,20 @@ export const getSlots = query(
 	async ({ date, resource }) => {
 		const calDate = parseDate(date);
 		validateBookingDate(calDate);
-		return await getAvailableSlots(calDate, resource);
+		const slots = await getAvailableSlots(calDate, resource);
+		const user = getAuthUser();
+		if (!user) return slots.map((s) => ({ ...s, username: null, userId: null }));
+		return slots;
 	}
 );
 
-export const getMonthSlots = query(
-	v.object({ year: v.number(), month: v.number(), resource: resourceSchema }),
-	async ({ year, month, resource }) => {
-		return await getMonthBookings(year, month, resource);
+export const getUpcomingSlots = query(
+	v.object({ resource: resourceSchema }),
+	async ({ resource }) => {
+		const bookings = await getUpcomingBookings(resource);
+		const user = getAuthUser();
+		if (!user) return bookings.map((b) => ({ ...b, username: null, userId: null }));
+		return bookings;
 	}
 );
 
@@ -35,23 +41,31 @@ export const book = command(
 	v.object({
 		timeslotId: v.number(),
 		resource: resourceSchema,
-		date: dateSchema
+		date: dateSchema,
+		replaceBookingId: v.optional(v.number())
 	}),
-	async ({ timeslotId, resource, date }) => {
+	async ({ timeslotId, resource, date, replaceBookingId }) => {
 		const user = requireAuth();
 		const calDate = parseDate(date);
 
 		validateBookingDate(calDate);
 
-		const alreadyBooked = await hasExistingFutureBooking(user.id, resource);
-		if (alreadyBooked) {
-			error(409, 'You already have a future booking for this resource');
+		if (replaceBookingId !== undefined) {
+			const cancelled = await cancelBookingDb(replaceBookingId, user.id);
+			if (!cancelled) {
+				error(404, 'Existing booking not found or cannot be cancelled');
+			}
+		} else {
+			const alreadyBooked = await hasExistingFutureBooking(user.id, resource);
+			if (alreadyBooked) {
+				error(409, 'You already have a future booking for this resource');
+			}
 		}
 
 		try {
 			const [result] = await createBookingDb(user.id, timeslotId, resource, calDate);
 			await getSlots({ date, resource }).refresh();
-			await getMonthSlots({ year: calDate.year, month: calDate.month, resource }).refresh();
+			await getUpcomingSlots({ resource }).refresh();
 			return result;
 		} catch (e: unknown) {
 			if (e instanceof Error && 'code' in e && (e as { code: string }).code === '23505') {

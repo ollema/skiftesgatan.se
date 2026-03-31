@@ -13,10 +13,9 @@
 		maxValue?: CalendarDate;
 		dots?: DotsByDate;
 		slotCount?: number;
-		onMonthChange?: (year: number, month: number) => void;
 	}
 
-	let { date = $bindable(), minValue, maxValue, dots, slotCount, onMonthChange }: Props = $props();
+	let { date = $bindable(), minValue, maxValue, dots, slotCount }: Props = $props();
 
 	let value: CalendarDate | undefined = $derived(date ? parseDate(date) : undefined);
 
@@ -39,10 +38,6 @@
 		}
 	}
 
-	function onPlaceholderChange(newPlaceholder: DateValue) {
-		onMonthChange?.(newPlaceholder.year, newPlaceholder.month);
-	}
-
 	function getDotsForDay(dayStr: string): SlotStatus[] | undefined {
 		if (!dots || dotLength === undefined) return undefined;
 		return dots[dayStr] ?? Array(dotLength).fill('free' as SlotStatus);
@@ -54,11 +49,11 @@
 		type="single"
 		{value}
 		{onValueChange}
-		{onPlaceholderChange}
 		{minValue}
 		{maxValue}
 		weekdayFormat="short"
 		fixedWeeks
+		disableDaysOutsideMonth={false}
 	>
 		{#snippet children({ months, weekdays })}
 			<Calendar.Header class="flex items-center justify-between pb-2">
@@ -103,7 +98,7 @@
 												data-today:font-bold"
 										>
 											{day.day}
-											{#if dots && dotLength && day.month === month.value.month}
+											{#if dots && dotLength && (!minValue || day.compare(minValue) >= 0) && (!maxValue || day.compare(maxValue) <= 0)}
 												{@const dayDots = getDotsForDay(day.toString())}
 												{#if dayDots}
 													<div class="mt-0.5 flex gap-0.5">

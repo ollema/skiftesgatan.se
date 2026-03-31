@@ -56,7 +56,7 @@ vi.mock('$lib/server/db', async () => {
 
 const {
 	getAvailableSlots,
-	getMonthBookings,
+	getUpcomingBookings,
 	hasExistingFutureBooking,
 	createBooking,
 	cancelBooking
@@ -101,15 +101,15 @@ describe('getAvailableSlots', () => {
 	});
 });
 
-describe('getMonthBookings', () => {
+describe('getUpcomingBookings', () => {
 	it('returns empty array when no bookings exist', async () => {
-		const result = await getMonthBookings(tomorrow.year, tomorrow.month, 'laundry_room');
+		const result = await getUpcomingBookings('laundry_room');
 		expect(result).toHaveLength(0);
 	});
 
-	it('returns bookings with correct username for a month', async () => {
+	it('returns bookings with correct username for upcoming dates', async () => {
 		await createBooking('user1', 1, 'laundry_room', tomorrow);
-		const result = await getMonthBookings(tomorrow.year, tomorrow.month, 'laundry_room');
+		const result = await getUpcomingBookings('laundry_room');
 		expect(result).toHaveLength(1);
 		expect(result[0].timeslotId).toBe(1);
 		expect(result[0].userId).toBe('user1');
@@ -119,7 +119,7 @@ describe('getMonthBookings', () => {
 
 	it('does not return bookings for other resources', async () => {
 		await createBooking('user1', 6, 'outdoor_area', tomorrow);
-		const result = await getMonthBookings(tomorrow.year, tomorrow.month, 'laundry_room');
+		const result = await getUpcomingBookings('laundry_room');
 		expect(result).toHaveLength(0);
 	});
 });

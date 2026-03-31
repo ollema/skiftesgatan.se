@@ -59,3 +59,8 @@ export function requireAuth() {
 	if (!locals.user) redirect(307, '/auth/login');
 	return locals.user;
 }
+
+export function getAuthUser() {
+	const { locals } = getRequestEvent();
+	return locals.user ?? null;
+}

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { today, getLocalTimeZone } from '@internationalized/date';
-	import { AlertDialog } from 'bits-ui';
-	import { getUser } from '$lib/api/auth.remote';
-	import { getSlots, getMonthSlots, book, cancelBooking } from '$lib/api/booking.remote';
+	import { getOptionalUser } from '$lib/api/auth.remote';
+	import { getSlots, getUpcomingSlots, book, cancelBooking } from '$lib/api/booking.remote';
 	import Calendar from '$lib/components/Calendar.svelte';
+	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import type { DotsByDate, SlotStatus } from '$lib/components/Calendar.svelte';
 
 	const resource = 'outdoor_area' as const;
@@ -13,22 +13,21 @@
 	const maxDate = today(tz).add({ days: 30 });
 	let date = $state(new Date().toISOString().slice(0, 10));
 	let error = $state('');
-	let visibleYear = $state(new Date().getFullYear());
-	let visibleMonth = $state(new Date().getMonth() + 1);
 	let cancelBookingId = $state<number | null>(null);
-
-	function handleMonthChange(year: number, month: number) {
-		visibleYear = year;
-		visibleMonth = month;
-	}
+	let pendingBooking = $state<{
+		timeslotId: number;
+		replaceBookingId: number;
+		replaceDate: string;
+	} | null>(null);
+	let showLoginDialog = $state(false);
 
 	function buildDots(
-		monthBookings: Array<{ timeslotId: number; date: string; userId: string }>,
+		monthBookings: Array<{ timeslotId: number; date: string; userId: string | null }>,
 		currentUserId: string,
 		timeslotIds: number[]
 	): DotsByDate {
 		const result: DotsByDate = {};
-		const byDate: Record<string, Record<number, string>> = {};
+		const byDate: Record<string, Record<number, string | null>> = {};
 		for (const b of monthBookings) {
 			if (!byDate[b.date]) byDate[b.date] = {};
 			byDate[b.date][b.timeslotId] = b.userId;
@@ -37,7 +36,7 @@
 			const slotMap = byDate[dateStr];
 			result[dateStr] = timeslotIds.map((tid): SlotStatus => {
 				const userId = slotMap[tid];
-				if (!userId) return 'free';
+				if (userId === undefined) return 'free';
 				return userId === currentUserId ? 'mine' : 'other';
 			});
 		}
@@ -46,30 +45,21 @@
 </script>
 
 <svelte:boundary>
-	{@const user = await getUser()}
+	{@const user = await getOptionalUser()}
 
 	<h1 class="text-xl font-semibold">Outdoor Area</h1>
-	<p class="mt-1 text-gray-600">Hi, {user.name}!</p>
+	{#if user}
+		<p class="mt-1 text-gray-600">Hi, {user.name}!</p>
+	{/if}
 
 	<svelte:boundary>
 		{@const slots = await getSlots({ date, resource })}
-		{@const monthBookings = await getMonthSlots({
-			year: visibleYear,
-			month: visibleMonth,
-			resource
-		})}
+		{@const upcomingBookings = await getUpcomingSlots({ resource })}
 		{@const timeslotIds = slots.map((s) => s.id)}
-		{@const dots = buildDots(monthBookings, user.id, timeslotIds)}
+		{@const dots = buildDots(upcomingBookings, user?.id ?? '', timeslotIds)}
 
 		<div class="mt-4">
-			<Calendar
-				bind:date
-				minValue={minDate}
-				maxValue={maxDate}
-				{dots}
-				{slotCount}
-				onMonthChange={handleMonthChange}
-			/>
+			<Calendar bind:date minValue={minDate} maxValue={maxDate} {dots} {slotCount} />
 		</div>
 
 		{#if error}
@@ -82,7 +72,20 @@
 					<button
 						class="rounded-lg bg-slot-free p-3 text-center text-sm font-medium text-white transition hover:opacity-90"
 						onclick={async () => {
+							if (!user) {
+								showLoginDialog = true;
+								return;
+							}
 							error = '';
+							const existing = upcomingBookings.find((b) => b.userId === user.id);
+							if (existing) {
+								pendingBooking = {
+									timeslotId: slot.id,
+									replaceBookingId: existing.bookingId,
+									replaceDate: existing.date
+								};
+								return;
+							}
 							try {
 								await book({ timeslotId: slot.id, resource, date });
 							} catch (e) {
@@ -98,7 +101,7 @@
 						</div>
 						<div class="mt-1 text-xs opacity-90">Book</div>
 					</button>
-				{:else if slot.userId === user.id}
+				{:else if user && slot.userId === user.id}
 					<button
 						class="rounded-lg bg-slot-mine p-3 text-center text-sm font-medium text-white transition hover:opacity-90"
 						onclick={() => {
@@ -124,55 +127,69 @@
 								'0'
 							)}
 						</div>
-						<div class="mt-1 text-xs opacity-90">{slot.username}</div>
+						<div class="mt-1 text-xs opacity-90">{user ? slot.username : 'Booked'}</div>
 					</button>
 				{/if}
 			{/each}
 		</div>
 
-		<AlertDialog.Root
-			open={cancelBookingId !== null}
-			onOpenChange={(open) => {
-				if (!open) cancelBookingId = null;
+		{#if user}
+			<ConfirmDialog
+				open={cancelBookingId !== null}
+				onClose={() => (cancelBookingId = null)}
+				title="Cancel booking?"
+				description="This will release your reserved time slot."
+				onConfirm={async () => {
+					if (cancelBookingId === null) return;
+					error = '';
+					try {
+						await cancelBooking({ bookingId: cancelBookingId }).updates(
+							getSlots({ date, resource }),
+							getUpcomingSlots({ resource })
+						);
+					} catch (e) {
+						error = e instanceof Error ? e.message : String(e);
+					}
+					cancelBookingId = null;
+				}}
+			/>
+
+			<ConfirmDialog
+				open={pendingBooking !== null}
+				onClose={() => (pendingBooking = null)}
+				title="Replace your booking?"
+				description="You already have a booking on {pendingBooking?.replaceDate}. This will cancel it and book the new slot instead."
+				confirmLabel="Replace"
+				confirmClass="bg-blue-600 hover:bg-blue-700"
+				onConfirm={async () => {
+					if (pendingBooking === null) return;
+					error = '';
+					try {
+						await book({
+							timeslotId: pendingBooking.timeslotId,
+							resource,
+							date,
+							replaceBookingId: pendingBooking.replaceBookingId
+						});
+					} catch (e) {
+						error = e instanceof Error ? e.message : String(e);
+					}
+					pendingBooking = null;
+				}}
+			/>
+		{/if}
+
+		<ConfirmDialog
+			open={showLoginDialog}
+			onClose={() => (showLoginDialog = false)}
+			title="Login required"
+			description="You need to log in to book a slot."
+			confirmLabel="Log in"
+			confirmClass="bg-blue-600 hover:bg-blue-700"
+			onConfirm={() => {
+				window.location.href = '/auth/login';
 			}}
-		>
-			<AlertDialog.Portal>
-				<AlertDialog.Overlay class="fixed inset-0 z-40 bg-black/50" />
-				<AlertDialog.Content
-					class="fixed inset-0 z-50 m-auto flex h-fit max-w-sm flex-col rounded-lg bg-white p-6 shadow-lg"
-				>
-					<AlertDialog.Title class="mb-2 text-lg font-semibold">Cancel booking?</AlertDialog.Title>
-					<AlertDialog.Description class="mb-6 text-sm text-gray-600">
-						This will release your reserved time slot.
-					</AlertDialog.Description>
-					<div class="flex justify-end gap-3">
-						<AlertDialog.Cancel
-							class="rounded-md border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
-						>
-							Go back
-						</AlertDialog.Cancel>
-						<AlertDialog.Action
-							class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
-							onclick={async () => {
-								if (cancelBookingId === null) return;
-								error = '';
-								try {
-									await cancelBooking({ bookingId: cancelBookingId }).updates(
-										getSlots({ date, resource }),
-										getMonthSlots({ year: visibleYear, month: visibleMonth, resource })
-									);
-								} catch (e) {
-									error = e instanceof Error ? e.message : String(e);
-								}
-								cancelBookingId = null;
-							}}
-						>
-							Confirm
-						</AlertDialog.Action>
-					</div>
-				</AlertDialog.Content>
-			</AlertDialog.Portal>
-		</AlertDialog.Root>
+		/>
 
 		{#snippet pending()}
 			<p>Loading slots...</p>

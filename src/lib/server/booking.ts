@@ -1,5 +1,5 @@
 import { type CalendarDate, today, getLocalTimeZone } from '@internationalized/date';
-import { eq, and, gte, lt } from 'drizzle-orm';
+import { eq, and, gte, lte } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { booking, timeslot, user } from '$lib/server/db/schema';
 
@@ -43,10 +43,9 @@ export async function getAvailableSlots(date: CalendarDate, resource: Resource) 
 		.orderBy(timeslot.startHour);
 }
 
-export async function getMonthBookings(year: number, month: number, resource: Resource) {
-	const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-	const endDate =
-		month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, '0')}-01`;
+export async function getUpcomingBookings(resource: Resource) {
+	const startDate = today(getLocalTimeZone()).toString();
+	const endDate = today(getLocalTimeZone()).add({ days: MAX_ADVANCE_DAYS }).toString();
 
 	return await db
 		.select({
@@ -59,7 +58,7 @@ export async function getMonthBookings(year: number, month: number, resource: Re
 		.from(booking)
 		.innerJoin(user, eq(booking.userId, user.id))
 		.where(
-			and(eq(booking.resource, resource), gte(booking.date, startDate), lt(booking.date, endDate))
+			and(eq(booking.resource, resource), gte(booking.date, startDate), lte(booking.date, endDate))
 		);
 }
 
