@@ -2,11 +2,14 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { resolve } from '$app/paths';
+	import { Toaster } from 'svelte-sonner';
 
 	let { children } = $props();
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
+
+<Toaster richColors />
 
 <div class="min-h-screen bg-bg font-body text-text-primary">
 	<nav class="border-b border-border-subtle bg-surface">

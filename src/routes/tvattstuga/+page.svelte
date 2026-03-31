@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { today, getLocalTimeZone } from '@internationalized/date';
+	import { toast } from 'svelte-sonner';
 	import { getOptionalUser } from '$lib/api/auth.remote';
 	import { getSlots, getUpcomingSlots, book, cancelBooking } from '$lib/api/booking.remote';
 	import Calendar from '$lib/components/Calendar.svelte';
@@ -132,6 +133,7 @@
 							}
 							try {
 								await book({ timeslotId: slot.id, resource, date });
+								toast.success('Tvättid bokad');
 							} catch (e) {
 								error = e instanceof Error ? e.message : String(e);
 							}
@@ -175,6 +177,7 @@
 							getSlots({ date, resource }),
 							getUpcomingSlots({ resource })
 						);
+						toast.success('Tvättid avbokad');
 					} catch (e) {
 						error = e instanceof Error ? e.message : String(e);
 					}
@@ -199,6 +202,7 @@
 							date,
 							replaceBookingId: pendingBooking.replaceBookingId
 						});
+						toast.success('Tvättid bokad');
 					} catch (e) {
 						error = e instanceof Error ? e.message : String(e);
 					}

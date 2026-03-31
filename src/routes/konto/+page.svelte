@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
 	import { getUser, signout, changeEmail, changePassword } from '$lib/api/auth.remote';
 	import Button from '$lib/components/Button.svelte';
 </script>
@@ -21,7 +22,18 @@
 
 	<div class="mt-12">
 		<h2 class="mb-4 font-heading text-xl font-normal">Byt e-post</h2>
-		<form {...changeEmail} class="flex max-w-sm flex-col gap-4">
+		<form
+			{...changeEmail.enhance(async ({ submit, form }) => {
+				try {
+					await submit();
+					form.reset();
+					toast.success('Verifieringsmail skickat');
+				} catch {
+					toast.error('Kunde inte byta e-post');
+				}
+			})}
+			class="flex max-w-sm flex-col gap-4"
+		>
 			<label class="flex flex-col gap-1 text-sm text-text-secondary">
 				Ny e-post
 				<input {...changeEmail.fields.email.as('email')} class="input-field" />
@@ -35,7 +47,18 @@
 
 	<div class="mt-12">
 		<h2 class="mb-4 font-heading text-xl font-normal">Byt lösenord</h2>
-		<form {...changePassword} class="flex max-w-sm flex-col gap-4">
+		<form
+			{...changePassword.enhance(async ({ submit, form }) => {
+				try {
+					await submit();
+					form.reset();
+					toast.success('Lösenordet ändrat');
+				} catch {
+					toast.error('Kunde inte byta lösenord');
+				}
+			})}
+			class="flex max-w-sm flex-col gap-4"
+		>
 			<label class="flex flex-col gap-1 text-sm text-text-secondary">
 				Nuvarande lösenord
 				<input {...changePassword.fields._currentPassword.as('password')} class="input-field" />
