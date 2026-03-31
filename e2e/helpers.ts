@@ -14,7 +14,7 @@ function readEmailUrl(type: string, email: string): string {
 	return match[1];
 }
 
-export function readVerificationUrl(email: string): string {
+function readVerificationUrl(email: string): string {
 	return readEmailUrl('verify', email);
 }
 
@@ -53,7 +53,7 @@ export async function register(
 	await expect(page).toHaveURL('/auth/verify-email');
 }
 
-export async function verify(page: Page, email: string) {
+async function verify(page: Page, email: string) {
 	const url = readVerificationUrl(email);
 	await page.goto(url);
 }

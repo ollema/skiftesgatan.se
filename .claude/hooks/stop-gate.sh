@@ -12,7 +12,7 @@ if git diff --quiet && git diff --cached --quiet; then
 fi
 
 # Run quality gates, capture output
-OUTPUT=$(pnpm format && pnpm lint && pnpm check && pnpm test 2>&1)
+OUTPUT=$(pnpm format && pnpm lint && pnpm knip && pnpm check && pnpm test 2>&1)
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -ne 0 ]; then

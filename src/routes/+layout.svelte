@@ -14,9 +14,15 @@
 			<div class="flex h-14 items-center justify-between">
 				<a href={resolve('/')} class="text-lg font-semibold text-gray-900">Skiftesgatan</a>
 				<div class="flex gap-4">
+					<a href={resolve('/news')} class="text-sm text-gray-600 hover:text-gray-900">News</a>
+					<a href={resolve('/information')} class="text-sm text-gray-600 hover:text-gray-900"
+						>Information</a
+					>
 					<a href={resolve('/laundry')} class="text-sm text-gray-600 hover:text-gray-900">Laundry</a
 					>
 					<a href={resolve('/outdoor')} class="text-sm text-gray-600 hover:text-gray-900">Outdoor</a
+					>
+					<a href={resolve('/contact')} class="text-sm text-gray-600 hover:text-gray-900">Contact</a
 					>
 					<a href={resolve('/auth')} class="text-sm text-gray-600 hover:text-gray-900">Account</a>
 				</div>

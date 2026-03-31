@@ -20,10 +20,14 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:seed": "pnpx tsx src/lib/server/db/seed.ts",
 		"db:studio": "drizzle-kit studio",
-		"auth:schema": "better-auth generate --config src/lib/server/auth.ts --output src/lib/server/db/auth.schema.ts --yes"
+		"auth:schema": "better-auth generate --config src/lib/server/auth.ts --output src/lib/server/db/auth.schema.ts --yes",
+		"knip": "knip"
 	},
 	"devDependencies": {
 		"@better-auth/cli": "~1.4.21",
+		"@content-collections/core": "^0.14.3",
+		"@content-collections/markdown": "^0.1.4",
+		"@content-collections/vite": "^0.2.9",
 		"@electric-sql/pglite": "^0.4.2",
 		"@eslint/compat": "^2.0.3",
 		"@eslint/js": "^10.0.1",
@@ -45,6 +49,7 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.16.0",
 		"globals": "^17.4.0",
+		"knip": "^6.1.1",
 		"playwright": "^1.58.2",
 		"postgres": "^3.4.8",
 		"prettier": "^3.8.1",

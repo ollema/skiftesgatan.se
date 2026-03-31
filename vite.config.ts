@@ -1,11 +1,17 @@
 import devtoolsJson from 'vite-plugin-devtools-json';
 import tailwindcss from '@tailwindcss/vite';
+import contentCollections from '@content-collections/vite';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit(), devtoolsJson()],
+	plugins: [tailwindcss(), contentCollections(), sveltekit(), devtoolsJson()],
+	server: {
+		fs: {
+			allow: ['.content-collections']
+		}
+	},
 	optimizeDeps: {
 		exclude: ['@electric-sql/pglite']
 	},

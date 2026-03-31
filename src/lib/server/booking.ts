@@ -5,7 +5,7 @@ import { booking, timeslot } from '$lib/server/db/schema';
 
 const MAX_ADVANCE_DAYS = 30;
 
-export type Resource = 'laundry_room' | 'outdoor_area';
+type Resource = 'laundry_room' | 'outdoor_area';
 
 export function validateBookingDate(date: CalendarDate): void {
 	const now = today(getLocalTimeZone());
