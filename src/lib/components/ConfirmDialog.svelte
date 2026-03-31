@@ -18,8 +18,8 @@
 		onConfirm,
 		title,
 		description,
-		confirmLabel = 'Confirm',
-		cancelLabel = 'Go back',
+		confirmLabel = 'Bekräfta',
+		cancelLabel = 'Gå tillbaka',
 		confirmClass = 'bg-error hover:bg-error-hover'
 	}: Props = $props();
 </script>

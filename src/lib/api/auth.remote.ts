@@ -34,14 +34,14 @@ export const login = form(
 			}
 			throw e;
 		}
-		redirect(303, '/auth');
+		redirect(303, '/konto');
 	}
 );
 
 export const signout = form(async () => {
 	const { request } = getRequestEvent();
 	await auth.api.signOut({ headers: request.headers });
-	redirect(303, '/auth/login');
+	redirect(303, '/konto/login');
 });
 
 export const requestPasswordReset = form(
@@ -51,12 +51,12 @@ export const requestPasswordReset = form(
 	async ({ email }) => {
 		try {
 			await auth.api.requestPasswordReset({
-				body: { email, redirectTo: '/auth/reset-password' }
+				body: { email, redirectTo: '/konto/reset-password' }
 			});
 		} catch {
 			// Always redirect to prevent email enumeration
 		}
-		redirect(303, '/auth/forgot-password/sent');
+		redirect(303, '/konto/forgot-password/sent');
 	}
 );
 
@@ -76,7 +76,7 @@ export const resetPassword = form(
 			}
 			throw e;
 		}
-		redirect(303, '/auth/login');
+		redirect(303, '/konto/login');
 	}
 );
 

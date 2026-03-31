@@ -7,18 +7,18 @@ test.describe('navigation', () => {
 		await expect(nav).toBeVisible();
 
 		// Navigate to laundry (accessible without auth)
-		await nav.getByRole('link', { name: 'Laundry' }).click();
-		await expect(page).toHaveURL('/laundry');
+		await nav.getByRole('link', { name: 'Tvättstuga' }).click();
+		await expect(page).toHaveURL('/tvattstuga');
 
 		// Navigate to outdoor (accessible without auth)
 		await page.goto('/');
-		await nav.getByRole('link', { name: 'Outdoor' }).click();
-		await expect(page).toHaveURL('/outdoor');
+		await nav.getByRole('link', { name: 'Uteplats' }).click();
+		await expect(page).toHaveURL('/uteplats');
 
 		// Navigate to account (redirects to login since not authenticated)
 		await page.goto('/');
-		await nav.getByRole('link', { name: 'Account' }).click();
-		await expect(page).toHaveURL(/\/auth\/login/);
+		await nav.getByRole('link', { name: 'Konto' }).click();
+		await expect(page).toHaveURL(/\/konto\/login/);
 
 		// Site title links back to home
 		await page.getByRole('link', { name: 'Skiftesgatan' }).click();

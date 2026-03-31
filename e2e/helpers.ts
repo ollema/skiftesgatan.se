@@ -67,14 +67,14 @@ export async function selectCalendarDate(page: Page, isoDate: string) {
 }
 
 export async function confirmCancelDialog(page: Page) {
-	await page.getByRole('alertdialog').getByRole('button', { name: 'Confirm' }).click();
+	await page.getByRole('alertdialog').getByRole('button', { name: 'Bekräfta' }).click();
 }
 
 export async function login(page: Page, user: { username: string; password: string }) {
-	await page.goto('/auth/login');
+	await page.goto('/konto/login');
 	const loginForm = page.locator('form').nth(0);
-	await loginForm.getByLabel('Apartment').fill(user.username);
-	await loginForm.getByLabel('Password').fill(user.password);
-	await loginForm.getByRole('button', { name: 'Login' }).click();
-	await expect(page).toHaveURL('/auth');
+	await loginForm.getByLabel('Lägenhet').fill(user.username);
+	await loginForm.getByLabel('Lösenord').fill(user.password);
+	await loginForm.getByRole('button', { name: 'Logga in' }).click();
+	await expect(page).toHaveURL('/konto');
 }

@@ -5,9 +5,9 @@ const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 
 test.describe('booking flow', () => {
 	test('shows calendar and login dialog when not authenticated', async ({ page }) => {
-		await page.goto('/laundry');
-		await expect(page).toHaveURL('/laundry');
-		await expect(page.getByText('Tvättstuga')).toBeVisible();
+		await page.goto('/tvattstuga');
+		await expect(page).toHaveURL('/tvattstuga');
+		await expect(page.getByRole('heading', { name: 'Tvättstuga' })).toBeVisible();
 
 		// Clicking a book button should show login dialog
 		const bookButtons = page.locator('button[data-slot-status="free"]');
@@ -15,7 +15,7 @@ test.describe('booking flow', () => {
 		await bookButtons.first().click();
 		const loginDialog = page.getByRole('alertdialog');
 		await expect(loginDialog).toContainText('Inloggning krävs');
-		await loginDialog.getByRole('button', { name: 'Go back' }).click();
+		await loginDialog.getByRole('button', { name: 'Gå tillbaka' }).click();
 		await expect(loginDialog).not.toBeVisible();
 	});
 
@@ -23,7 +23,7 @@ test.describe('booking flow', () => {
 		const user = uniqueUser('B');
 		await login(page, user);
 
-		await page.goto('/laundry');
+		await page.goto('/tvattstuga');
 		await selectCalendarDate(page, tomorrow);
 
 		const bookButtons = page.locator('button[data-slot-status="free"]');
@@ -46,7 +46,7 @@ test.describe('booking flow', () => {
 		await expect(replaceDialog).toContainText('Ersätt din bokning?');
 
 		// Dismiss the replace dialog
-		await replaceDialog.getByRole('button', { name: 'Go back' }).click();
+		await replaceDialog.getByRole('button', { name: 'Gå tillbaka' }).click();
 		await expect(replaceDialog).not.toBeVisible();
 
 		// Still have the original booking
@@ -81,7 +81,7 @@ test.describe('booking flow', () => {
 		const user = uniqueUser('B');
 		await login(page, user);
 
-		await page.goto('/outdoor');
+		await page.goto('/uteplats');
 		await selectCalendarDate(page, tomorrow);
 
 		const bookButtons = page.locator('button[data-slot-status="free"]');
@@ -109,7 +109,7 @@ test.describe('booking flow', () => {
 		const user = uniqueUser('B');
 		await login(page, user);
 
-		await page.goto('/laundry');
+		await page.goto('/tvattstuga');
 
 		// The calendar enforces max 30 days via maxValue — verify a day 31 days out is disabled
 		const tooFar = new Date(Date.now() + 31 * 86400000).toISOString().slice(0, 10);

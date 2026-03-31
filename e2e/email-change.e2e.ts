@@ -8,9 +8,9 @@ test.describe('email change flow', () => {
 
 		// Request email change on account page
 		const newEmail = `changed-${user.username.toLowerCase()}@resend.dev`;
-		await page.goto('/auth');
-		await page.getByLabel('New email').fill(newEmail);
-		await page.getByRole('button', { name: 'Change email' }).click();
+		await page.goto('/konto');
+		await page.getByLabel('Ny e-post').fill(newEmail);
+		await page.getByRole('button', { name: 'Byt e-post' }).click();
 
 		// Wait for the form to complete (no error shown)
 		await page.waitForLoadState('networkidle');
@@ -20,7 +20,7 @@ test.describe('email change flow', () => {
 		await page.goto(verifyUrl);
 
 		// Verification complete — navigate to account page to confirm
-		await page.goto('/auth');
+		await page.goto('/konto');
 		await expect(page.locator('h1')).toContainText(user.username);
 		await expect(page.getByText(newEmail)).toBeVisible();
 	});

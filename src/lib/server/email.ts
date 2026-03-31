@@ -4,7 +4,7 @@ import { env } from '$env/dynamic/private';
 
 export function sendEmail(options: { to: string; subject: string; html: string }) {
 	if (!env.RESEND_API_KEY) {
-		const type = /verify/i.test(options.subject) ? 'verify' : 'reset';
+		const type = /verif(?:y|iera)/i.test(options.subject) ? 'verify' : 'reset';
 		const recipient = options.to.replace(/[@.]/g, '-');
 		mkdirSync('.test-emails', { recursive: true });
 		writeFileSync(`.test-emails/${type}-${recipient}.json`, JSON.stringify(options));

@@ -1,5 +1,11 @@
 # Skiftesgatan
 
+# TODO:
+
+- Add navbar and mobile menu
+- Add better landing page
+- Revise color choices
+
 Booking system for shared spaces (laundry room, outdoor area) at Skiftesgatan.
 
 ## Development

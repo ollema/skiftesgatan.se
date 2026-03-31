@@ -16,8 +16,8 @@ export const auth = betterAuth({
 		sendVerificationEmail: async ({ user, url }) => {
 			sendEmail({
 				to: user.email,
-				subject: 'Verify your email address',
-				html: `<p>Click the link to verify your email: <a href="${url}">${url}</a></p>`
+				subject: 'Verifiera din e-postadress',
+				html: `<p>Klicka på länken för att verifiera din e-post: <a href="${url}">${url}</a></p>`
 			});
 		},
 		autoSignInAfterVerification: true
@@ -31,8 +31,8 @@ export const auth = betterAuth({
 		sendResetPassword: async ({ user, url }) => {
 			sendEmail({
 				to: user.email,
-				subject: 'Reset your password',
-				html: `<p>Click the link to reset your password: <a href="${url}">${url}</a></p>`
+				subject: 'Återställ ditt lösenord',
+				html: `<p>Klicka på länken för att återställa ditt lösenord: <a href="${url}">${url}</a></p>`
 			});
 		}
 	},
@@ -49,7 +49,7 @@ export const auth = betterAuth({
 
 export function requireAuth() {
 	const { locals } = getRequestEvent();
-	if (!locals.user) redirect(307, '/auth/login');
+	if (!locals.user) redirect(307, '/konto/login');
 	return locals.user;
 }
 

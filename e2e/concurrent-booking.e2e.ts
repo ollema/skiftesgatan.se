@@ -18,11 +18,11 @@ test.describe('concurrent booking', () => {
 		await login(page2, user2);
 
 		// Both navigate to laundry and set date
-		await page1.goto('/laundry');
+		await page1.goto('/tvattstuga');
 		await selectCalendarDate(page1, testDate);
 		await expect(page1.locator('button[data-slot-status="free"]')).toHaveCount(5);
 
-		await page2.goto('/laundry');
+		await page2.goto('/tvattstuga');
 		await selectCalendarDate(page2, testDate);
 		await expect(page2.locator('button[data-slot-status="free"]')).toHaveCount(5);
 

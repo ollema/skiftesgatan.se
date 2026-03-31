@@ -18,9 +18,9 @@
 				>
 				<div class="flex gap-6">
 					<a
-						href={resolve('/news')}
+						href={resolve('/nyheter')}
 						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
-						>News</a
+						>Nyheter</a
 					>
 					<a
 						href={resolve('/information')}
@@ -28,24 +28,24 @@
 						>Information</a
 					>
 					<a
-						href={resolve('/laundry')}
+						href={resolve('/tvattstuga')}
 						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
-						>Laundry</a
+						>Tvättstuga</a
 					>
 					<a
-						href={resolve('/outdoor')}
+						href={resolve('/uteplats')}
 						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
-						>Outdoor</a
+						>Uteplats</a
 					>
 					<a
-						href={resolve('/contact')}
+						href={resolve('/kontakt')}
 						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
-						>Contact</a
+						>Kontakt</a
 					>
 					<a
-						href={resolve('/auth')}
+						href={resolve('/konto')}
 						class="text-sm text-text-secondary no-underline transition-colors duration-[120ms] hover:text-accent"
-						>Account</a
+						>Konto</a
 					>
 				</div>
 			</div>

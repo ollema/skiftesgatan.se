@@ -2,12 +2,12 @@
 title: Stadgar
 ---
 
-The association's bylaws (stadgar) govern how the housing association operates. They cover topics such as:
+Föreningens stadgar reglerar hur bostadsrättsföreningen drivs. De omfattar bland annat:
 
-- Membership and transfer of apartments
-- Rights and obligations of members
-- The annual general meeting
-- The board and its responsibilities
-- Financial management and auditing
+- Medlemskap och överlåtelse av lägenheter
+- Medlemmars rättigheter och skyldigheter
+- Årsstämman
+- Styrelsen och dess ansvar
+- Ekonomisk förvaltning och revision
 
-A complete copy of the current bylaws is available from the board upon request.
+En fullständig kopia av gällande stadgar finns tillgänglig hos styrelsen på begäran.

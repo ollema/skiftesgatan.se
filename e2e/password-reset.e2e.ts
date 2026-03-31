@@ -7,36 +7,36 @@ test.describe('password reset flow', () => {
 		await login(page, user);
 
 		// Sign out
-		await page.goto('/auth');
-		await page.getByRole('button', { name: 'Sign out' }).click();
+		await page.goto('/konto');
+		await page.getByRole('button', { name: 'Logga ut' }).click();
 
 		// Go to forgot password page
-		await page.goto('/auth/forgot-password');
-		await page.getByLabel('Email').fill(user.email);
-		await page.getByRole('button', { name: 'Send reset link' }).click();
+		await page.goto('/konto/forgot-password');
+		await page.getByLabel('E-post').fill(user.email);
+		await page.getByRole('button', { name: 'Skicka återställningslänk' }).click();
 
 		// Should land on sent confirmation page
-		await expect(page).toHaveURL('/auth/forgot-password/sent');
-		await expect(page.getByText('Check your email')).toBeVisible();
+		await expect(page).toHaveURL('/konto/forgot-password/sent');
+		await expect(page.getByText('Kolla din e-post')).toBeVisible();
 
 		// Read the reset URL from the file written by the server
 		const resetUrl = readResetPasswordUrl(user.email);
 		await page.goto(resetUrl);
 
 		// Should see the reset password form
-		await expect(page.getByText('Reset your password')).toBeVisible();
+		await expect(page.getByText('Återställ ditt lösenord')).toBeVisible();
 
 		// Set new password
 		const newPassword = 'ResetPassword789!';
-		await page.getByLabel('New password').fill(newPassword);
-		await page.getByRole('button', { name: 'Reset password' }).click();
+		await page.getByLabel('Nytt lösenord').fill(newPassword);
+		await page.getByRole('button', { name: 'Återställ lösenord' }).click();
 
 		// Should redirect to login
 		await expect(page).toHaveURL(/\/login/);
 
 		// Login with new password
 		await login(page, { username: user.username, password: newPassword });
-		await expect(page).toHaveURL('/auth');
+		await expect(page).toHaveURL('/konto');
 		await expect(page.locator('h1')).toContainText(user.username);
 	});
 });

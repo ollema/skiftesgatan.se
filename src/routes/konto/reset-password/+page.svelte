@@ -9,21 +9,23 @@
 </script>
 
 {#if error}
-	<h1 class="mb-4 font-heading text-2xl font-normal">Invalid or expired link</h1>
-	<p class="mb-6 text-text-secondary">This password reset link is invalid or has expired.</p>
-	<a href={resolve('/auth/forgot-password')} class="text-sm">Request a new link</a>
+	<h1 class="mb-4 font-heading text-2xl font-normal">Ogiltig eller utgången länk</h1>
+	<p class="mb-6 text-text-secondary">
+		Länken för att återställa lösenordet är ogiltig eller har gått ut.
+	</p>
+	<a href={resolve('/konto/forgot-password')} class="text-sm">Begär en ny länk</a>
 {:else}
-	<h1 class="mb-4 font-heading text-2xl font-normal">Reset your password</h1>
+	<h1 class="mb-4 font-heading text-2xl font-normal">Återställ ditt lösenord</h1>
 	<form {...resetPassword} class="mb-6 flex max-w-sm flex-col gap-4">
 		<input type="hidden" name="token" value={token} />
 		<label class="flex flex-col gap-1 text-sm text-text-secondary">
-			New password
+			Nytt lösenord
 			<input {...resetPassword.fields._newPassword.as('password')} class="input-field" />
 		</label>
-		<Button>Reset password</Button>
+		<Button>Återställ lösenord</Button>
 		{#each resetPassword.fields.allIssues() as issue (issue.message)}
 			<p class="text-sm text-error">{issue.message}</p>
 		{/each}
 	</form>
-	<a href={resolve('/auth/login')} class="text-sm">Back to login</a>
+	<a href={resolve('/konto/login')} class="text-sm">Tillbaka till inloggning</a>
 {/if}

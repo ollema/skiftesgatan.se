@@ -6,8 +6,8 @@
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import type { DotsByDate, SlotStatus } from '$lib/components/Calendar.svelte';
 
-	const resource = 'laundry_room' as const;
-	const slotCount = 5;
+	const resource = 'outdoor_area' as const;
+	const slotCount = 1;
 	const tz = getLocalTimeZone();
 	const minDate = today(tz);
 	const maxDate = today(tz).add({ days: 30 });
@@ -64,19 +64,19 @@
 		{@const dots = buildDots(upcomingBookings, user?.id ?? '', timeslotIds)}
 		{@const myBooking = user ? upcomingBookings.find((b) => b.userId === user.id) : undefined}
 
-		<h1 class="font-heading text-2xl font-normal">Tvättstuga</h1>
+		<h1 class="font-heading text-2xl font-normal">Uteplats</h1>
 		{#if user}
 			<p class="mt-2 text-text-secondary">Hej boende i {user.name}!</p>
 		{/if}
 		{#if myBooking}
 			<p class="mt-2 text-text-secondary">
-				Du har bokat en tvättid {formatDate(myBooking.date)}, {String(myBooking.startHour).padStart(
+				Du har bokat uteplatsen {formatDate(myBooking.date)}, {String(myBooking.startHour).padStart(
 					2,
 					'0'
 				)}:00&ndash;{String(myBooking.endHour).padStart(2, '0')}:00.
 			</p>
 		{:else if user}
-			<p class="mt-2 text-text-muted">Du har inte bokat någon tvättid.</p>
+			<p class="mt-2 text-text-muted">Du har inte bokat uteplatsen.</p>
 		{/if}
 
 		<div>
@@ -109,7 +109,7 @@
 			</p>
 		</div>
 
-		<div class="grid grid-cols-5 gap-2">
+		<div class="grid grid-cols-1 gap-2">
 			{#each slots as slot (slot.id)}
 				{#if slot.bookingId === null}
 					<button
@@ -166,7 +166,7 @@
 				open={cancelBookingId !== null}
 				onClose={() => (cancelBookingId = null)}
 				title="Avboka?"
-				description="Din bokade tvättid kommer att frigöras."
+				description="Din bokade uteplats kommer att frigöras."
 				onConfirm={async () => {
 					if (cancelBookingId === null) return;
 					error = '';
@@ -215,7 +215,7 @@
 			confirmLabel="Logga in"
 			confirmClass="bg-accent hover:bg-accent-hover"
 			onConfirm={() => {
-				window.location.href = '/auth/login';
+				window.location.href = '/konto/login';
 			}}
 		/>
 
