@@ -4,7 +4,7 @@ title: Styrelsen
 
 Styrelsen väljs vid årsstämman och ansvarar för den löpande förvaltningen av föreningen.
 
-## Nuvarande styrelsemedlemmar
+### Nuvarande styrelsemedlemmar
 
 - **Ordförande**: Placeholder Name
 - **Kassör**: Placeholder Name

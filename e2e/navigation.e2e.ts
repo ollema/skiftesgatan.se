@@ -15,9 +15,9 @@ test.describe('navigation', () => {
 		await nav.getByRole('link', { name: 'Uteplats' }).click();
 		await expect(page).toHaveURL('/uteplats');
 
-		// Navigate to account (redirects to login since not authenticated)
+		// Navigate to login (shown as "Logga in" when not authenticated)
 		await page.goto('/');
-		await nav.getByRole('link', { name: 'Konto' }).click();
+		await nav.getByRole('link', { name: 'Logga in' }).click();
 		await expect(page).toHaveURL(/\/konto\/login/);
 
 		// Site title links back to home

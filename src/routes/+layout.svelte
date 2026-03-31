@@ -76,7 +76,7 @@
 		</div>
 	</nav>
 
-	<main class="mx-auto max-w-240 px-4 py-16 lg:px-10">
+	<main class="mx-auto max-w-240 p-4 lg:px-10 lg:py-6">
 		{@render children()}
 	</main>
 </div>

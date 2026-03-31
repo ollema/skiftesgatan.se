@@ -7,7 +7,7 @@
 	);
 </script>
 
-<h1 class="mb-12 font-heading text-3xl font-normal">Information</h1>
+<h1 class="mb-6 font-heading text-3xl font-normal">Information</h1>
 
 <div class="flex flex-col gap-6">
 	{#each informationPages as page (page._meta.path)}

@@ -12,7 +12,7 @@
 
 <h1 class="mb-3 font-heading text-2xl font-normal">{article.title}</h1>
 
-<p class="mb-10 text-xs tracking-widest text-text-muted uppercase">
+<p class="mb-6 text-xs tracking-widest text-text-muted uppercase">
 	{new Date(article.date).toLocaleDateString('sv-SE', {
 		year: 'numeric',
 		month: 'long',
@@ -21,6 +21,6 @@
 </p>
 
 <!-- eslint-disable svelte/no-at-html-tags -- build-time compiled markdown -->
-<div class="prose max-w-[680px]">
+<div class="prose max-w-170">
 	{@html article.html}
 </div>
