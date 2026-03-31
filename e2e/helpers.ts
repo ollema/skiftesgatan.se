@@ -5,17 +5,21 @@ import { expect } from '@playwright/test';
 
 const TEST_EMAILS_DIR = '.test-emails';
 
-export function readVerificationUrl(username: string): string {
-	const filePath = path.join(TEST_EMAILS_DIR, `verify-${username.toLowerCase()}.json`);
+function readEmailUrl(type: string, email: string): string {
+	const recipient = email.replace(/[@.]/g, '-');
+	const filePath = path.join(TEST_EMAILS_DIR, `${type}-${recipient}.json`);
 	const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-	return data.url;
+	const match = data.html.match(/href="([^"]+)"/);
+	if (!match) throw new Error(`No URL found in ${filePath}`);
+	return match[1];
+}
+
+export function readVerificationUrl(email: string): string {
+	return readEmailUrl('verify', email);
 }
 
 export function readResetPasswordUrl(email: string): string {
-	const safeEmail = email.replace(/[@.]/g, '-');
-	const filePath = path.join(TEST_EMAILS_DIR, `reset-${safeEmail}.json`);
-	const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-	return data.url;
+	return readEmailUrl('reset', email);
 }
 
 export function uniqueUser(prefix: string) {
@@ -39,8 +43,8 @@ export async function register(
 	await expect(page).toHaveURL('/auth/verify-email');
 }
 
-export async function verify(page: Page, username: string) {
-	const url = readVerificationUrl(username);
+export async function verify(page: Page, email: string) {
+	const url = readVerificationUrl(email);
 	await page.goto(url);
 }
 
@@ -49,7 +53,7 @@ export async function registerAndVerify(
 	user: { username: string; email: string; password: string }
 ) {
 	await register(page, user);
-	await verify(page, user.username);
+	await verify(page, user.email);
 }
 
 export async function login(page: Page, user: { username: string; password: string }) {

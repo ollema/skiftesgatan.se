@@ -7,7 +7,6 @@ export default defineConfig({
 		port: 4173,
 		env: {
 			PGLITE_PATH: '.pglite-test',
-			TEST_MODE: '1',
 			RESEND_API_KEY: '',
 			ORIGIN: 'http://localhost:4173'
 		}
