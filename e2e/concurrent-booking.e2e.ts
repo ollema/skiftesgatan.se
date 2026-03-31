@@ -13,7 +13,7 @@ test.describe('concurrent booking', () => {
 
 		// Register and verify both users
 		const user1 = uniqueUser('C');
-		const user2 = uniqueUser('D');
+		const user2 = uniqueUser('C');
 		await registerAndVerify(page1, user1);
 		await registerAndVerify(page2, user2);
 

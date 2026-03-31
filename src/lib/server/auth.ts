@@ -46,7 +46,9 @@ export const auth = betterAuth({
 		username({
 			minUsernameLength: 5,
 			maxUsernameLength: 5,
-			usernameValidator: (u) => /^[A-Da-d]\d{4}$/.test(u)
+			usernameNormalization: (u) => u.toUpperCase(),
+			validationOrder: { username: 'post-normalization' },
+			usernameValidator: (u) => /^[ABCD]1[0-3]0[12]$/.test(u)
 		}),
 		sveltekitCookies(getRequestEvent) // make sure this is the last plugin in the array
 	]

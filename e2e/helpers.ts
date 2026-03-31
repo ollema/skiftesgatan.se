@@ -22,11 +22,21 @@ export function readResetPasswordUrl(email: string): string {
 	return readEmailUrl('reset', email);
 }
 
+const VALID_SUFFIXES = ['1001', '1002', '1101', '1102', '1201', '1202', '1301', '1302'];
+const counters: Record<string, number> = {};
+
 export function uniqueUser(prefix: string) {
+	const key = prefix.toUpperCase();
+	const index = counters[key] ?? 0;
+	counters[key] = index + 1;
+	if (index >= VALID_SUFFIXES.length) {
+		throw new Error(`Exhausted all ${VALID_SUFFIXES.length} valid apartments for prefix "${key}"`);
+	}
+	const username = `${key}${VALID_SUFFIXES[index]}`;
 	return {
-		username: `${prefix}${1000 + (Date.now() % 9000)}`,
+		username,
 		password: 'TestPassword123!',
-		email: `test-${prefix.toLowerCase()}-${Date.now()}@resend.dev`
+		email: `test-${key.toLowerCase()}-${Date.now()}-${index}@resend.dev`
 	};
 }
 

@@ -8,7 +8,11 @@ export const getUser = query(() => requireAuth());
 
 export const login = form(
 	v.object({
-		username: v.pipe(v.string(), v.nonEmpty()),
+		username: v.pipe(
+			v.string(),
+			v.length(5),
+			v.regex(/^[A-Da-d]1[0-3]0[12]$/, 'Must be a valid apartment (e.g. A1001)')
+		),
 		_password: v.pipe(v.string(), v.nonEmpty())
 	}),
 	async ({ username, _password }) => {
@@ -34,7 +38,11 @@ export const login = form(
 
 export const signup = form(
 	v.object({
-		username: v.pipe(v.string(), v.nonEmpty()),
+		username: v.pipe(
+			v.string(),
+			v.length(5),
+			v.regex(/^[A-Da-d]1[0-3]0[12]$/, 'Must be a valid apartment (e.g. A1001)')
+		),
 		email: v.pipe(v.string(), v.email()),
 		_password: v.pipe(v.string(), v.minLength(8))
 	}),
@@ -45,7 +53,7 @@ export const signup = form(
 				body: {
 					email,
 					password: _password,
-					name: username,
+					name: username.toUpperCase(),
 					username
 				},
 				headers: request.headers

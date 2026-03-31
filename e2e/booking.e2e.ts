@@ -45,7 +45,7 @@ test.describe('booking flow', () => {
 	});
 
 	test('outdoor area booking flow', async ({ page }) => {
-		const user = uniqueUser('C');
+		const user = uniqueUser('B');
 		await registerAndVerify(page, user);
 
 		await page.goto('/outdoor');
