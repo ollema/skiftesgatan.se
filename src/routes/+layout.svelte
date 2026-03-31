@@ -8,14 +8,6 @@
 	import MobileMenu from '$lib/components/MobileMenu.svelte';
 
 	let { children } = $props();
-
-	const links = [
-		{ path: '/nyheter', label: 'Nyheter' },
-		{ path: '/information', label: 'Information' },
-		{ path: '/tvattstuga', label: 'Tvättstuga' },
-		{ path: '/uteplats', label: 'Uteplats' },
-		{ path: '/kontakt', label: 'Kontakt' }
-	] as const;
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
@@ -31,7 +23,7 @@
 						href={resolve('/')}
 						class="font-heading text-xl font-normal text-text-primary no-underline">Skiftesgatan</a
 					>
-					<Navbar {links} />
+					<Navbar />
 				</div>
 
 				<svelte:boundary>
@@ -52,7 +44,7 @@
 								Logga in
 							</a>
 						{/if}
-						<MobileMenu {links} {user} />
+						<MobileMenu {user} />
 					</div>
 
 					{#snippet pending()}
