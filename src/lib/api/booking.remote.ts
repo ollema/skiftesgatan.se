@@ -71,6 +71,9 @@ export const book = command(
 			return result;
 		} catch (e: unknown) {
 			if (e instanceof Error && 'code' in e && (e as { code: string }).code === '23505') {
+				console.warn(
+					`[booking] conflict userId=${user.id} resource=${resource} date=${date} timeslotId=${timeslotId}`
+				);
 				error(409, 'This slot is already booked');
 			}
 			throw e;

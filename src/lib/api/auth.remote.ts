@@ -26,6 +26,8 @@ export const login = form(
 			});
 		} catch (e) {
 			if (e instanceof APIError) {
+				const reason = e.status === 403 ? 'email_not_verified' : 'invalid_credentials';
+				console.warn(`[auth] login failed username=${username} reason=${reason}`);
 				if (e.status === 403) {
 					invalid('Please verify your email address before logging in');
 				} else {
@@ -34,12 +36,14 @@ export const login = form(
 			}
 			throw e;
 		}
+		console.log(`[auth] login username=${username}`);
 		redirect(303, '/konto');
 	}
 );
 
 export const signout = form(async () => {
-	const { request } = getRequestEvent();
+	const { request, locals } = getRequestEvent();
+	console.log(`[auth] signout userId=${locals.user?.id}`);
 	await auth.api.signOut({ headers: request.headers });
 	redirect(303, '/konto/login');
 });
@@ -76,6 +80,7 @@ export const resetPassword = form(
 			}
 			throw e;
 		}
+		console.log('[auth] password reset completed');
 		redirect(303, '/konto/login');
 	}
 );
@@ -87,7 +92,7 @@ export const changePassword = form(
 	}),
 	async ({ _currentPassword, _newPassword }) => {
 		const { request } = getRequestEvent();
-		requireAuth();
+		const user = requireAuth();
 		try {
 			await auth.api.changePassword({
 				body: { currentPassword: _currentPassword, newPassword: _newPassword },
@@ -99,6 +104,7 @@ export const changePassword = form(
 			}
 			throw e;
 		}
+		console.log(`[auth] password changed userId=${user.id}`);
 	}
 );
 
@@ -108,7 +114,7 @@ export const changeEmail = form(
 	}),
 	async ({ email }) => {
 		const { request } = getRequestEvent();
-		requireAuth();
+		const user = requireAuth();
 		try {
 			await auth.api.changeEmail({
 				body: { newEmail: email },
@@ -120,5 +126,6 @@ export const changeEmail = form(
 			}
 			throw e;
 		}
+		console.log(`[auth] email change requested userId=${user.id}`);
 	}
 );

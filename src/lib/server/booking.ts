@@ -86,10 +86,14 @@ export async function createBooking(
 	resource: Resource,
 	date: CalendarDate
 ) {
-	return await db
+	const result = await db
 		.insert(booking)
 		.values({ userId, timeslotId, resource, date: date.toString() })
 		.returning();
+	console.log(
+		`[booking] created userId=${userId} resource=${resource} date=${date} timeslotId=${timeslotId}`
+	);
+	return result;
 }
 
 export async function cancelBooking(bookingId: number, userId: string): Promise<boolean> {
@@ -98,5 +102,8 @@ export async function cancelBooking(bookingId: number, userId: string): Promise<
 		.delete(booking)
 		.where(and(eq(booking.id, bookingId), eq(booking.userId, userId), gte(booking.date, todayStr)))
 		.returning();
+	if (result.length > 0) {
+		console.log(`[booking] cancelled bookingId=${bookingId} userId=${userId}`);
+	}
 	return result.length > 0;
 }

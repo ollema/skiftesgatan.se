@@ -14,7 +14,7 @@ export const auth = betterAuth({
 	database: drizzleAdapter(db, { provider: 'pg' }),
 	emailVerification: {
 		sendVerificationEmail: async ({ user, url }) => {
-			sendEmail({
+			await sendEmail({
 				to: user.email,
 				subject: 'Verifiera din e-postadress',
 				html: `<p>Klicka på länken för att verifiera din e-post: <a href="${url}">${url}</a></p>`
@@ -29,7 +29,7 @@ export const auth = betterAuth({
 		...PASSWORD_CONFIG,
 		revokeSessionsOnPasswordReset: true,
 		sendResetPassword: async ({ user, url }) => {
-			sendEmail({
+			await sendEmail({
 				to: user.email,
 				subject: 'Återställ ditt lösenord',
 				html: `<p>Klicka på länken för att återställa ditt lösenord: <a href="${url}">${url}</a></p>`
