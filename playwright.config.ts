@@ -4,7 +4,7 @@ export default defineConfig({
 	workers: 1,
 	webServer: {
 		command:
-			'rm -rf .pglite-test .test-emails && pnpm exec drizzle-kit push --force && pnpx tsx src/lib/server/db/seed.ts && npm run build && npm run preview',
+			'rm -rf .pglite-test .test-emails && pnpm exec drizzle-kit push --force && pnpm db:seed:timeslots && pnpm db:seed:test && npm run build && npm run preview',
 		port: 4173,
 		env: {
 			PGLITE_PATH: '.pglite-test',

@@ -1,6 +1,11 @@
 {
 	"$schema": "https://unpkg.com/knip@6/schema.json",
 	"tags": ["-lintignore"],
-	"entry": ["src/lib/server/db/seed.ts", "content-collections.ts"],
+	"entry": [
+		"src/lib/server/db/seed/timeslots.ts",
+		"src/lib/server/db/seed/test_accounts.ts",
+		"src/lib/server/db/seed/prod_accounts.ts",
+		"content-collections.ts"
+	],
 	"ignoreDependencies": ["vitest-browser-svelte"]
 }

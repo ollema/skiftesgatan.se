@@ -1,5 +1,5 @@
-import { db } from './index';
-import { timeslot } from './schema';
+import { db } from '../index';
+import { timeslot } from '../schema';
 
 const TIMESLOT_SEEDS = [
 	{ startHour: 7, endHour: 10, resource: 'laundry_room' as const },

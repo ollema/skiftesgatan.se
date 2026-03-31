@@ -14,10 +14,6 @@ function readEmailUrl(type: string, email: string): string {
 	return match[1];
 }
 
-function readVerificationUrl(email: string): string {
-	return readEmailUrl('verify', email);
-}
-
 export function readResetPasswordUrl(email: string): string {
 	return readEmailUrl('reset', email);
 }
@@ -35,35 +31,9 @@ export function uniqueUser(prefix: string) {
 	const username = `${key}${VALID_SUFFIXES[index]}`;
 	return {
 		username,
-		password: 'TestPassword123!',
-		email: `test-${key.toLowerCase()}-${Date.now()}-${index}@resend.dev`
+		password: `password-${username}`,
+		email: `delivered+${username}@resend.dev`
 	};
-}
-
-export async function register(
-	page: Page,
-	user: { username: string; email: string; password: string }
-) {
-	await page.goto('/auth/login');
-	const signupForm = page.locator('form').nth(1);
-	await signupForm.getByLabel('Apartment').fill(user.username);
-	await signupForm.getByLabel('Email').fill(user.email);
-	await signupForm.getByLabel('Password').fill(user.password);
-	await signupForm.getByRole('button', { name: 'Register' }).click();
-	await expect(page).toHaveURL('/auth/verify-email');
-}
-
-async function verify(page: Page, email: string) {
-	const url = readVerificationUrl(email);
-	await page.goto(url);
-}
-
-export async function registerAndVerify(
-	page: Page,
-	user: { username: string; email: string; password: string }
-) {
-	await register(page, user);
-	await verify(page, user.email);
 }
 
 export async function selectCalendarDate(page: Page, isoDate: string) {

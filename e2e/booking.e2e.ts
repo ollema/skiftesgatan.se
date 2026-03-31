@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { uniqueUser, registerAndVerify, selectCalendarDate, confirmCancelDialog } from './helpers';
+import { uniqueUser, login, selectCalendarDate, confirmCancelDialog } from './helpers';
 
 const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 
@@ -19,9 +19,9 @@ test.describe('booking flow', () => {
 		await expect(loginDialog).not.toBeVisible();
 	});
 
-	test('register, view slots, book, fail double-book, cancel, rebook', async ({ page }) => {
+	test('login, view slots, book, fail double-book, cancel, rebook', async ({ page }) => {
 		const user = uniqueUser('B');
-		await registerAndVerify(page, user);
+		await login(page, user);
 
 		await page.goto('/laundry');
 		await selectCalendarDate(page, tomorrow);
@@ -79,7 +79,7 @@ test.describe('booking flow', () => {
 
 	test('outdoor area booking flow', async ({ page }) => {
 		const user = uniqueUser('B');
-		await registerAndVerify(page, user);
+		await login(page, user);
 
 		await page.goto('/outdoor');
 		await selectCalendarDate(page, tomorrow);
@@ -107,7 +107,7 @@ test.describe('booking flow', () => {
 
 	test('rejects booking beyond 30-day window', async ({ page }) => {
 		const user = uniqueUser('B');
-		await registerAndVerify(page, user);
+		await login(page, user);
 
 		await page.goto('/laundry');
 

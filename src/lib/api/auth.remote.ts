@@ -38,38 +38,6 @@ export const login = form(
 	}
 );
 
-export const signup = form(
-	v.object({
-		username: v.pipe(
-			v.string(),
-			v.length(5),
-			v.regex(/^[A-Da-d]1[0-3]0[12]$/, 'Must be a valid apartment (e.g. A1001)')
-		),
-		email: v.pipe(v.string(), v.email()),
-		_password: v.pipe(v.string(), v.minLength(8))
-	}),
-	async ({ username, email, _password }) => {
-		const { request } = getRequestEvent();
-		try {
-			await auth.api.signUpEmail({
-				body: {
-					email,
-					password: _password,
-					name: username.toUpperCase(),
-					username
-				},
-				headers: request.headers
-			});
-		} catch (e) {
-			if (e instanceof APIError) {
-				invalid(e.message || 'Registration failed');
-			}
-			throw e;
-		}
-		redirect(303, '/auth/verify-email');
-	}
-);
-
 export const signout = form(async () => {
 	const { request } = getRequestEvent();
 	await auth.api.signOut({ headers: request.headers });

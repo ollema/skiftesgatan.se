@@ -19,7 +19,9 @@
 		"db:reset": "rm -rf .pglite",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
-		"db:seed": "pnpx tsx src/lib/server/db/seed.ts",
+		"db:seed:timeslots": "pnpx tsx src/lib/server/db/seed/timeslots.ts",
+		"db:seed:test": "pnpx tsx src/lib/server/db/seed/test_accounts.ts",
+		"db:seed:prod": "pnpx tsx src/lib/server/db/seed/prod_accounts.ts",
 		"db:studio": "drizzle-kit studio",
 		"auth:schema": "better-auth generate --config src/lib/server/auth.ts --output src/lib/server/db/auth.schema.ts --yes",
 		"knip": "knip"

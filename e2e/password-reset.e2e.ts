@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { uniqueUser, registerAndVerify, login, readResetPasswordUrl } from './helpers';
+import { uniqueUser, login, readResetPasswordUrl } from './helpers';
 
 test.describe('password reset flow', () => {
 	test('request reset, use link, login with new password', async ({ page }) => {
 		const user = uniqueUser('D');
-		await registerAndVerify(page, user);
+		await login(page, user);
 
 		// Sign out
 		await page.goto('/auth');
