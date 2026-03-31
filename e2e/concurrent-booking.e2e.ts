@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { uniqueUser, registerAndVerify } from './helpers';
+import { uniqueUser, registerAndVerify, selectCalendarDate } from './helpers';
 
 // Use 3 days out to avoid collisions with other test files that book on "tomorrow"
 const testDate = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
@@ -19,11 +19,11 @@ test.describe('concurrent booking', () => {
 
 		// Both navigate to laundry and set date
 		await page1.goto('/laundry');
-		await page1.getByTestId('date-input').fill(testDate);
+		await selectCalendarDate(page1, testDate);
 		await expect(page1.getByRole('button', { name: 'Book' })).toHaveCount(5);
 
 		await page2.goto('/laundry');
-		await page2.getByTestId('date-input').fill(testDate);
+		await selectCalendarDate(page2, testDate);
 		await expect(page2.getByRole('button', { name: 'Book' })).toHaveCount(5);
 
 		// User1 books the first slot

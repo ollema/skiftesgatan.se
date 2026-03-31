@@ -1,8 +1,15 @@
 <script lang="ts">
+	import { today, getLocalTimeZone } from '@internationalized/date';
 	import { getUser } from '$lib/api/auth.remote';
 	import { getSlots, book, cancelBooking } from '$lib/api/booking.remote';
+	import AlertDialog from '$lib/components/AlertDialog.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import Calendar from '$lib/components/Calendar.svelte';
 
 	const resource = 'outdoor_area' as const;
+	const tz = getLocalTimeZone();
+	const minDate = today(tz);
+	const maxDate = today(tz).add({ days: 30 });
 	let date = $state(new Date().toISOString().slice(0, 10));
 	let error = $state('');
 </script>
@@ -12,10 +19,7 @@
 	<h1>Outdoor Area</h1>
 	<p>Hi, {user.name}!</p>
 
-	<label>
-		Date
-		<input type="date" bind:value={date} data-testid="date-input" />
-	</label>
+	<Calendar bind:date minValue={minDate} maxValue={maxDate} />
 
 	{#if error}
 		<p class="text-red-500" data-testid="booking-error">{error}</p>
@@ -32,8 +36,7 @@
 						)}:00</span
 					>
 					{#if slot.bookingId === null}
-						<button
-							class="rounded-md bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
+						<Button
 							onclick={async () => {
 								error = '';
 								try {
@@ -44,12 +47,14 @@
 							}}
 						>
 							Book
-						</button>
+						</Button>
 					{:else}
 						<span>Booked</span>
-						<button
-							class="rounded-md bg-red-600 px-4 py-2 text-white transition hover:bg-red-700"
-							onclick={async () => {
+						<AlertDialog
+							title="Cancel booking?"
+							description="This will release your reserved time slot."
+							triggerLabel="Cancel"
+							onconfirm={async () => {
 								error = '';
 								try {
 									await cancelBooking({ bookingId: slot.bookingId! }).updates(
@@ -59,9 +64,7 @@
 									error = e instanceof Error ? e.message : String(e);
 								}
 							}}
-						>
-							Cancel
-						</button>
+						/>
 					{/if}
 				</li>
 			{/each}

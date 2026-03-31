@@ -66,6 +66,32 @@ export async function registerAndVerify(
 	await verify(page, user.email);
 }
 
+export async function selectCalendarDate(page: Page, isoDate: string) {
+	const [, month] = isoDate.split('-').map(Number);
+	const calendar = page.locator('[data-calendar-root]');
+
+	// Navigate to the correct month by checking the heading
+	for (let i = 0; i < 12; i++) {
+		const heading = await calendar.locator('[data-calendar-heading]').textContent();
+		if (!heading) break;
+		// heading is like "April 2026" — extract the month number
+		const headingDate = new Date(heading + ' 1');
+		if (headingDate.getMonth() + 1 === month) break;
+		if (headingDate.getMonth() + 1 < month) {
+			await calendar.locator('[data-calendar-next-button]').click();
+		} else {
+			await calendar.locator('[data-calendar-prev-button]').click();
+		}
+	}
+
+	// Click the day cell — bits-ui Day buttons have data-value="YYYY-MM-DD"
+	await calendar.locator(`[data-calendar-day][data-value="${isoDate}"]`).click();
+}
+
+export async function confirmCancelDialog(page: Page) {
+	await page.getByRole('alertdialog').getByRole('button', { name: 'Confirm' }).click();
+}
+
 export async function login(page: Page, user: { username: string; password: string }) {
 	await page.goto('/auth/login');
 	const loginForm = page.locator('form').nth(0);
