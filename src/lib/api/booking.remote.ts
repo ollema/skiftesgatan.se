@@ -19,7 +19,6 @@ export const getSlots = query(
 	v.object({ date: dateSchema, resource: resourceSchema }),
 	async ({ date, resource }) => {
 		const calDate = parseDate(date);
-		validateBookingDate(calDate);
 		const slots = await getAvailableSlots(calDate, resource);
 		const user = getAuthUser();
 		const fetchedAt = new Date().toISOString();

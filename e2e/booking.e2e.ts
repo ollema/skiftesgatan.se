@@ -1,7 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { today, getLocalTimeZone } from '@internationalized/date';
 import { uniqueUser, login, selectCalendarDate, confirmCancelDialog } from './helpers';
 
-const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+const now = today(getLocalTimeZone());
+const tomorrow = now.add({ days: 1 }).toString();
 
 test.describe('booking flow', () => {
 	test('shows calendar and login dialog when not authenticated', async ({ page }) => {
@@ -105,29 +107,29 @@ test.describe('booking flow', () => {
 		await expect(myButtons).toHaveCount(1);
 	});
 
-	test('rejects booking beyond 30-day window', async ({ page }) => {
+	test('rejects booking beyond one-month window', async ({ page }) => {
 		const user = uniqueUser('B');
 		await login(page, user);
 
 		await page.goto('/tvattstuga');
 
-		// The calendar enforces max 30 days via maxValue — verify a day 31 days out is disabled
-		const tooFar = new Date(Date.now() + 31 * 86400000).toISOString().slice(0, 10);
+		// The calendar enforces max one month via maxValue — verify a day beyond that is disabled
+		const tooFar = now.add({ months: 1, days: 1 }).toString();
+		const tooFarMonth = now.add({ months: 1, days: 1 }).month;
 		const calendar = page.locator('[data-calendar-root]');
-		const [, targetMonth] = tooFar.split('-').map(Number);
 
 		// Navigate forward until we're on the target month or the next button is disabled
 		for (let i = 0; i < 3; i++) {
 			const heading = await calendar.locator('[data-calendar-heading]').textContent();
 			if (!heading) break;
 			const headingDate = new Date(heading + ' 1');
-			if (headingDate.getMonth() + 1 >= targetMonth) break;
+			if (headingDate.getMonth() + 1 >= tooFarMonth) break;
 			const nextBtn = calendar.locator('[data-calendar-next-button]');
 			if ((await nextBtn.getAttribute('data-disabled')) !== null) break;
 			await nextBtn.click();
 		}
 
-		// The day 31 days out should either not exist on the current page or be disabled
+		// The day beyond one month should either not exist on the current page or be disabled
 		const dayButton = calendar.locator(`[data-calendar-day][data-value="${tooFar}"]`);
 		const count = await dayButton.count();
 		if (count > 0) {

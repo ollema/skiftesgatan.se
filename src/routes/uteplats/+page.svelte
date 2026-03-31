@@ -11,7 +11,7 @@
 	const slotCount = 1;
 	const tz = getLocalTimeZone();
 	const minDate = today(tz);
-	const maxDate = today(tz).add({ days: 30 });
+	const maxDate = today(tz).add({ months: 1 });
 	let date = $state(new Date().toISOString().slice(0, 10));
 	let error = $state('');
 	let cancelBookingId = $state<number | null>(null);

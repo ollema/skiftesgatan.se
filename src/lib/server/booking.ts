@@ -3,18 +3,19 @@ import { eq, and, gte, lte } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { booking, timeslot, user } from '$lib/server/db/schema';
 
-const MAX_ADVANCE_DAYS = 30;
-
 type Resource = 'laundry_room' | 'outdoor_area';
+
+function maxBookingDate(from: CalendarDate = today(getLocalTimeZone())): CalendarDate {
+	return from.add({ months: 1 });
+}
 
 export function validateBookingDate(date: CalendarDate): void {
 	const now = today(getLocalTimeZone());
 	if (date.compare(now) < 0) {
 		throw new Error('Cannot book in the past');
 	}
-	const max = now.add({ days: MAX_ADVANCE_DAYS });
-	if (date.compare(max) > 0) {
-		throw new Error(`Cannot book more than ${MAX_ADVANCE_DAYS} days in advance`);
+	if (date.compare(maxBookingDate(now)) > 0) {
+		throw new Error('Cannot book more than one month in advance');
 	}
 }
 
@@ -45,7 +46,7 @@ export async function getAvailableSlots(date: CalendarDate, resource: Resource) 
 
 export async function getUpcomingBookings(resource: Resource) {
 	const startDate = today(getLocalTimeZone()).toString();
-	const endDate = today(getLocalTimeZone()).add({ days: MAX_ADVANCE_DAYS }).toString();
+	const endDate = maxBookingDate().toString();
 
 	return await db
 		.select({
