@@ -10,20 +10,14 @@
 </script>
 
 <script lang="ts">
-	import {
-		today,
-		getLocalTimeZone,
-		CalendarDate,
-		CalendarDateTime,
-		DateFormatter
-	} from '@internationalized/date';
+	import { today, CalendarDate, CalendarDateTime, DateFormatter } from '@internationalized/date';
 	import { toast } from 'svelte-sonner';
 	import { getOptionalUser } from '$lib/api/auth.remote';
 	import { getSlots, getUpcomingSlots, book, cancelBooking } from '$lib/api/booking.remote';
 	import Calendar from '$lib/components/Calendar.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import type { DotsByDate, SlotStatus } from '$lib/components/Calendar.svelte';
-	import type { Resource } from '$lib/types/bookings';
+	import { TIMEZONE, type Resource } from '$lib/types/bookings';
 
 	interface Props {
 		resource: Resource;
@@ -34,10 +28,9 @@
 
 	let { resource, slotCount, gridClass, labels }: Props = $props();
 
-	const tz = getLocalTimeZone();
-	const minDate = today(tz);
-	const maxDate = today(tz).add({ months: 1 });
-	let date = $state(today(tz));
+	const minDate = today(TIMEZONE);
+	const maxDate = today(TIMEZONE).add({ months: 1 });
+	let date = $state(today(TIMEZONE));
 	let error = $state('');
 	let cancelBookingId = $state<number | null>(null);
 	let pendingBooking = $state<{
@@ -55,11 +48,11 @@
 	const hourFormatter = new DateFormatter('sv-SE', { hour: '2-digit', minute: '2-digit' });
 
 	function formatDate(d: CalendarDate | CalendarDateTime) {
-		return dateFormatter.format(d.toDate(tz));
+		return dateFormatter.format(d.toDate(TIMEZONE));
 	}
 
 	function formatHour(d: CalendarDateTime) {
-		return hourFormatter.format(d.toDate(tz));
+		return hourFormatter.format(d.toDate(TIMEZONE));
 	}
 
 	function buildDots(

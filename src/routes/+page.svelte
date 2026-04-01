@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { allNews } from 'content-collections';
 	import { resolve } from '$app/paths';
-	import { parseDate, DateFormatter, getLocalTimeZone } from '@internationalized/date';
+	import { parseDate, DateFormatter } from '@internationalized/date';
+	import { TIMEZONE } from '$lib/types/bookings';
 
 	const latestNews = allNews
 		.toSorted((a, b) => parseDate(b.date).compare(parseDate(a.date)))
 		.slice(0, 3);
 
 	const df = new DateFormatter('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' });
-	const tz = getLocalTimeZone();
 </script>
 
 <!-- Hero -->
@@ -46,7 +46,7 @@
 					class="mb-2 block text-xs tracking-widest text-text-muted uppercase"
 					datetime={item.date}
 				>
-					{df.format(parseDate(item.date).toDate(tz))}
+					{df.format(parseDate(item.date).toDate(TIMEZONE))}
 				</time>
 				<h3 class="mb-2 font-heading text-xl font-normal text-text-primary">{item.title}</h3>
 				<p class="text-sm text-text-secondary">{item.summary}</p>

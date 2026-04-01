@@ -1,16 +1,16 @@
-import { type CalendarDate, today, getLocalTimeZone } from '@internationalized/date';
+import { type CalendarDate, today } from '@internationalized/date';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { log } from '$lib/server/log';
 import { booking, timeslot, user } from '$lib/server/db/schema';
-import type { Resource } from '$lib/types/bookings';
+import { TIMEZONE, type Resource } from '$lib/types/bookings';
 
-function maxBookingDate(from: CalendarDate = today(getLocalTimeZone())): CalendarDate {
+function maxBookingDate(from: CalendarDate = today(TIMEZONE)): CalendarDate {
 	return from.add({ months: 1 });
 }
 
 export function validateBookingDate(date: CalendarDate): void {
-	const now = today(getLocalTimeZone());
+	const now = today(TIMEZONE);
 	if (date.compare(now) < 0) {
 		throw new Error('Cannot book in the past');
 	}
@@ -45,7 +45,7 @@ export async function getAvailableSlots(date: CalendarDate, resource: Resource) 
 }
 
 export async function getUpcomingBookings(resource: Resource) {
-	const startDate = today(getLocalTimeZone()).toString();
+	const startDate = today(TIMEZONE).toString();
 	const endDate = maxBookingDate().toString();
 
 	return await db
@@ -70,7 +70,7 @@ export async function hasExistingFutureBooking(
 	userId: string,
 	resource: Resource
 ): Promise<boolean> {
-	const todayStr = today(getLocalTimeZone()).toString();
+	const todayStr = today(TIMEZONE).toString();
 	const result = await db
 		.select({ id: booking.id })
 		.from(booking)
@@ -98,7 +98,7 @@ export async function createBooking(
 }
 
 export async function cancelBooking(bookingId: number, userId: string): Promise<boolean> {
-	const todayStr = today(getLocalTimeZone()).toString();
+	const todayStr = today(TIMEZONE).toString();
 	const result = await db
 		.delete(booking)
 		.where(and(eq(booking.id, bookingId), eq(booking.userId, userId), gte(booking.date, todayStr)))

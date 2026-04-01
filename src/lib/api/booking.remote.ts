@@ -12,7 +12,8 @@ import {
 	cancelBooking as cancelBookingDb,
 	validateBookingDate
 } from '$lib/server/booking';
-import { RESOURCES, type Slot, type UpcomingBooking } from '$lib/types/bookings';
+import { createBookingNotifications } from '$lib/server/notification';
+import { TIMEZONE, RESOURCES, type Slot, type UpcomingBooking } from '$lib/types/bookings';
 
 const resourceSchema = v.picklist(RESOURCES);
 const calendarDateSchema = v.instance(CalendarDate);
@@ -26,7 +27,7 @@ export const getSlots = query(
 	async ({ date, resource }) => {
 		const rawSlots = await getAvailableSlots(date, resource);
 		const user = getAuthUser();
-		const zdt = now('Europe/Stockholm');
+		const zdt = now(TIMEZONE);
 		const fetchedAt = new Time(zdt.hour, zdt.minute, zdt.second);
 		const slots: Slot[] = rawSlots.map((s) => ({
 			id: s.id,
@@ -86,6 +87,11 @@ export const book = command(
 
 		try {
 			const [result] = await createBookingDb(user.id, timeslotId, resource, date);
+			try {
+				await createBookingNotifications(result.id, user.id, resource, date.toString(), timeslotId);
+			} catch (e) {
+				log.warn(`[notification] failed to create notifications bookingId=${result.id}: ${e}`);
+			}
 			await getSlots({ date, resource }).refresh();
 			await getUpcomingSlots({ resource }).refresh();
 			return result;

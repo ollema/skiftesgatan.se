@@ -177,7 +177,9 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ### Medium
 
-- [ ] **Investigate future needs for schema changes** -- I think we might want to have some sort of notification system which runs on a schedule and sends out emails to users who have bookings coming up the next day or something. Might even allow for more than one notification per bookings. If and how many notifications should be controlled in some user preferences table. Let's make sure we have the correct schema design to support this without breaking changes in the future.
+- [x] **~~Investigate future needs for schema changes~~** -- Notification system implemented: schema (`notification_preference`, `booking_notification`), scheduler (60s interval via `init` hook), email templates, preference UI on `/konto`.
+
+- [ ] **Consolidate Drizzle relations** -- `relations()` for the `user` table is declared in three files (`auth.schema.ts`, `booking.schema.ts`, `notification.schema.ts`). Drizzle only supports one `relations()` per table -- the last one wins. This doesn't cause issues today (no code uses Drizzle relational queries), but should be merged into a single file before using `.query.user.findMany({ with: ... })`.
 
 - [ ] **Safer error type checking in booking conflict handler** -- `src/lib/api/booking.remote.ts` uses an unsafe cast `(e as { code: string }).code === '23505'` to detect unique constraint violations. Use a proper type guard.
 

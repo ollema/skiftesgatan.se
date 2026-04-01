@@ -1,11 +1,39 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { getUser, signout, changeName, changeEmail, changePassword } from '$lib/api/auth.remote';
+	import { getPreferences, togglePreference } from '$lib/api/notification.remote';
 	import Button from '$lib/components/Button.svelte';
+	import type { Resource } from '$lib/types/bookings';
+
+	function isEnabled(
+		preferences: Awaited<ReturnType<typeof getPreferences>>,
+		resource: Resource,
+		offsetMinutes: number
+	): boolean {
+		return preferences.some(
+			(p) => p.resource === resource && p.offsetMinutes === offsetMinutes && p.enabled
+		);
+	}
+
+	async function handleToggle(
+		event: Event & { currentTarget: HTMLInputElement },
+		resource: Resource,
+		offsetMinutes: 60 | 1440
+	) {
+		const enabled = event.currentTarget.checked;
+		try {
+			await togglePreference({ resource, offsetMinutes, enabled });
+			toast.success(enabled ? 'Avisering aktiverad' : 'Avisering inaktiverad');
+		} catch {
+			event.currentTarget.checked = !enabled;
+			toast.error('Kunde inte uppdatera avisering');
+		}
+	}
 </script>
 
 <svelte:boundary>
 	{@const user = await getUser()}
+	{@const preferences = await getPreferences()}
 	<h1 class="mb-2 font-heading text-2xl font-normal">Mitt konto</h1>
 	<p class="mb-12 text-lg text-text-secondary">Hej, {user.name}.</p>
 
@@ -88,6 +116,50 @@
 				<p class="text-sm text-error">{issue.message}</p>
 			{/each}
 		</form>
+	</section>
+
+	<section class="mb-12 max-w-sm">
+		<h2 class="mb-6 font-heading text-xl font-normal">Aviseringar</h2>
+		<p class="mb-6 text-text-secondary">Få en påminnelse via e-post innan din bokning.</p>
+
+		<fieldset class="mb-6">
+			<legend class="mb-3 text-sm font-medium text-text-primary">Tvättstuga</legend>
+			<div class="flex flex-col gap-3">
+				<label class="flex items-center gap-2 text-sm text-text-secondary">
+					<input
+						type="checkbox"
+						class="accent-accent"
+						checked={isEnabled(preferences, 'laundry_room', 1440)}
+						onchange={(e) => handleToggle(e, 'laundry_room', 1440)}
+					/>
+					24 timmar före
+				</label>
+				<label class="flex items-center gap-2 text-sm text-text-secondary">
+					<input
+						type="checkbox"
+						class="accent-accent"
+						checked={isEnabled(preferences, 'laundry_room', 60)}
+						onchange={(e) => handleToggle(e, 'laundry_room', 60)}
+					/>
+					1 timme före
+				</label>
+			</div>
+		</fieldset>
+
+		<fieldset>
+			<legend class="mb-3 text-sm font-medium text-text-primary">Uteplats</legend>
+			<div class="flex flex-col gap-3">
+				<label class="flex items-center gap-2 text-sm text-text-secondary">
+					<input
+						type="checkbox"
+						class="accent-accent"
+						checked={isEnabled(preferences, 'outdoor_area', 1440)}
+						onchange={(e) => handleToggle(e, 'outdoor_area', 1440)}
+					/>
+					24 timmar före
+				</label>
+			</div>
+		</fieldset>
 	</section>
 
 	<section class="border-t border-border-subtle pt-8">

@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { today, getLocalTimeZone } from '@internationalized/date';
+import { today } from '@internationalized/date';
+import { TIMEZONE } from '$lib/types/bookings';
 import { uniqueUser, login, selectCalendarDate, confirmCancelDialog } from './helpers';
 
-const now = today(getLocalTimeZone());
+const now = today(TIMEZONE);
 const tomorrow = now.add({ days: 1 }).toString();
 
 test.describe('booking flow', () => {

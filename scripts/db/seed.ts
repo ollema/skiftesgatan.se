@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import crypto from 'node:crypto';
 import { log, outro, intro } from '@clack/prompts';
-import { today, getLocalTimeZone } from '@internationalized/date';
+import { today } from '@internationalized/date';
 import { eq } from 'drizzle-orm';
 import { parseEnv, setEnvVars } from './env.js';
 
@@ -54,7 +54,7 @@ function randomInt(min: number, max: number) {
 }
 
 function randomFutureDate() {
-	return today(getLocalTimeZone())
+	return today('Europe/Stockholm')
 		.add({ days: randomInt(1, 30) })
 		.toString();
 }

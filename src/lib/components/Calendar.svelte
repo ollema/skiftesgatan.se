@@ -5,12 +5,8 @@
 
 <script lang="ts">
 	import { Calendar } from 'bits-ui';
-	import {
-		DateFormatter,
-		getLocalTimeZone,
-		type CalendarDate,
-		type DateValue
-	} from '@internationalized/date';
+	import { DateFormatter, type CalendarDate, type DateValue } from '@internationalized/date';
+	import { TIMEZONE } from '$lib/types/bookings';
 
 	const monthFormatter = new DateFormatter('sv-SE', { month: 'long' });
 
@@ -70,7 +66,7 @@
 				</Calendar.PrevButton>
 
 				<Calendar.Heading class="w-[10ch] text-center font-heading text-sm font-normal">
-					{monthFormatter.format(months[0].value.toDate(getLocalTimeZone()))}
+					{monthFormatter.format(months[0].value.toDate(TIMEZONE))}
 				</Calendar.Heading>
 
 				<Calendar.NextButton

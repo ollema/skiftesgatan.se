@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 import type { PGlite } from '@electric-sql/pglite';
 import { sql } from 'drizzle-orm';
-import { today, getLocalTimeZone } from '@internationalized/date';
+import { today } from '@internationalized/date';
+import { TIMEZONE } from '$lib/types/bookings';
 
 let pgliteClient: PGlite;
 
@@ -67,7 +68,7 @@ const {
 } = await import('./booking');
 const { db } = await import('$lib/server/db');
 
-const now = today(getLocalTimeZone());
+const now = today(TIMEZONE);
 const tomorrow = now.add({ days: 1 });
 const yesterday = now.subtract({ days: 1 });
 
