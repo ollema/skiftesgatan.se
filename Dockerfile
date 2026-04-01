@@ -9,6 +9,7 @@ COPY pnpm-lock.yaml package.json .npmrc ./
 RUN pnpm fetch
 COPY . .
 RUN pnpm install --frozen-lockfile --offline
+ENV BETTER_AUTH_SECRET="docker-build-placeholder-not-used-at-runtime-only-here-to-satisfy-validation"
 RUN pnpm build
 
 FROM base
