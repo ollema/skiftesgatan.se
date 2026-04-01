@@ -14,8 +14,10 @@
 	import { toast } from 'svelte-sonner';
 	import { getOptionalUser } from '$lib/api/auth.remote';
 	import { getSlots, getUpcomingSlots, book, cancelBooking } from '$lib/api/booking.remote';
+	import { getSetupHints } from '$lib/api/hints.remote';
 	import Calendar from '$lib/components/Calendar.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import SetupHints from '$lib/components/SetupHints.svelte';
 	import type { DotsByDate, SlotStatus } from '$lib/components/Calendar.svelte';
 	import { TIMEZONE, type Resource } from '$lib/types/bookings';
 
@@ -95,6 +97,7 @@
 		{@const timeslotIds = slots.map((s) => s.id)}
 		{@const dots = buildDots(upcomingBookings, user?.id ?? '', timeslotIds)}
 		{@const myBooking = user ? upcomingBookings.find((b) => b.userId === user.id) : undefined}
+		{@const hints = await getSetupHints()}
 
 		<h1 class="font-heading text-2xl font-normal">{labels.title}</h1>
 		{#if user}
@@ -109,6 +112,13 @@
 			</p>
 		{:else if user}
 			<p class="mt-2 text-text-muted">{labels.noBooking}</p>
+		{/if}
+
+		{#if user}
+			<SetupHints
+				showNotificationHint={hints.showNotificationHint}
+				showCalendarHint={hints.showCalendarHint}
+			/>
 		{/if}
 
 		<div>

@@ -176,7 +176,7 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 - [ ] **Theming** -- favicons and PWA theme colors or whatever those attributes are called should mathc the new color scheme.
 
-- [ ] **Setup hints for notifications and calendar feed** -- Show a dismissible tip on the booking page (or after booking) if the user hasn't enabled email notifications or subscribed to the calendar feed. Check backend for missing `notification_preference` rows or `calendar_token`. Dismissing sets a cookie that hides the hint for a configurable period (e.g. 30 days) or forever.
+- [x] **~~Setup hints for notifications and calendar feed~~** -- Dismissible tips on booking pages when user has no notification preferences or calendar subscription. Checks `notification_preference` and `calendar_token` tables server-side, dismissal via cookie (30 days default, "Visa inte tips" for permanent). Component: `SetupHints.svelte`, query: `hints.remote.ts`.
 
 ### Medium
 

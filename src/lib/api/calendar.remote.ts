@@ -1,7 +1,7 @@
 import { query, command } from '$app/server';
 import { env } from '$env/dynamic/private';
 import { requireAuth } from '$lib/server/auth';
-import { getOrCreateToken, regenerateToken } from '$lib/server/calendar';
+import { getExistingToken, createToken, regenerateToken } from '$lib/server/calendar';
 
 function buildCalendarUrl(token: string): string {
 	return `${env.ORIGIN}/kalender/${token}.ics`;
@@ -9,7 +9,13 @@ function buildCalendarUrl(token: string): string {
 
 export const getCalendarUrl = query(async () => {
 	const user = requireAuth();
-	const token = await getOrCreateToken(user.id);
+	const token = await getExistingToken(user.id);
+	return token ? buildCalendarUrl(token) : null;
+});
+
+export const createCalendarUrl = command(async () => {
+	const user = requireAuth();
+	const token = await createToken(user.id);
 	return buildCalendarUrl(token);
 });
 

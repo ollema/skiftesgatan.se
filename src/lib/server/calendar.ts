@@ -11,14 +11,19 @@ const RESOURCE_LABELS = {
 	outdoor_area: 'Uteplats'
 } as const;
 
-export async function getOrCreateToken(userId: string): Promise<string> {
+export async function getExistingToken(userId: string): Promise<string | null> {
 	const existing = await db
 		.select({ token: calendarToken.token })
 		.from(calendarToken)
 		.where(eq(calendarToken.userId, userId))
 		.limit(1);
 
-	if (existing.length > 0) return existing[0].token;
+	return existing.length > 0 ? existing[0].token : null;
+}
+
+export async function createToken(userId: string): Promise<string> {
+	const existing = await getExistingToken(userId);
+	if (existing) return existing;
 
 	const token = randomUUID();
 	await db.insert(calendarToken).values({ token, userId });
