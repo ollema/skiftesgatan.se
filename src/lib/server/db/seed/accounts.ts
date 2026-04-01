@@ -7,7 +7,8 @@ import { APARTMENTS, PASSWORD_CONFIG, usernamePlugin } from '../../auth.config';
 
 const seedAuth = betterAuth({
 	baseURL: 'http://localhost',
-	secret: 'seed-secret',
+	secret: 'xK9mP2vQ7nR4sT8wF3jL6hG1dA5cB0eY',
+	logger: { disabled: true },
 	database: drizzleAdapter(db, { provider: 'pg' }),
 	emailAndPassword: {
 		enabled: true,

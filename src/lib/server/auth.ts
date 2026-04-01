@@ -11,6 +11,7 @@ import { PASSWORD_CONFIG, usernamePlugin } from '$lib/server/auth.config';
 export const auth = betterAuth({
 	baseURL: env.ORIGIN,
 	secret: env.BETTER_AUTH_SECRET,
+	logger: env.LOG_LEVEL === 'error' ? { disabled: true } : undefined,
 	database: drizzleAdapter(db, { provider: 'pg' }),
 	emailVerification: {
 		sendVerificationEmail: async ({ user, url }) => {

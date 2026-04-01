@@ -11,14 +11,16 @@ if git diff --quiet && git diff --cached --quiet; then
   exit 0
 fi
 
-# Run quality gates, capture output
-OUTPUT=$(pnpm format && pnpm lint && pnpm knip && pnpm check && pnpm test 2>&1)
-EXIT_CODE=$?
-
-if [ $EXIT_CODE -ne 0 ]; then
-  # Exit 2 = blocking error. Reason goes to stderr.
-  echo "$OUTPUT" | tail -30 >&2
-  exit 2
-fi
+# Run quality gates sequentially, printing each step
+COMMANDS=("pnpm lint" "pnpm knip" "pnpm check" "pnpm test")
+for CMD in "${COMMANDS[@]}"; do
+  echo "▶ $CMD" >&2
+  OUTPUT=$($CMD 2>&1)
+  EXIT_CODE=$?
+  if [ $EXIT_CODE -ne 0 ]; then
+    echo "$OUTPUT" | tail -30 >&2
+    exit 2
+  fi
+done
 
 exit 0
