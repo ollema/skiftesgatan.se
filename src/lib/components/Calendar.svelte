@@ -8,7 +8,7 @@
 	import { DateFormatter, type CalendarDate, type DateValue } from '@internationalized/date';
 	import { TIMEZONE } from '$lib/types/bookings';
 
-	const monthFormatter = new DateFormatter('sv-SE', { month: 'long' });
+	const monthFormatter = new DateFormatter('sv-SE', { month: 'long', timeZone: TIMEZONE });
 
 	interface Props {
 		date: CalendarDate;

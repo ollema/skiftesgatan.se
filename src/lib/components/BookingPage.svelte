@@ -43,9 +43,14 @@
 	const dateFormatter = new DateFormatter('sv-SE', {
 		weekday: 'long',
 		day: 'numeric',
-		month: 'long'
+		month: 'long',
+		timeZone: TIMEZONE
 	});
-	const hourFormatter = new DateFormatter('sv-SE', { hour: '2-digit', minute: '2-digit' });
+	const hourFormatter = new DateFormatter('sv-SE', {
+		hour: '2-digit',
+		minute: '2-digit',
+		timeZone: TIMEZONE
+	});
 
 	function formatDate(d: CalendarDate | CalendarDateTime) {
 		return dateFormatter.format(d.toDate(TIMEZONE));

@@ -13,7 +13,12 @@
 		return found;
 	});
 
-	const df = new DateFormatter('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' });
+	const df = new DateFormatter('sv-SE', {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric',
+		timeZone: TIMEZONE
+	});
 </script>
 
 <h1 class="mb-3 font-heading text-2xl font-normal">{article.title}</h1>

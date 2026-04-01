@@ -8,7 +8,12 @@
 		.toSorted((a, b) => parseDate(b.date).compare(parseDate(a.date)))
 		.slice(0, 3);
 
-	const df = new DateFormatter('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' });
+	const df = new DateFormatter('sv-SE', {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric',
+		timeZone: TIMEZONE
+	});
 </script>
 
 <!-- Hero -->

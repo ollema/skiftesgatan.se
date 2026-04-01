@@ -6,7 +6,12 @@
 
 	const sorted = allNews.toSorted((a, b) => parseDate(b.date).compare(parseDate(a.date)));
 
-	const df = new DateFormatter('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' });
+	const df = new DateFormatter('sv-SE', {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric',
+		timeZone: TIMEZONE
+	});
 </script>
 
 <h1 class="mb-12 font-heading text-3xl font-normal">Nyheter</h1>
