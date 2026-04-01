@@ -12,6 +12,7 @@ There is no self-registration. Accounts are pre-created by an admin using a CSV 
 - **Laundry room booking** -- calendar with 5 daily timeslots (3-hour blocks, 07-22), one active booking per user
 - **Outdoor area booking** -- calendar with 1 all-day slot (07-22), one active booking per user
 - **Booking constraints** -- 30-day advance window, concurrent booking protection via database unique constraint, replace-or-cancel flow
+- **Calendar subscription** -- per-user iCal feed URL (`/kalender/{token}.ics`) that syncs bookings to iPhone Calendar or any app supporting webcal subscriptions; manage from account page
 - **Member information** -- markdown pages for bylaws (stadgar), finances, renovations, and board members, compiled at build time
 - **News** -- markdown articles for association updates, shown on the home page and in a dedicated listing
 

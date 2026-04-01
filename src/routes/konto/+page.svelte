@@ -1,9 +1,31 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { getUser, signout, changeName, changeEmail, changePassword } from '$lib/api/auth.remote';
+	import { getCalendarUrl, regenerateCalendarUrl } from '$lib/api/calendar.remote';
 	import { getPreferences, togglePreference } from '$lib/api/notification.remote';
 	import Button from '$lib/components/Button.svelte';
 	import type { Resource } from '$lib/types/bookings';
+
+	let regeneratedCalendarUrl = $state('');
+
+	async function handleCopyCalendarUrl(url: string) {
+		try {
+			await navigator.clipboard.writeText(url);
+			toast.success('Länk kopierad');
+		} catch {
+			toast.error('Kunde inte kopiera länken');
+		}
+	}
+
+	async function handleRegenerateCalendarUrl() {
+		if (!window.confirm('Den gamla länken slutar fungera. Vill du skapa en ny?')) return;
+		try {
+			regeneratedCalendarUrl = await regenerateCalendarUrl();
+			toast.success('Ny länk skapad');
+		} catch {
+			toast.error('Kunde inte skapa ny länk');
+		}
+	}
 
 	function isEnabled(
 		preferences: Awaited<ReturnType<typeof getPreferences>>,
@@ -34,6 +56,8 @@
 <svelte:boundary>
 	{@const user = await getUser()}
 	{@const preferences = await getPreferences()}
+	{@const initialCalendarUrl = await getCalendarUrl()}
+	{@const calendarUrl = regeneratedCalendarUrl || initialCalendarUrl}
 	<h1 class="mb-2 font-heading text-2xl font-normal">Mitt konto</h1>
 	<p class="mb-12 text-lg text-text-secondary">Hej, {user.name}.</p>
 
@@ -160,6 +184,26 @@
 				</label>
 			</div>
 		</fieldset>
+	</section>
+
+	<section class="mb-12 max-w-sm">
+		<h2 class="mb-6 font-heading text-xl font-normal">Kalenderprenumeration</h2>
+		<p class="mb-6 text-text-secondary">Prenumerera på dina bokningar i din kalenderapp.</p>
+		<div class="mb-4 flex items-center gap-2">
+			<input type="text" readonly value={calendarUrl} class="input-field min-w-0 flex-1 text-xs" />
+			<Button onclick={() => handleCopyCalendarUrl(calendarUrl)}>Kopiera</Button>
+		</div>
+		<div class="flex flex-col gap-3">
+			<!-- eslint-disable svelte/no-navigation-without-resolve -- webcal:// is an external protocol -->
+			<a
+				href={calendarUrl.replace('https://', 'webcal://')}
+				class="text-sm text-text-secondary underline"
+			>
+				Öppna i kalender
+			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
+			<Button onclick={handleRegenerateCalendarUrl}>Skapa ny länk</Button>
+		</div>
 	</section>
 
 	<section class="border-t border-border-subtle pt-8">
