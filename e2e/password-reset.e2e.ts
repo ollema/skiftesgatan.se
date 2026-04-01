@@ -12,7 +12,7 @@ test.describe('password reset flow', () => {
 
 		// Go to forgot password page
 		await page.goto('/konto/forgot-password');
-		await page.getByLabel('E-post').fill(user.email);
+		await page.getByLabel('Lägenhet').fill(user.username);
 		await page.getByRole('button', { name: 'Skicka återställningslänk' }).click();
 
 		// Should land on sent confirmation page

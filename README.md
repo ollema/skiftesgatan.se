@@ -167,9 +167,17 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ### High
 
-- [x] **Split db commands into test, dev and prod** -- action-based scripts (`db:reset`, `db:seed`, `db:studio`) take the environment as an argument. Test is non-interactive, dev/prod prompt for confirmation. Prod requires `DATABASE_URL` via `.env.prod`.
+- [ ] **Use actual content and proper facts** -- Currently we have a lot of incorrect placeholder content.
+
+- [ ] **PWA readyness** -- add manifest.json, icons, and service worker for offline support and installability.
+
+- [ ] **Updated color scheme** -- current palette is a bit dull. Consider refreshing with more vibrant colors while maintaining accessibility.
+
+- [ ] **Theming** -- favicons and PWA theme colors or whatever those attributes are called should mathc the new color scheme.
 
 ### Medium
+
+- [ ] **Investigate future needs for schema changes** -- I think we might want to have some sort of notification system which runs on a schedule and sends out emails to users who have bookings coming up the next day or something. Might even allow for more than one notification per bookings. If and how many notifications should be controlled in some user preferences table. Let's make sure we have the correct schema design to support this without breaking changes in the future.
 
 - [ ] **Safer error type checking in booking conflict handler** -- `src/lib/api/booking.remote.ts` uses an unsafe cast `(e as { code: string }).code === '23505'` to detect unique constraint violations. Use a proper type guard.
 
@@ -185,7 +193,11 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 - [ ] **Unit tests for auth form validation** -- auth remote functions have Valibot schemas but no dedicated unit tests for validation edge cases.
 
-- [ ] **Auto-refresh booking calendar** -- if a user leaves the tab open, slot availability can go stale. Consider periodic re-fetch or visibility-change refresh.
+- [ ] **Auto-refresh booking calendar** -- if a user leaves the tab open, slot availability can go stale. Consider periodic re-fetch or visibility-change refresh. Better yet, let's use SSE!
+
+- [ ] **Better logging** -- log actual apartment numbers and timeslot start hours and so on instead of IDs.
+
+- [ ] **Use intelligent status texts** -- If the user's name contains & then use "Ni" instead of "Du" 
 
 ## Design
 

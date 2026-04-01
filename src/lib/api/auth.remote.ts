@@ -1,8 +1,11 @@
 import * as v from 'valibot';
 import { invalid, redirect } from '@sveltejs/kit';
 import { getRequestEvent, query, form } from '$app/server';
+import { eq } from 'drizzle-orm';
 import { auth, requireAuth, getAuthUser } from '$lib/server/auth';
 import { APARTMENT_REGEX } from '$lib/server/auth.config';
+import { db } from '$lib/server/db';
+import { user as userTable } from '$lib/server/db/auth.schema';
 import { APIError } from 'better-auth/api';
 import { log } from '$lib/server/log';
 
@@ -52,15 +55,27 @@ export const signout = form(async () => {
 
 export const requestPasswordReset = form(
 	v.object({
-		email: v.pipe(v.string(), v.email())
+		username: v.pipe(
+			v.string(),
+			v.transform((u) => u.toUpperCase()),
+			v.length(5),
+			v.regex(APARTMENT_REGEX, 'Måste vara en giltig lägenhet (t.ex. A1001)')
+		)
 	}),
-	async ({ email }) => {
+	async ({ username }) => {
 		try {
-			await auth.api.requestPasswordReset({
-				body: { email, redirectTo: '/konto/reset-password' }
-			});
+			const [found] = await db
+				.select({ email: userTable.email })
+				.from(userTable)
+				.where(eq(userTable.username, username))
+				.limit(1);
+			if (found) {
+				await auth.api.requestPasswordReset({
+					body: { email: found.email, redirectTo: '/konto/reset-password' }
+				});
+			}
 		} catch {
-			// Always redirect to prevent email enumeration
+			// Always redirect to prevent username enumeration
 		}
 		redirect(303, '/konto/forgot-password/sent');
 	}
