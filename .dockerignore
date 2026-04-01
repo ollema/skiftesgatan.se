@@ -1,0 +1,46 @@
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Content Collections
+.content-collections
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+# Playwright
+test-results
+
+# PGLite local database
+.pglite*
+
+# Test email tokens
+.test-emails
+
+# Production seed data
+accounts.csv
+
+# Docker-specific
+Dockerfile
+.dockerignore
+.git
+.github
+.vscode
+tests
+playwright.config.ts
