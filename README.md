@@ -197,7 +197,7 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 - [ ] **Better logging** -- log actual apartment numbers and timeslot start hours and so on instead of IDs.
 
-- [ ] **Use intelligent status texts** -- If the user's name contains & then use "Ni" instead of "Du" 
+- [ ] **Use intelligent status texts** -- If the user's name contains & then use "Ni" instead of "Du"
 
 ## Design
 

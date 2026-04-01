@@ -2,3 +2,4 @@ onlyBuiltDependencies:
   - '@prisma/client'
   - better-sqlite3
   - esbuild
+  - sharp

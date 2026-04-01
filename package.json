@@ -21,7 +21,8 @@
 		"db:tunnel": "pnpx tsx scripts/db/tunnel.ts",
 		"db:generate": "drizzle-kit generate",
 		"auth:schema": "better-auth generate --config src/lib/server/auth.ts --output src/lib/server/db/auth.schema.ts --yes",
-		"knip": "knip"
+		"knip": "knip",
+		"icons": "pnpx tsx scripts/generate-icons.ts"
 	},
 	"devDependencies": {
 		"@better-auth/cli": "~1.4.21",
@@ -59,6 +60,7 @@
 		"prettier-plugin-svelte": "^3.5.1",
 		"prettier-plugin-tailwindcss": "^0.7.2",
 		"resend": "^6.10.0",
+		"sharp": "^0.34.5",
 		"svelte": "^5.55.1",
 		"svelte-check": "^4.4.6",
 		"svelte-sonner": "^1.1.0",

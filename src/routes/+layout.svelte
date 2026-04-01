@@ -1,6 +1,5 @@
 <script lang="ts">
 	import './layout.css';
-	import favicon from '$lib/assets/favicon.svg';
 	import { resolve } from '$app/paths';
 	import { Toaster } from 'svelte-sonner';
 	import { getOptionalUser } from '$lib/api/auth.remote';
@@ -9,8 +8,6 @@
 
 	let { children } = $props();
 </script>
-
-<svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <Toaster richColors />
 
