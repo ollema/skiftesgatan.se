@@ -15,6 +15,18 @@ test.describe('content pages', () => {
 		await expect(page.locator('h1')).toBeVisible();
 	});
 
+	test('article content updates on client-side navigation between articles', async ({ page }) => {
+		await page.goto('/nyheter/valkommen');
+		await expect(page.locator('h1')).toHaveText('Välkommen till Skiftesgatan');
+
+		// Open Nyheter dropdown and click the other article
+		await page.locator('nav').getByRole('button', { name: 'Nyheter' }).click();
+		await page.locator('nav').getByRole('link', { name: 'Sommarens underhållsschema' }).click();
+
+		await expect(page).toHaveURL('/nyheter/sommarunderhall');
+		await expect(page.locator('h1')).toHaveText('Sommarens underhållsschema');
+	});
+
 	test('information listing and detail pages', async ({ page }) => {
 		await page.goto('/information');
 		await expect(page.locator('h1')).toHaveText('Information');

@@ -168,7 +168,7 @@
 							}
 						}}
 					>
-						{formatHour(slot.start)}&ndash;{formatHour(slot.end)}
+						{slot.start.hour}&ndash;{slot.end.hour}
 					</button>
 				{:else if user && slot.userId === user.id}
 					<button
@@ -178,7 +178,7 @@
 							cancelBookingId = slot.bookingId;
 						}}
 					>
-						{formatHour(slot.start)}&ndash;{formatHour(slot.end)}
+						{slot.username}
 					</button>
 				{:else}
 					<button
@@ -186,7 +186,7 @@
 						class="cursor-not-allowed rounded-sm bg-slot-occupied px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface sm:text-sm"
 						disabled
 					>
-						{formatHour(slot.start)}&ndash;{formatHour(slot.end)}
+						{slot.username}
 					</button>
 				{/if}
 			{/each}

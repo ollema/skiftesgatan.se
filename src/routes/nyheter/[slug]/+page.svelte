@@ -4,11 +4,13 @@
 	import { error } from '@sveltejs/kit';
 	import { parseDate, DateFormatter, getLocalTimeZone } from '@internationalized/date';
 
-	const article = allNews.find((n) => n._meta.path === page.params.slug);
-
-	if (!article) {
-		error(404, 'Not found');
-	}
+	const article = $derived.by(() => {
+		const found = allNews.find((n) => n._meta.path === page.params.slug);
+		if (!found) {
+			error(404, 'Not found');
+		}
+		return found;
+	});
 
 	const df = new DateFormatter('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' });
 </script>

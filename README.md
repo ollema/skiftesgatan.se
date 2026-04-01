@@ -150,7 +150,7 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ### High
 
-- [x] **Display names** -- display names are set during seeding (dev uses fictional names, prod CSV has a `name` column). Users can change their display name on /konto. Display names appear in greetings on /konto and booking pages. The navbar login button keeps the apartment number for fixed-width UI.
+- [ ]
 
 ### Medium
 
