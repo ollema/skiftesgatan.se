@@ -3,6 +3,7 @@ import { invalid, redirect } from '@sveltejs/kit';
 import { getRequestEvent, query, form } from '$app/server';
 import { auth, requireAuth, getAuthUser } from '$lib/server/auth';
 import { APIError } from 'better-auth/api';
+import { log } from '$lib/server/log';
 
 export const getUser = query(() => requireAuth());
 
@@ -27,7 +28,7 @@ export const login = form(
 		} catch (e) {
 			if (e instanceof APIError) {
 				const reason = e.status === 403 ? 'email_not_verified' : 'invalid_credentials';
-				console.warn(`[auth] login failed username=${username} reason=${reason}`);
+				log.warn(`[auth] login failed username=${username} reason=${reason}`);
 				if (e.status === 403) {
 					invalid('Please verify your email address before logging in');
 				} else {
@@ -36,14 +37,14 @@ export const login = form(
 			}
 			throw e;
 		}
-		console.log(`[auth] login username=${username}`);
+		log.info(`[auth] login username=${username}`);
 		redirect(303, '/konto');
 	}
 );
 
 export const signout = form(async () => {
 	const { request, locals } = getRequestEvent();
-	console.log(`[auth] signout userId=${locals.user?.id}`);
+	log.info(`[auth] signout userId=${locals.user?.id}`);
 	await auth.api.signOut({ headers: request.headers });
 	redirect(303, '/konto/login');
 });
@@ -80,7 +81,7 @@ export const resetPassword = form(
 			}
 			throw e;
 		}
-		console.log('[auth] password reset completed');
+		log.info('[auth] password reset completed');
 		redirect(303, '/konto/login');
 	}
 );
@@ -104,7 +105,7 @@ export const changePassword = form(
 			}
 			throw e;
 		}
-		console.log(`[auth] password changed userId=${user.id}`);
+		log.info(`[auth] password changed userId=${user.id}`);
 	}
 );
 
@@ -126,6 +127,6 @@ export const changeEmail = form(
 			}
 			throw e;
 		}
-		console.log(`[auth] email change requested userId=${user.id}`);
+		log.info(`[auth] email change requested userId=${user.id}`);
 	}
 );

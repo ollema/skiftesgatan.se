@@ -1,6 +1,7 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { Resend } from 'resend';
 import { env } from '$env/dynamic/private';
+import { log } from '$lib/server/log';
 
 export async function sendEmail(options: { to: string; subject: string; html: string }) {
 	const label = `to ${options.to} subject="${options.subject}"`;
@@ -11,7 +12,7 @@ export async function sendEmail(options: { to: string; subject: string; html: st
 		const file = `.test-emails/${type}-${recipient}.json`;
 		mkdirSync('.test-emails', { recursive: true });
 		writeFileSync(file, JSON.stringify(options));
-		console.log(`[email] sent ${label} (no Resend API key, written to ${file})`);
+		log.info(`[email] sent ${label} (no Resend API key, written to ${file})`);
 		return;
 	}
 
@@ -24,9 +25,9 @@ export async function sendEmail(options: { to: string; subject: string; html: st
 	});
 
 	if (error) {
-		console.error(`[email] failed to send ${label}`, error);
+		log.error(`[email] failed to send ${label}`, error);
 		throw new Error(`Email send failed: ${error.message}`);
 	}
 
-	console.log(`[email] sent ${label}`);
+	log.info(`[email] sent ${label}`);
 }

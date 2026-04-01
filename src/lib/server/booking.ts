@@ -1,6 +1,7 @@
 import { type CalendarDate, today, getLocalTimeZone } from '@internationalized/date';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { db } from '$lib/server/db';
+import { log } from '$lib/server/log';
 import { booking, timeslot, user } from '$lib/server/db/schema';
 
 type Resource = 'laundry_room' | 'outdoor_area';
@@ -91,7 +92,7 @@ export async function createBooking(
 		.insert(booking)
 		.values({ userId, timeslotId, resource, date: date.toString() })
 		.returning();
-	console.log(
+	log.info(
 		`[booking] created userId=${userId} resource=${resource} date=${date} timeslotId=${timeslotId}`
 	);
 	return result;
@@ -104,7 +105,7 @@ export async function cancelBooking(bookingId: number, userId: string): Promise<
 		.where(and(eq(booking.id, bookingId), eq(booking.userId, userId), gte(booking.date, todayStr)))
 		.returning();
 	if (result.length > 0) {
-		console.log(`[booking] cancelled bookingId=${bookingId} userId=${userId}`);
+		log.info(`[booking] cancelled bookingId=${bookingId} userId=${userId}`);
 	}
 	return result.length > 0;
 }

@@ -1,12 +1,16 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
+import type { PGlite } from '@electric-sql/pglite';
 import { sql } from 'drizzle-orm';
 import { today, getLocalTimeZone } from '@internationalized/date';
+
+let pgliteClient: PGlite;
 
 vi.mock('$lib/server/db', async () => {
 	const { PGlite } = await import('@electric-sql/pglite');
 	const { drizzle } = await import('drizzle-orm/pglite');
 	const schema = await import('$lib/server/db/schema');
 	const client = new PGlite();
+	pgliteClient = client;
 	const db = drizzle({ client, schema });
 
 	await client.exec(`
@@ -66,6 +70,10 @@ const { db } = await import('$lib/server/db');
 const now = today(getLocalTimeZone());
 const tomorrow = now.add({ days: 1 });
 const yesterday = now.subtract({ days: 1 });
+
+afterAll(async () => {
+	await pgliteClient?.close();
+});
 
 beforeEach(async () => {
 	await db.execute(sql`DELETE FROM booking`);

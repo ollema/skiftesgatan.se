@@ -6,7 +6,12 @@ import { playwright } from '@vitest/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
-	plugins: [tailwindcss(), contentCollections(), sveltekit(), devtoolsJson()],
+	plugins: [
+		tailwindcss(),
+		!process.env.VITEST && contentCollections(),
+		sveltekit(),
+		devtoolsJson()
+	],
 	server: {
 		fs: {
 			allow: ['.content-collections']
@@ -38,7 +43,8 @@ export default defineConfig({
 					name: 'server',
 					environment: 'node',
 					include: ['src/**/*.{test,spec}.{js,ts}'],
-					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
+					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}'],
+					env: { LOG_LEVEL: 'error' }
 				}
 			}
 		]

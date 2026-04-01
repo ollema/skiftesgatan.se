@@ -3,6 +3,7 @@ import { CalendarDate, CalendarDateTime, Time, now, parseDate } from '@internati
 import { error } from '@sveltejs/kit';
 import { query, command } from '$app/server';
 import { requireAuth, getAuthUser } from '$lib/server/auth';
+import { log } from '$lib/server/log';
 import {
 	getAvailableSlots,
 	getUpcomingBookings,
@@ -88,7 +89,7 @@ export const book = command(
 			return result;
 		} catch (e: unknown) {
 			if (e instanceof Error && 'code' in e && (e as { code: string }).code === '23505') {
-				console.warn(
+				log.warn(
 					`[booking] conflict userId=${user.id} resource=${resource} date=${date} timeslotId=${timeslotId}`
 				);
 				error(409, 'This slot is already booked');
