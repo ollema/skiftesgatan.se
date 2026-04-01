@@ -18,5 +18,6 @@ COPY --from=build /app/build build/
 COPY package.json .
 EXPOSE 3000
 ENV NODE_ENV=production
+ENV TZ=Europe/Stockholm
 
 CMD ["node", "build"]
