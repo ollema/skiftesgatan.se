@@ -176,6 +176,8 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 - [ ] **Theming** -- favicons and PWA theme colors or whatever those attributes are called should mathc the new color scheme.
 
+- [ ] **Setup hints for notifications and calendar feed** -- Show a dismissible tip on the booking page (or after booking) if the user hasn't enabled email notifications or subscribed to the calendar feed. Check backend for missing `notification_preference` rows or `calendar_token`. Dismissing sets a cookie that hides the hint for a configurable period (e.g. 30 days) or forever.
+
 ### Medium
 
 - [x] **~~Investigate future needs for schema changes~~** -- Notification system implemented: schema (`notification_preference`, `booking_notification`), scheduler (60s interval via `init` hook), email templates, preference UI on `/konto`.
