@@ -4,7 +4,7 @@ Website for BRF Skiftesgatan 4, a housing association with 32 apartments in Goth
 
 Residents log in with their apartment number to book shared facilities, read association news, and access member information such as bylaws, finances, renovation plans, and board details.
 
-There is no self-registration. Accounts are pre-created by an admin using a CSV of apartment numbers and email addresses (`pnpm db:seed:prod`). Emails are marked as verified at creation time. Each resident can then log in and reset their password via email.
+There is no self-registration. Accounts are pre-created by an admin using a CSV of apartment numbers and email addresses (`pnpm db:prod:seed:accounts`). Emails are marked as verified at creation time. Each resident can then log in and reset their password via email.
 
 ## Features
 
@@ -80,59 +80,96 @@ pnpm dev
 
 ### Database Setup
 
-PGLite runs in-process locally -- no external database needed.
+PGLite runs in-process locally -- no external database needed. All dev commands are prefixed with `db:dev:`.
 
 ```sh
-pnpm db:push                  # apply Drizzle schema
-pnpm db:seed:timeslots        # seed available timeslots
-pnpm db:seed:accounts         # seed 32 dev accounts
-pnpm db:seed:bookings         # seed random bookings
+pnpm db:dev:push              # apply Drizzle schema
+pnpm db:dev:seed:timeslots    # seed available timeslots
+pnpm db:dev:seed:accounts     # seed 32 dev accounts
+pnpm db:dev:seed:bookings     # seed random bookings
 ```
 
 Full reset from scratch:
 
 ```sh
-pnpm db:reset && pnpm db:push && pnpm db:seed:timeslots && pnpm db:seed:accounts && pnpm db:seed:bookings
+pnpm db:dev:fresh
 ```
 
 Dev accounts use apartment numbers A1001 through D1302. Password for each is `password-{username}`, e.g. `password-A1001`. Each dev account has a fictional display name that can be changed on the /konto page.
 
+### Production Database
+
+Production uses PostgreSQL on a CapRover VPS. The database is not publicly accessible -- you connect via SSH tunnel.
+
+**One-time CapRover setup:**
+
+1. Open CapRover UI > Apps > `skiftesgatan-prod-db` > App Config
+2. Add port mapping: Server Port `54321` → Container Port `5432`
+3. Save & Update
+
+**Local setup:**
+
+1. Copy `.env.prod.example` to `.env.prod` and fill in your VPS SSH details and database password
+2. Open the tunnel in one terminal: `pnpm db:prod:tunnel`
+3. Run prod commands in another terminal: `pnpm db:prod:push`
+
+Destructive commands (`push`, `migrate`, `seed:*`) require you to type the database name to confirm.
+
 ## Scripts
 
-| Script                   | Description                                             |
-| ------------------------ | ------------------------------------------------------- |
-| `pnpm dev`               | Start dev server                                        |
-| `pnpm build`             | Production build                                        |
-| `pnpm preview`           | Preview production build                                |
-| `pnpm check`             | SvelteKit sync + svelte-check                           |
-| `pnpm lint`              | Prettier + ESLint                                       |
-| `pnpm format`            | Auto-format code                                        |
-| `pnpm knip`              | Detect unused files/dependencies                        |
-| `pnpm test`              | Run all tests (unit + E2E)                              |
-| `pnpm test:unit`         | Vitest (unit + integration)                             |
-| `pnpm test:e2e`          | Playwright E2E tests                                    |
-| `pnpm db:push`           | Apply Drizzle schema to database                        |
-| `pnpm db:reset`          | Delete local PGLite database                            |
-| `pnpm db:generate`       | Generate Drizzle migrations                             |
-| `pnpm db:migrate`        | Run Drizzle migrations                                  |
-| `pnpm db:seed:timeslots` | Seed timeslots                                          |
-| `pnpm db:seed:accounts`  | Seed 32 dev accounts                                    |
-| `pnpm db:seed:bookings`  | Seed random bookings                                    |
-| `pnpm db:seed:prod`      | Seed production accounts from CSV (username,email,name) |
-| `pnpm db:studio`         | Open Drizzle Studio GUI                                 |
-| `pnpm auth:schema`       | Generate Better Auth schema                             |
+| Script                        | Description                                              |
+| ----------------------------- | -------------------------------------------------------- |
+| `pnpm dev`                    | Start dev server                                         |
+| `pnpm build`                  | Production build                                         |
+| `pnpm preview`                | Preview production build                                 |
+| `pnpm check`                  | SvelteKit sync + svelte-check                            |
+| `pnpm lint`                   | Prettier + ESLint                                        |
+| `pnpm format`                 | Auto-format code                                         |
+| `pnpm knip`                   | Detect unused files/dependencies                         |
+| `pnpm test`                   | Run all tests (unit + E2E)                               |
+| `pnpm test:unit`              | Vitest (unit + integration)                              |
+| `pnpm test:e2e`               | Playwright E2E tests                                     |
+| `pnpm db:dev:push`            | Apply Drizzle schema to dev PGLite                       |
+| `pnpm db:dev:reset`           | Delete local PGLite database                             |
+| `pnpm db:dev:seed`            | Seed all dev data (timeslots + accounts + bookings)      |
+| `pnpm db:dev:seed:timeslots`  | Seed timeslots                                           |
+| `pnpm db:dev:seed:accounts`   | Seed 32 dev accounts                                     |
+| `pnpm db:dev:seed:bookings`   | Seed random bookings                                     |
+| `pnpm db:dev:studio`          | Open Drizzle Studio GUI (dev)                            |
+| `pnpm db:dev:fresh`           | Full dev reset: delete + push + seed                     |
+| `pnpm db:test:push`           | Apply Drizzle schema to test PGLite                      |
+| `pnpm db:test:reset`          | Delete test PGLite database + test emails                |
+| `pnpm db:test:seed`           | Seed test data (timeslots + accounts)                    |
+| `pnpm db:test:fresh`          | Full test reset: delete + push + seed                    |
+| `pnpm db:prod:tunnel`         | Open SSH tunnel to production database                   |
+| `pnpm db:prod:push`           | Apply Drizzle schema to production (with confirmation)   |
+| `pnpm db:prod:migrate`        | Run Drizzle migrations on production (with confirmation) |
+| `pnpm db:prod:seed:timeslots` | Seed timeslots in production (with confirmation)         |
+| `pnpm db:prod:seed:accounts`  | Seed production accounts from CSV (with confirmation)    |
+| `pnpm db:prod:studio`         | Open Drizzle Studio GUI (production)                     |
+| `pnpm db:generate`            | Generate Drizzle migration files                         |
+| `pnpm auth:schema`            | Generate Better Auth schema                              |
 
 ## Environment Variables
 
 Copy `.env.example` to `.env` and fill in values.
 
-| Variable             | Required        | Description                                                     |
-| -------------------- | --------------- | --------------------------------------------------------------- |
-| `DATABASE_URL`       | Production only | PostgreSQL connection string (PGLite used automatically in dev) |
-| `ORIGIN`             | Yes             | Application origin URL (e.g. `http://localhost:5173`)           |
-| `BETTER_AUTH_SECRET` | Yes             | 32-character high-entropy secret for session signing            |
-| `RESEND_API_KEY`     | Production only | Resend API key for email delivery (falls back to file mock)     |
-| `EMAIL_FROM`         | Yes             | Sender email address                                            |
+**`.env`** -- local development (copy from `.env.example`):
+
+| Variable             | Required | Description                                           |
+| -------------------- | -------- | ----------------------------------------------------- |
+| `ORIGIN`             | Yes      | Application origin URL (e.g. `http://localhost:5173`) |
+| `BETTER_AUTH_SECRET` | Yes      | 32-character high-entropy secret for session signing  |
+| `RESEND_API_KEY`     | Prod     | Resend API key for email delivery (file mock in dev)  |
+| `EMAIL_FROM`         | Yes      | Sender email address                                  |
+
+**`.env.prod`** -- production database commands (copy from `.env.prod.example`):
+
+| Variable           | Description                                     |
+| ------------------ | ----------------------------------------------- |
+| `DATABASE_URL`     | PostgreSQL connection string (via tunnel)       |
+| `PROD_VPS_SSH`     | SSH target for tunnel (e.g. `root@your-vps-ip`) |
+| `PROD_VPS_DB_PORT` | PostgreSQL port on VPS host (e.g. `54321`)      |
 
 ## Testing
 
@@ -140,7 +177,7 @@ Copy `.env.example` to `.env` and fill in values.
 
 **E2E tests** (Playwright): auth flows, booking flows, concurrent booking race conditions, content rendering, email change, password reset, navigation.
 
-E2E tests use a separate PGLite database (`.pglite-test`), empty `RESEND_API_KEY` to capture emails as files, and run sequentially (1 worker).
+E2E tests use a separate PGLite database (`.pglite-test`) via `pnpm db:test:fresh`, empty `RESEND_API_KEY` to capture emails as files, and run sequentially (1 worker).
 
 **CI pipeline** (GitHub Actions): lint + typecheck + knip, unit tests, E2E tests with artifact upload on failure.
 
@@ -150,7 +187,7 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ### High
 
-- [ ]
+- [x] **Split db commands into test, dev and prod** -- `db:dev:*` forces PGLite, `db:test:*` uses separate `.pglite-test`, `db:prod:*` requires `DATABASE_URL` with interactive confirmation for destructive operations.
 
 ### Medium
 
