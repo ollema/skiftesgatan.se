@@ -23,9 +23,10 @@
 	import Calendar from '$lib/components/Calendar.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import type { DotsByDate, SlotStatus } from '$lib/components/Calendar.svelte';
+	import type { Resource } from '$lib/types/bookings';
 
 	interface Props {
-		resource: 'laundry_room' | 'outdoor_area';
+		resource: Resource;
 		slotCount: number;
 		gridClass: string;
 		labels: BookingPageLabels;

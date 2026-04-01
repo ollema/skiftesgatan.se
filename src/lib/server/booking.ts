@@ -3,8 +3,7 @@ import { eq, and, gte, lte } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { log } from '$lib/server/log';
 import { booking, timeslot, user } from '$lib/server/db/schema';
-
-type Resource = 'laundry_room' | 'outdoor_area';
+import type { Resource } from '$lib/types/bookings';
 
 function maxBookingDate(from: CalendarDate = today(getLocalTimeZone())): CalendarDate {
 	return from.add({ months: 1 });

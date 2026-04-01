@@ -12,8 +12,9 @@ import {
 	cancelBooking as cancelBookingDb,
 	validateBookingDate
 } from '$lib/server/booking';
+import { RESOURCES, type Slot, type UpcomingBooking } from '$lib/types/bookings';
 
-const resourceSchema = v.picklist(['laundry_room', 'outdoor_area']);
+const resourceSchema = v.picklist(RESOURCES);
 const calendarDateSchema = v.instance(CalendarDate);
 
 function toCalendarDateTime(date: CalendarDate, hour: number) {
@@ -27,7 +28,7 @@ export const getSlots = query(
 		const user = getAuthUser();
 		const zdt = now('Europe/Stockholm');
 		const fetchedAt = new Time(zdt.hour, zdt.minute, zdt.second);
-		const slots = rawSlots.map((s) => ({
+		const slots: Slot[] = rawSlots.map((s) => ({
 			id: s.id,
 			start: toCalendarDateTime(date, s.startHour),
 			end: toCalendarDateTime(date, s.endHour),
@@ -44,7 +45,7 @@ export const getUpcomingSlots = query(
 	async ({ resource }) => {
 		const rawBookings = await getUpcomingBookings(resource);
 		const user = getAuthUser();
-		return rawBookings.map((b) => {
+		const bookings: UpcomingBooking[] = rawBookings.map((b) => {
 			const date = parseDate(b.date);
 			return {
 				timeslotId: b.timeslotId,
@@ -55,6 +56,7 @@ export const getUpcomingSlots = query(
 				username: user ? b.username : null
 			};
 		});
+		return bookings;
 	}
 );
 

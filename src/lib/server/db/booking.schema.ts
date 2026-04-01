@@ -10,8 +10,17 @@ import {
 	unique
 } from 'drizzle-orm/pg-core';
 import { user } from './auth.schema';
+import type { Resource } from '$lib/types/bookings';
 
 export const resourceEnum = pgEnum('resource', ['laundry_room', 'outdoor_area']);
+
+// Compile-time check: Drizzle enum values must match the shared Resource type
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _AssertResourceMatch = (typeof resourceEnum.enumValues)[number] extends Resource
+	? Resource extends (typeof resourceEnum.enumValues)[number]
+		? true
+		: never
+	: never;
 
 export const timeslot = pgTable(
 	'timeslot',

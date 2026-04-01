@@ -148,6 +148,10 @@ E2E tests use a separate PGLite database (`.pglite-test`), empty `RESEND_API_KEY
 
 Code quality improvements identified during codebase review, ordered by impact.
 
+### High
+
+- [ ] **Display names** -- we want to set display names. This should be done in the seeding. For prod we would need another column in the CSV. Users should be able to change their display name. Display names should be used in /konto and in the booking pages (pretty much everywhere except the login button there a fixed length is nice for UI purposes and we can use the apartment number instead)
+
 ### Medium
 
 - [ ] **Safer error type checking in booking conflict handler** -- `src/lib/api/booking.remote.ts` uses an unsafe cast `(e as { code: string }).code === '23505'` to detect unique constraint violations. Use a proper type guard.
