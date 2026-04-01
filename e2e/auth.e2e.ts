@@ -39,6 +39,20 @@ test.describe('auth flow', () => {
 		await expect(page.locator('.text-error')).toContainText('Felaktigt');
 	});
 
+	test('change display name', async ({ page }) => {
+		const user = uniqueUser('A');
+		await login(page, user);
+
+		await page.goto('/konto');
+		await expect(page.locator('h1')).toContainText('Mitt konto');
+
+		const newName = 'Nytt Testnamn';
+		await page.getByLabel('Nytt visningsnamn').fill(newName);
+		await page.getByRole('button', { name: 'Byt namn' }).click();
+
+		await expect(page.getByText(`Hej, ${newName}.`)).toBeVisible();
+	});
+
 	test('change password', async ({ page }) => {
 		const user = uniqueUser('A');
 		await login(page, user);

@@ -8,7 +8,7 @@ There is no self-registration. Accounts are pre-created by an admin using a CSV 
 
 ## Features
 
-- **Closed user system** -- no self-registration; accounts are provisioned by admin for each of the 32 apartments. Username is the apartment number (e.g. A1001). Supports password reset via email and email address changes with re-verification.
+- **Closed user system** -- no self-registration; accounts are provisioned by admin for each of the 32 apartments. Username is the apartment number (e.g. A1001). Supports password reset via email, email address changes with re-verification, and customizable display names.
 - **Laundry room booking** -- calendar with 5 daily timeslots (3-hour blocks, 07-22), one active booking per user
 - **Outdoor area booking** -- calendar with 1 all-day slot (07-22), one active booking per user
 - **Booking constraints** -- 30-day advance window, concurrent booking protection via database unique constraint, replace-or-cancel flow
@@ -95,32 +95,32 @@ Full reset from scratch:
 pnpm db:reset && pnpm db:push && pnpm db:seed:timeslots && pnpm db:seed:accounts && pnpm db:seed:bookings
 ```
 
-Dev accounts use apartment numbers A1001 through D1302. Password for each is `password-{username}`, e.g. `password-A1001`.
+Dev accounts use apartment numbers A1001 through D1302. Password for each is `password-{username}`, e.g. `password-A1001`. Each dev account has a fictional display name that can be changed on the /konto page.
 
 ## Scripts
 
-| Script                   | Description                       |
-| ------------------------ | --------------------------------- |
-| `pnpm dev`               | Start dev server                  |
-| `pnpm build`             | Production build                  |
-| `pnpm preview`           | Preview production build          |
-| `pnpm check`             | SvelteKit sync + svelte-check     |
-| `pnpm lint`              | Prettier + ESLint                 |
-| `pnpm format`            | Auto-format code                  |
-| `pnpm knip`              | Detect unused files/dependencies  |
-| `pnpm test`              | Run all tests (unit + E2E)        |
-| `pnpm test:unit`         | Vitest (unit + integration)       |
-| `pnpm test:e2e`          | Playwright E2E tests              |
-| `pnpm db:push`           | Apply Drizzle schema to database  |
-| `pnpm db:reset`          | Delete local PGLite database      |
-| `pnpm db:generate`       | Generate Drizzle migrations       |
-| `pnpm db:migrate`        | Run Drizzle migrations            |
-| `pnpm db:seed:timeslots` | Seed timeslots                    |
-| `pnpm db:seed:accounts`  | Seed 32 dev accounts              |
-| `pnpm db:seed:bookings`  | Seed random bookings              |
-| `pnpm db:seed:prod`      | Seed production accounts from CSV |
-| `pnpm db:studio`         | Open Drizzle Studio GUI           |
-| `pnpm auth:schema`       | Generate Better Auth schema       |
+| Script                   | Description                                             |
+| ------------------------ | ------------------------------------------------------- |
+| `pnpm dev`               | Start dev server                                        |
+| `pnpm build`             | Production build                                        |
+| `pnpm preview`           | Preview production build                                |
+| `pnpm check`             | SvelteKit sync + svelte-check                           |
+| `pnpm lint`              | Prettier + ESLint                                       |
+| `pnpm format`            | Auto-format code                                        |
+| `pnpm knip`              | Detect unused files/dependencies                        |
+| `pnpm test`              | Run all tests (unit + E2E)                              |
+| `pnpm test:unit`         | Vitest (unit + integration)                             |
+| `pnpm test:e2e`          | Playwright E2E tests                                    |
+| `pnpm db:push`           | Apply Drizzle schema to database                        |
+| `pnpm db:reset`          | Delete local PGLite database                            |
+| `pnpm db:generate`       | Generate Drizzle migrations                             |
+| `pnpm db:migrate`        | Run Drizzle migrations                                  |
+| `pnpm db:seed:timeslots` | Seed timeslots                                          |
+| `pnpm db:seed:accounts`  | Seed 32 dev accounts                                    |
+| `pnpm db:seed:bookings`  | Seed random bookings                                    |
+| `pnpm db:seed:prod`      | Seed production accounts from CSV (username,email,name) |
+| `pnpm db:studio`         | Open Drizzle Studio GUI                                 |
+| `pnpm auth:schema`       | Generate Better Auth schema                             |
 
 ## Environment Variables
 
@@ -150,7 +150,7 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ### High
 
-- [ ] **Display names** -- we want to set display names. This should be done in the seeding. For prod we would need another column in the CSV. Users should be able to change their display name. Display names should be used in /konto and in the booking pages (pretty much everywhere except the login button there a fixed length is nice for UI purposes and we can use the apartment number instead)
+- [x] **Display names** -- display names are set during seeding (dev uses fictional names, prod CSV has a `name` column). Users can change their display name on /konto. Display names appear in greetings on /konto and booking pages. The navbar login button keeps the apartment number for fixed-width UI.
 
 ### Medium
 

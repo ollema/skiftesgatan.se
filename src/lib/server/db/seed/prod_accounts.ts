@@ -33,7 +33,7 @@ async function seedProd() {
 	try {
 		csv = readFileSync(csvPath, 'utf-8');
 	} catch {
-		console.error(`Could not read ${csvPath}. Provide a CSV with columns: username,email`);
+		console.error(`Could not read ${csvPath}. Provide a CSV with columns: username,email,name`);
 		console.error('Usage: pnpx tsx src/lib/server/db/seed/prod_accounts.ts [path/to/accounts.csv]');
 		process.exit(1);
 	}
@@ -46,16 +46,17 @@ async function seedProd() {
 
 	const credentials: { username: string; email: string; password: string }[] = [];
 
-	for (const [apt, email] of lines) {
+	for (const [apt, email, name] of lines) {
 		if (!APARTMENT_REGEX.test(apt)) {
 			console.error(`Invalid apartment "${apt}" — skipping`);
 			continue;
 		}
 		const password = crypto.randomBytes(16).toString('base64url');
+		const displayName = name?.trim() || apt;
 
 		try {
 			await seedAuth.api.signUpEmail({
-				body: { email, password, name: apt, username: apt }
+				body: { email, password, name: displayName, username: apt }
 			});
 			credentials.push({ username: apt, email, password });
 		} catch (e) {

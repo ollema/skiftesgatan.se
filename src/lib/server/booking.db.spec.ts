@@ -47,8 +47,8 @@ vi.mock('$lib/server/db', async () => {
 		);
 
 		INSERT INTO "user" (id, name, email, username) VALUES
-			('user1', 'A1001', 'user1@test.com', 'A1001'),
-			('user2', 'B1001', 'user2@test.com', 'B1001');
+			('user1', 'Anna Lindqvist', 'user1@test.com', 'A1001'),
+			('user2', 'Erik Johansson', 'user2@test.com', 'B1001');
 
 		INSERT INTO timeslot (start_hour, end_hour, resource) VALUES
 			(7, 10, 'laundry_room'), (10, 13, 'laundry_room'), (13, 16, 'laundry_room'),

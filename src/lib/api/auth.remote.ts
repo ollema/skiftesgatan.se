@@ -110,6 +110,28 @@ export const changePassword = form(
 	}
 );
 
+export const changeName = form(
+	v.object({
+		name: v.pipe(v.string(), v.minLength(1), v.maxLength(100))
+	}),
+	async ({ name }) => {
+		const { request } = getRequestEvent();
+		const user = requireAuth();
+		try {
+			await auth.api.updateUser({
+				body: { name },
+				headers: request.headers
+			});
+		} catch (e) {
+			if (e instanceof APIError) {
+				invalid('Kunde inte byta namn');
+			}
+			throw e;
+		}
+		log.info(`[auth] name changed userId=${user.id}`);
+	}
+);
+
 export const changeEmail = form(
 	v.object({
 		email: v.pipe(v.string(), v.email())

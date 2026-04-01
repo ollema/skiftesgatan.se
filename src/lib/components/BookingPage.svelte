@@ -100,7 +100,7 @@
 
 		<h1 class="font-heading text-2xl font-normal">{labels.title}</h1>
 		{#if user}
-			<p class="mt-2 text-text-secondary">Hej boende i {user.name}!</p>
+			<p class="mt-2 text-text-secondary">Hej, {user.name}!</p>
 		{/if}
 		{#if myBooking}
 			<p class="mt-2 text-text-secondary">

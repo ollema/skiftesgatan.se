@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { getUser, signout, changeEmail, changePassword } from '$lib/api/auth.remote';
+	import { getUser, signout, changeName, changeEmail, changePassword } from '$lib/api/auth.remote';
 	import Button from '$lib/components/Button.svelte';
 </script>
 
@@ -8,6 +8,32 @@
 	{@const user = await getUser()}
 	<h1 class="mb-2 font-heading text-2xl font-normal">Mitt konto</h1>
 	<p class="mb-12 text-lg text-text-secondary">Hej, {user.name}.</p>
+
+	<section class="mb-12 max-w-sm">
+		<h2 class="mb-6 font-heading text-xl font-normal">Visningsnamn</h2>
+		<p class="mb-6 text-text-primary">{user.name}</p>
+		<form
+			{...changeName.enhance(async ({ submit, form }) => {
+				try {
+					await submit();
+					form.reset();
+					toast.success('Namn uppdaterat');
+				} catch {
+					toast.error('Kunde inte byta namn');
+				}
+			})}
+			class="flex flex-col gap-4"
+		>
+			<label class="flex flex-col gap-1 text-sm text-text-secondary">
+				Nytt visningsnamn
+				<input {...changeName.fields.name.as('text')} class="input-field" />
+			</label>
+			<Button>Byt namn</Button>
+			{#each changeName.fields.allIssues() as issue (issue.message)}
+				<p class="text-sm text-error">{issue.message}</p>
+			{/each}
+		</form>
+	</section>
 
 	<section class="mb-12 max-w-sm">
 		<h2 class="mb-6 font-heading text-xl font-normal">E-post</h2>
