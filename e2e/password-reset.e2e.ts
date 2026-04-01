@@ -37,6 +37,6 @@ test.describe('password reset flow', () => {
 		// Login with new password
 		await login(page, { username: user.username, password: newPassword });
 		await expect(page).toHaveURL('/konto');
-		await expect(page.locator('h1')).toContainText(user.username);
+		await expect(page.locator('h1')).toContainText('Mitt konto');
 	});
 });

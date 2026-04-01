@@ -6,22 +6,12 @@
 
 <svelte:boundary>
 	{@const user = await getUser()}
-	<h1 class="mb-2 font-heading text-2xl font-normal">Hej, {user.name}!</h1>
-	<p class="text-text-secondary">Ditt användar-ID är {user.id}.</p>
-	<form {...signout} class="mt-4">
-		<Button>Logga ut</Button>
-	</form>
+	<h1 class="mb-2 font-heading text-2xl font-normal">Mitt konto</h1>
+	<p class="mb-12 text-lg text-text-secondary">Hej, {user.name}.</p>
 
-	<div class="mt-12">
-		<h2 class="mb-4 font-heading text-xl font-normal">E-post</h2>
-		<p class="text-text-secondary">Nuvarande e-post: {user.email}</p>
-		<p class="text-text-secondary">
-			Verifierad: {#if user.emailVerified}Ja{:else}Nej{/if}
-		</p>
-	</div>
-
-	<div class="mt-12">
-		<h2 class="mb-4 font-heading text-xl font-normal">Byt e-post</h2>
+	<section class="mb-12 max-w-sm">
+		<h2 class="mb-6 font-heading text-xl font-normal">E-post</h2>
+		<p class="mb-6 text-text-primary">{user.email}</p>
 		<form
 			{...changeEmail.enhance(async ({ submit, form }) => {
 				try {
@@ -32,7 +22,7 @@
 					toast.error('Kunde inte byta e-post');
 				}
 			})}
-			class="flex max-w-sm flex-col gap-4"
+			class="flex flex-col gap-4"
 		>
 			<label class="flex flex-col gap-1 text-sm text-text-secondary">
 				Ny e-post
@@ -43,10 +33,10 @@
 				<p class="text-sm text-error">{issue.message}</p>
 			{/each}
 		</form>
-	</div>
+	</section>
 
-	<div class="mt-12">
-		<h2 class="mb-4 font-heading text-xl font-normal">Byt lösenord</h2>
+	<section class="mb-12 max-w-sm">
+		<h2 class="mb-6 font-heading text-xl font-normal">Lösenord</h2>
 		<form
 			{...changePassword.enhance(async ({ submit, form }) => {
 				try {
@@ -57,7 +47,7 @@
 					toast.error('Kunde inte byta lösenord');
 				}
 			})}
-			class="flex max-w-sm flex-col gap-4"
+			class="flex flex-col gap-4"
 		>
 			<label class="flex flex-col gap-1 text-sm text-text-secondary">
 				Nuvarande lösenord
@@ -72,7 +62,13 @@
 				<p class="text-sm text-error">{issue.message}</p>
 			{/each}
 		</form>
-	</div>
+	</section>
+
+	<section class="border-t border-border-subtle pt-8">
+		<form {...signout}>
+			<Button>Logga ut</Button>
+		</form>
+	</section>
 
 	{#snippet pending()}
 		<p class="text-text-secondary">Laddar...</p>

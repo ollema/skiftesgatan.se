@@ -14,7 +14,7 @@ test.describe('auth flow', () => {
 
 		// Should be able to access protected page
 		await page.goto('/konto');
-		await expect(page.locator('h1')).toContainText(user.username);
+		await expect(page.locator('h1')).toContainText('Mitt konto');
 
 		// Sign out
 		await page.getByRole('button', { name: 'Logga ut' }).click();
@@ -23,7 +23,7 @@ test.describe('auth flow', () => {
 		// Login again
 		await login(page, user);
 		await expect(page).toHaveURL('/konto');
-		await expect(page.locator('h1')).toContainText(user.username);
+		await expect(page.locator('h1')).toContainText('Mitt konto');
 	});
 
 	test('login with wrong password shows error', async ({ page }) => {
@@ -45,7 +45,7 @@ test.describe('auth flow', () => {
 
 		// Go to account page
 		await page.goto('/konto');
-		await expect(page.locator('h1')).toContainText(user.username);
+		await expect(page.locator('h1')).toContainText('Mitt konto');
 
 		// Change password
 		const newPassword = 'NewPassword456!';
@@ -60,6 +60,6 @@ test.describe('auth flow', () => {
 		// Login with new password
 		await login(page, { username: user.username, password: newPassword });
 		await expect(page).toHaveURL('/konto');
-		await expect(page.locator('h1')).toContainText(user.username);
+		await expect(page.locator('h1')).toContainText('Mitt konto');
 	});
 });
