@@ -2,6 +2,7 @@ import * as v from 'valibot';
 import { invalid, redirect } from '@sveltejs/kit';
 import { getRequestEvent, query, form } from '$app/server';
 import { auth, requireAuth, getAuthUser } from '$lib/server/auth';
+import { APARTMENT_REGEX } from '$lib/server/auth.config';
 import { APIError } from 'better-auth/api';
 import { log } from '$lib/server/log';
 
@@ -14,7 +15,7 @@ export const login = form(
 		username: v.pipe(
 			v.string(),
 			v.length(5),
-			v.regex(/^[A-Da-d]1[0-3]0[12]$/, 'Must be a valid apartment (e.g. A1001)')
+			v.regex(APARTMENT_REGEX, 'Måste vara en giltig lägenhet (t.ex. A1001)')
 		),
 		_password: v.pipe(v.string(), v.nonEmpty())
 	}),
@@ -30,9 +31,9 @@ export const login = form(
 				const reason = e.status === 403 ? 'email_not_verified' : 'invalid_credentials';
 				log.warn(`[auth] login failed username=${username} reason=${reason}`);
 				if (e.status === 403) {
-					invalid('Please verify your email address before logging in');
+					invalid('Verifiera din e-postadress innan du loggar in');
 				} else {
-					invalid(e.message || 'Invalid username or password');
+					invalid('Felaktigt användarnamn eller lösenord');
 				}
 			}
 			throw e;
@@ -77,7 +78,7 @@ export const resetPassword = form(
 			});
 		} catch (e) {
 			if (e instanceof APIError) {
-				invalid(e.message || 'Password reset failed. The link may have expired.');
+				invalid('Kunde inte återställa lösenordet. Länken kan ha gått ut.');
 			}
 			throw e;
 		}
@@ -101,7 +102,7 @@ export const changePassword = form(
 			});
 		} catch (e) {
 			if (e instanceof APIError) {
-				invalid(e.message || 'Password change failed');
+				invalid('Kunde inte byta lösenord');
 			}
 			throw e;
 		}
@@ -123,7 +124,7 @@ export const changeEmail = form(
 			});
 		} catch (e) {
 			if (e instanceof APIError) {
-				invalid(e.message || 'Email change failed');
+				invalid('Kunde inte byta e-post');
 			}
 			throw e;
 		}

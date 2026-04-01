@@ -9,6 +9,8 @@ for (const block of ['A', 'B', 'C', 'D']) {
 	}
 }
 
+export const APARTMENT_REGEX = /^[ABCD]1[0-3]0[12]$/;
+
 export const PASSWORD_CONFIG = {
 	minPasswordLength: 8,
 	maxPasswordLength: 256
@@ -20,6 +22,6 @@ export function usernamePlugin() {
 		maxUsernameLength: 5,
 		usernameNormalization: (u: string) => u.toUpperCase(),
 		validationOrder: { username: 'post-normalization' as const },
-		usernameValidator: (u: string) => /^[ABCD]1[0-3]0[12]$/.test(u)
+		usernameValidator: (u: string) => APARTMENT_REGEX.test(u)
 	});
 }

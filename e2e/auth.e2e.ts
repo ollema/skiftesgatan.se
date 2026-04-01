@@ -36,7 +36,7 @@ test.describe('auth flow', () => {
 		await loginForm.getByRole('button', { name: 'Logga in' }).click();
 
 		await expect(page).toHaveURL(/\/login/);
-		await expect(page.locator('.text-error')).toContainText('Invalid');
+		await expect(page.locator('.text-error')).toContainText('Felaktigt');
 	});
 
 	test('change password', async ({ page }) => {

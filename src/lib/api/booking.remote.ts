@@ -73,12 +73,12 @@ export const book = command(
 		if (replaceBookingId !== undefined) {
 			const cancelled = await cancelBookingDb(replaceBookingId, user.id);
 			if (!cancelled) {
-				error(404, 'Existing booking not found or cannot be cancelled');
+				error(404, 'Befintlig bokning hittades inte');
 			}
 		} else {
 			const alreadyBooked = await hasExistingFutureBooking(user.id, resource);
 			if (alreadyBooked) {
-				error(409, 'You already have a future booking for this resource');
+				error(409, 'Du har redan en kommande bokning');
 			}
 		}
 
@@ -92,7 +92,7 @@ export const book = command(
 				log.warn(
 					`[booking] conflict userId=${user.id} resource=${resource} date=${date} timeslotId=${timeslotId}`
 				);
-				error(409, 'This slot is already booked');
+				error(409, 'Tiden är redan bokad');
 			}
 			throw e;
 		}
@@ -104,6 +104,6 @@ export const cancelBooking = command(v.object({ bookingId: v.number() }), async 
 
 	const success = await cancelBookingDb(bookingId, user.id);
 	if (!success) {
-		error(404, 'Booking not found or cannot be cancelled');
+		error(404, 'Bokningen hittades inte');
 	}
 });

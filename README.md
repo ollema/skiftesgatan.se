@@ -148,15 +148,6 @@ E2E tests use a separate PGLite database (`.pglite-test`), empty `RESEND_API_KEY
 
 Code quality improvements identified during codebase review, ordered by impact.
 
-### High
-
-- [ ] **Consolidate apartment format regex** -- the apartment validation pattern is defined in 3 places with inconsistent behavior:
-  - `src/lib/server/auth.config.ts:23` -- `/^[ABCD]1[0-3]0[12]$/` (uppercase only)
-  - `src/lib/api/auth.remote.ts:16` -- `/^[A-Da-d]1[0-3]0[12]$/` (allows lowercase)
-  - `src/lib/server/db/seed/prod_accounts.ts:50` -- `/^[ABCD]1[0-3]0[12]$/` (uppercase only)
-
-  Export a single pattern from `auth.config.ts` and import it everywhere (uppercase only)
-
 ### Medium
 
 - [ ] **Safer error type checking in booking conflict handler** -- `src/lib/api/booking.remote.ts` uses an unsafe cast `(e as { code: string }).code === '23505'` to detect unique constraint violations. Use a proper type guard.

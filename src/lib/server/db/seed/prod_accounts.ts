@@ -5,7 +5,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { eq } from 'drizzle-orm';
 import { db } from '../index';
 import { user } from '../auth.schema';
-import { PASSWORD_CONFIG, usernamePlugin } from '../../auth.config';
+import { APARTMENT_REGEX, PASSWORD_CONFIG, usernamePlugin } from '../../auth.config';
 
 const seedAuth = betterAuth({
 	baseURL: 'http://localhost',
@@ -47,7 +47,7 @@ async function seedProd() {
 	const credentials: { username: string; email: string; password: string }[] = [];
 
 	for (const [apt, email] of lines) {
-		if (!/^[ABCD]1[0-3]0[12]$/.test(apt)) {
+		if (!APARTMENT_REGEX.test(apt)) {
 			console.error(`Invalid apartment "${apt}" — skipping`);
 			continue;
 		}
