@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
 	workers: 1,
 	webServer: {
-		command: 'pnpm db:test:fresh && pnpm build && pnpm preview',
+		command: 'pnpm db:reset test && pnpm db:seed test && pnpm build && pnpm preview',
 		port: 4173,
 		env: {
 			PGLITE_PATH: '.pglite-test',

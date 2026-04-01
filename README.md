@@ -4,7 +4,7 @@ Website for BRF Skiftesgatan 4, a housing association with 32 apartments in Goth
 
 Residents log in with their apartment number to book shared facilities, read association news, and access member information such as bylaws, finances, renovation plans, and board details.
 
-There is no self-registration. Accounts are pre-created by an admin using a CSV of apartment numbers and email addresses (`pnpm db:prod:seed:accounts`). Emails are marked as verified at creation time. Each resident can then log in and reset their password via email.
+There is no self-registration. Accounts are pre-created by an admin using a CSV of apartment numbers and email addresses (`pnpm db:seed prod`). Emails are marked as verified at creation time. Each resident can then log in and reset their password via email.
 
 ## Features
 
@@ -80,20 +80,14 @@ pnpm dev
 
 ### Database Setup
 
-PGLite runs in-process locally -- no external database needed. All dev commands are prefixed with `db:dev:`.
+PGLite runs in-process locally -- no external database needed.
 
 ```sh
-pnpm db:dev:push              # apply Drizzle schema
-pnpm db:dev:seed:timeslots    # seed available timeslots
-pnpm db:dev:seed:accounts     # seed 32 dev accounts
-pnpm db:dev:seed:bookings     # seed random bookings
+pnpm db:reset dev             # delete, push schema
+pnpm db:seed dev              # seed timeslots, accounts, bookings
 ```
 
-Full reset from scratch:
-
-```sh
-pnpm db:dev:fresh
-```
+Both commands accept `-y` to skip confirmation: `pnpm db:reset dev -- -y`.
 
 Dev accounts use apartment numbers A1001 through D1302. Password for each is `password-{username}`, e.g. `password-A1001`. Each dev account has a fictional display name that can be changed on the /konto page.
 
@@ -110,45 +104,31 @@ Production uses PostgreSQL on a CapRover VPS. The database is not publicly acces
 **Local setup:**
 
 1. Copy `.env.prod.example` to `.env.prod` and fill in your VPS SSH details and database password
-2. Open the tunnel in one terminal: `pnpm db:prod:tunnel`
-3. Run prod commands in another terminal: `pnpm db:prod:push`
+2. Open the tunnel in one terminal: `pnpm db:tunnel`
+3. Run prod commands in another terminal: `pnpm db:reset prod`, `pnpm db:seed prod`
 
-Destructive commands (`push`, `migrate`, `seed:*`) require you to type the database name to confirm.
+Destructive prod commands require you to type the database name to confirm.
 
 ## Scripts
 
-| Script                        | Description                                              |
-| ----------------------------- | -------------------------------------------------------- |
-| `pnpm dev`                    | Start dev server                                         |
-| `pnpm build`                  | Production build                                         |
-| `pnpm preview`                | Preview production build                                 |
-| `pnpm check`                  | SvelteKit sync + svelte-check                            |
-| `pnpm lint`                   | Prettier + ESLint                                        |
-| `pnpm format`                 | Auto-format code                                         |
-| `pnpm knip`                   | Detect unused files/dependencies                         |
-| `pnpm test`                   | Run all tests (unit + E2E)                               |
-| `pnpm test:unit`              | Vitest (unit + integration)                              |
-| `pnpm test:e2e`               | Playwright E2E tests                                     |
-| `pnpm db:dev:push`            | Apply Drizzle schema to dev PGLite                       |
-| `pnpm db:dev:reset`           | Delete local PGLite database                             |
-| `pnpm db:dev:seed`            | Seed all dev data (timeslots + accounts + bookings)      |
-| `pnpm db:dev:seed:timeslots`  | Seed timeslots                                           |
-| `pnpm db:dev:seed:accounts`   | Seed 32 dev accounts                                     |
-| `pnpm db:dev:seed:bookings`   | Seed random bookings                                     |
-| `pnpm db:dev:studio`          | Open Drizzle Studio GUI (dev)                            |
-| `pnpm db:dev:fresh`           | Full dev reset: delete + push + seed                     |
-| `pnpm db:test:push`           | Apply Drizzle schema to test PGLite                      |
-| `pnpm db:test:reset`          | Delete test PGLite database + test emails                |
-| `pnpm db:test:seed`           | Seed test data (timeslots + accounts)                    |
-| `pnpm db:test:fresh`          | Full test reset: delete + push + seed                    |
-| `pnpm db:prod:tunnel`         | Open SSH tunnel to production database                   |
-| `pnpm db:prod:push`           | Apply Drizzle schema to production (with confirmation)   |
-| `pnpm db:prod:migrate`        | Run Drizzle migrations on production (with confirmation) |
-| `pnpm db:prod:seed:timeslots` | Seed timeslots in production (with confirmation)         |
-| `pnpm db:prod:seed:accounts`  | Seed production accounts from CSV (with confirmation)    |
-| `pnpm db:prod:studio`         | Open Drizzle Studio GUI (production)                     |
-| `pnpm db:generate`            | Generate Drizzle migration files                         |
-| `pnpm auth:schema`            | Generate Better Auth schema                              |
+| Script                 | Description                                                 |
+| ---------------------- | ----------------------------------------------------------- |
+| `pnpm dev`             | Start dev server                                            |
+| `pnpm build`           | Production build                                            |
+| `pnpm preview`         | Preview production build                                    |
+| `pnpm check`           | SvelteKit sync + svelte-check                               |
+| `pnpm lint`            | Prettier + ESLint                                           |
+| `pnpm format`          | Auto-format code                                            |
+| `pnpm knip`            | Detect unused files/dependencies                            |
+| `pnpm test`            | Run all tests (unit + E2E)                                  |
+| `pnpm test:unit`       | Vitest (unit + integration)                                 |
+| `pnpm test:e2e`        | Playwright E2E tests                                        |
+| `pnpm db:reset <env>`  | Clean slate + push schema (env: test, dev, prod)            |
+| `pnpm db:seed <env>`   | Seed timeslots + accounts + bookings (env: test, dev, prod) |
+| `pnpm db:studio <env>` | Open Drizzle Studio GUI (env: dev, prod)                    |
+| `pnpm db:tunnel`       | Open SSH tunnel to production database                      |
+| `pnpm db:generate`     | Generate Drizzle migration files                            |
+| `pnpm auth:schema`     | Generate Better Auth schema                                 |
 
 ## Environment Variables
 
@@ -177,7 +157,7 @@ Copy `.env.example` to `.env` and fill in values.
 
 **E2E tests** (Playwright): auth flows, booking flows, concurrent booking race conditions, content rendering, email change, password reset, navigation.
 
-E2E tests use a separate PGLite database (`.pglite-test`) via `pnpm db:test:fresh`, empty `RESEND_API_KEY` to capture emails as files, and run sequentially (1 worker).
+E2E tests use a separate PGLite database (`.pglite-test`) via `pnpm db:reset test && pnpm db:seed test`, empty `RESEND_API_KEY` to capture emails as files, and run sequentially (1 worker).
 
 **CI pipeline** (GitHub Actions): lint + typecheck + knip, unit tests, E2E tests with artifact upload on failure.
 
@@ -187,7 +167,7 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ### High
 
-- [x] **Split db commands into test, dev and prod** -- `db:dev:*` forces PGLite, `db:test:*` uses separate `.pglite-test`, `db:prod:*` requires `DATABASE_URL` with interactive confirmation for destructive operations.
+- [x] **Split db commands into test, dev and prod** -- action-based scripts (`db:reset`, `db:seed`, `db:studio`) take the environment as an argument. Test is non-interactive, dev/prod prompt for confirmation. Prod requires `DATABASE_URL` via `.env.prod`.
 
 ### Medium
 
