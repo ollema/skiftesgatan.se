@@ -17,7 +17,7 @@
 	<h1 class="mb-6 font-heading text-3xl font-normal lg:text-[2.75rem] lg:leading-tight">
 		Skiftesgatan
 	</h1>
-	<p class="mx-auto max-w-120 text-lg leading-relaxed text-text-secondary">
+	<p class="mx-auto max-w-120 text-lg/relaxed text-text-secondary">
 		24 lägenheter i fyra våningar, byggda 1965. Ett välskött hem i Göteborg.
 	</p>
 </section>

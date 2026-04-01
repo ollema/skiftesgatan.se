@@ -150,8 +150,6 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ### High
 
-- [ ] **Extract shared booking page component** -- `src/routes/tvattstuga/+page.svelte` and `src/routes/uteplats/+page.svelte` are near-identical (247 lines each, copy-pasted). Only differences are the resource name, slot count, and Swedish labels. Extract a parameterized `BookingPage.svelte` component.
-
 - [ ] **Consolidate apartment format regex** -- the apartment validation pattern is defined in 3 places with inconsistent behavior:
   - `src/lib/server/auth.config.ts:23` -- `/^[ABCD]1[0-3]0[12]$/` (uppercase only)
   - `src/lib/api/auth.remote.ts:16` -- `/^[A-Da-d]1[0-3]0[12]$/` (allows lowercase)
