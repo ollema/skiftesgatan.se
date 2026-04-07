@@ -2,15 +2,10 @@
 title: Renoveringar
 ---
 
-Information om genomförda och planerade renoveringar i byggnaden.
+Genomförda renoverings- och underhållsarbeten:
 
-### Genomförda
-
-- **2024**: Badrumsrenoveringar i alla lägenheter
-- **2023**: Nya fönster installerade i hela byggnaden
-- **2022**: Uppgradering av elsystemet
-
-### Planerade
-
-- **2026**: Takbyte
-- **2027**: Hissmodernisering
+- **2021–2022**: Tak- och fasadrenovering
+- **2021–2022**: Renovering av vinden i samband med nyproduktion av lägenheter
+- **2017**: Indragning av fiber till samtliga lägenheter
+- **2013–2014**: Upprustning av innergården
+- **2011**: Totalrenovering av samtliga lägenheter

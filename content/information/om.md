@@ -1,7 +1,7 @@
 ---
-title: Om Skiftesgatan
+title: Om BRF Skiftesgatan 4
 ---
 
-Skiftesgatan är en bostadsrättsförening belägen i Göteborg. Byggnaden uppfördes 1965 och består av 24 lägenheter fördelade på fyra våningar.
+Bostadsrättsföreningen Skiftesgatan 4 bildades 2012 och äger fastigheten Brämaregården 45:11 i Göteborg. Huset uppfördes 1939 och totalrenoverades 2011/2012.
 
-Föreningen förvaltas av en vald styrelse och alla boende är medlemmar med lika rösträtt vid årsstämman.
+Föreningen utökades 2022 från 24 till 32 lägenheter genom nyproduktion på vindsvåningen. Den sammanlagda bostadsarean är 1 154 kvadratmeter, och till fastigheten hör en gård om 1 192 kvadratmeter.

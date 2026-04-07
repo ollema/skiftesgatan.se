@@ -18,28 +18,29 @@
 
 <!-- Hero -->
 <section class="pt-16 pb-24 text-center lg:pt-24 lg:pb-32">
-	<p class="mb-4 text-xs tracking-widest text-text-muted uppercase">Bostadsrättsförening</p>
+	<p class="mb-4 text-xs tracking-widest text-text-muted uppercase">Bostadsrättsföreningen</p>
 	<h1 class="mb-6 font-heading text-3xl font-normal lg:text-[2.75rem] lg:leading-tight">
-		Skiftesgatan
+		BRF Skiftesgatan 4
 	</h1>
 	<p class="mx-auto max-w-120 text-lg/relaxed text-text-secondary">
-		24 lägenheter i fyra våningar, byggda 1965. Ett välskött hem i Göteborg.
+		32 lägenheter i ett landshövdingehus från 1939.
+		<br />Ett välskött hem i Göteborg.
 	</p>
 </section>
 
 <!-- About -->
-<section class="mx-auto max-w-170 pb-24 lg:pb-32">
-	<h2 class="mb-6 font-heading text-xl font-normal">Om föreningen</h2>
+<section class="mx-auto max-w-170 pb-12 lg:pb-16">
+	<h2 class="font-heading text-xl font-normal">Om föreningen</h2>
 	<p class="leading-loose text-text-secondary">
-		Skiftesgatan är en bostadsrättsförening belägen i Göteborg. Byggnaden uppfördes 1965 och består
-		av 24 lägenheter fördelade på fyra våningar. Föreningen förvaltas av en vald styrelse och alla
-		boende är medlemmar med lika rösträtt vid årsstämman.
+		Bostadsrättsföreningen Skiftesgatan 4 bildades 2012 och äger fastigheten Brämaregården 45:11 i
+		Göteborg. Huset uppfördes 1939 och totalrenoverades 2011/2012. Föreningen utökades 2022 från 24
+		till 32 lägenheter genom nyproduktion på vindsvåningen.
 	</p>
 	<a href={resolve('/information/om')} class="mt-4 inline-block text-sm"> Läs mer om föreningen </a>
 </section>
 
 <!-- Latest News -->
-<section class="mx-auto max-w-170 pb-24 lg:pb-32">
+<section class="mx-auto max-w-170 pb-12 lg:pb-16">
 	<h2 class="mb-10 font-heading text-xl font-normal">Nyheter</h2>
 	<div class="flex flex-col gap-10">
 		{#each latestNews as item (item._meta.path)}
@@ -62,7 +63,7 @@
 </section>
 
 <!-- Resident Services -->
-<section class="pb-24 lg:pb-32">
+<section class="mx-auto max-w-170 pb-12 lg:pb-16">
 	<h2 class="mb-10 font-heading text-xl font-normal">För boende</h2>
 	<div class="grid gap-6 sm:grid-cols-2">
 		<a
@@ -91,7 +92,7 @@
 			class="block bg-bg-alt p-8 no-underline transition-colors duration-120 hover:bg-border-subtle"
 		>
 			<h3 class="mb-2 font-heading text-xl font-normal text-text-primary">Kontakt</h3>
-			<p class="text-sm text-text-secondary">Nå styrelsen eller fastighetsförvaltaren.</p>
+			<p class="text-sm text-text-secondary">Nå styrelsen.</p>
 		</a>
 	</div>
 </section>
@@ -101,7 +102,7 @@
 	<h2 class="mb-6 font-heading text-xl font-normal">Kontakt</h2>
 	<p class="text-text-secondary">
 		Har du frågor? Kontakta styrelsen på
-		<a href="mailto:styrelsen@skiftesgatan.se">styrelsen@skiftesgatan.se</a>.
+		<a href="mailto:brfskiftesgatan@gmail.com">brfskiftesgatan@gmail.com</a>.
 	</p>
 	<a href={resolve('/kontakt')} class="mt-4 inline-block text-sm">Alla kontaktuppgifter</a>
 </section>

@@ -21,7 +21,7 @@ test.describe('navigation', () => {
 		await expect(page).toHaveURL(/\/konto\/login/);
 
 		// Site title links back to home
-		await page.getByRole('link', { name: 'Skiftesgatan' }).click();
+		await page.getByRole('link', { name: 'BRF Skiftesgatan 4' }).click();
 		await expect(page).toHaveURL('/');
 	});
 });

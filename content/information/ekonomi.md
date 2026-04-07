@@ -2,12 +2,12 @@
 title: Ekonomi
 ---
 
-En översikt av föreningens ekonomiska status.
+I månadsavgiften ingår värme, vatten, kabel-TV, bredband, IP-telefoni och sophämtning.
 
-### Månadsavgifter
+### TV, bredband och telefoni
 
-Månadsavgifterna fastställs årligen av styrelsen baserat på den budget som godkänns vid årsstämman. Nuvarande avgifter ligger mellan 3 500 och 6 200 kr beroende på lägenhetsstorlek.
+Föreningen har ett gruppavtal med Telenor, och fiber är indraget till varje lägenhet.
 
 ### Årsredovisning
 
-Årsredovisningen presenteras vid årsstämman varje vår. Den innehåller resultaträkning, balansräkning och revisionsberättelse.
+[Årsredovisning 2023](https://hemma.sbc.se/shared/rapporter/arsredovisningPopup.php?bokslutsdatum=2023-12-31)

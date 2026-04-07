@@ -18,7 +18,8 @@
 				<div class="flex items-center gap-8">
 					<a
 						href={resolve('/')}
-						class="font-heading text-xl font-normal text-text-primary no-underline">Skiftesgatan</a
+						class="font-heading text-xl font-normal text-text-primary no-underline"
+						>BRF Skiftesgatan 4</a
 					>
 					<Navbar />
 				</div>
@@ -73,7 +74,7 @@
 		</div>
 	</nav>
 
-	<main class="mx-auto max-w-240 p-4 lg:px-10 lg:py-6">
+	<main class="mx-auto max-w-240 p-4 lg:px-10 lg:py-8">
 		{@render children()}
 	</main>
 </div>

@@ -176,11 +176,11 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 - [ ] **Theming** -- favicons and PWA theme colors or whatever those attributes are called should mathc the new color scheme.
 
-- [x] **~~Setup hints for notifications and calendar feed~~** -- Dismissible tips on booking pages when user has no notification preferences or calendar subscription. Checks `notification_preference` and `calendar_token` tables server-side, dismissal via cookie (30 days default, "Visa inte tips" for permanent). Component: `SetupHints.svelte`, query: `hints.remote.ts`.
+- [ ] **Setup hints for notifications and calendar feed** -- Exists but it seems like calendar feed is automatically created when visting the /konto page so we should add a manual toggle for that somehow.
+
+- [ ] **Add contact information for property manager and emergency contact** -- currently missing from the contact page and should be added once we have that information. It should be redacted for users which are not logged in.
 
 ### Medium
-
-- [x] **~~Investigate future needs for schema changes~~** -- Notification system implemented: schema (`notification_preference`, `booking_notification`), scheduler (60s interval via `init` hook), email templates, preference UI on `/konto`.
 
 - [ ] **Consolidate Drizzle relations** -- `relations()` for the `user` table is declared in three files (`auth.schema.ts`, `booking.schema.ts`, `notification.schema.ts`). Drizzle only supports one `relations()` per table -- the last one wins. This doesn't cause issues today (no code uses Drizzle relational queries), but should be merged into a single file before using `.query.user.findMany({ with: ... })`.
 

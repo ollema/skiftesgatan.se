@@ -67,7 +67,7 @@ export async function generateCalendarFeed(userId: string): Promise<string> {
 		.where(and(eq(booking.userId, userId), gte(booking.date, todayStr)));
 
 	const cal = ical({
-		name: 'Skiftesgatan - Bokningar',
+		name: 'BRF Skiftesgatan 4 - Bokningar',
 		prodId: '//BRF Skiftesgatan 4//Bokningar//SV',
 		method: ICalCalendarMethod.PUBLISH,
 		timezone: TIMEZONE
@@ -75,15 +75,14 @@ export async function generateCalendarFeed(userId: string): Promise<string> {
 
 	for (const b of bookings) {
 		const label = RESOURCE_LABELS[b.resource];
-		const summary = `${label} ${pad(b.startHour)}:00–${pad(b.endHour)}:00`;
 
 		cal.createEvent({
 			id: `booking-${b.bookingId}@skiftesgatan.se`,
-			summary,
+			summary: label,
 			start: new Date(`${b.date}T${pad(b.startHour)}:00:00`),
 			end: new Date(`${b.date}T${pad(b.endHour)}:00:00`),
 			timezone: TIMEZONE,
-			location: 'Skiftesgatan 4'
+			location: 'Skiftesgatan 4 41739 Göteborg'
 		});
 	}
 
