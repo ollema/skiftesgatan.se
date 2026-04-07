@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import { CalendarDate, CalendarDateTime, Time, now, parseDate } from '@internationalized/date';
 import { error } from '@sveltejs/kit';
-import { query, command } from '$app/server';
+import { query, command, requested } from '$app/server';
 import { requireAuth, getAuthUser } from '$lib/server/auth';
 import { log } from '$lib/server/log';
 import {
@@ -114,4 +114,7 @@ export const cancelBooking = command(v.object({ bookingId: v.number() }), async 
 	if (!success) {
 		error(404, 'Bokningen hittades inte');
 	}
+
+	await requested(getSlots, 5).refreshAll();
+	await requested(getUpcomingSlots, 5).refreshAll();
 });
