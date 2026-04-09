@@ -3,7 +3,7 @@ import { uniqueUser, login, readResetPasswordUrl } from './helpers';
 
 test.describe('password reset flow', () => {
 	test('request reset, use link, login with new password', async ({ page }) => {
-		const user = uniqueUser('D');
+		const user = uniqueUser('B');
 		await login(page, user);
 
 		// Sign out
@@ -37,6 +37,6 @@ test.describe('password reset flow', () => {
 		// Login with new password
 		await login(page, { username: user.username, password: newPassword });
 		await expect(page).toHaveURL('/konto');
-		await expect(page.locator('h1')).toContainText('Mitt konto');
+		await expect(page.locator('h1')).toContainText('Hej,');
 	});
 });

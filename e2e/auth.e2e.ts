@@ -14,7 +14,7 @@ test.describe('auth flow', () => {
 
 		// Should be able to access protected page
 		await page.goto('/konto');
-		await expect(page.locator('h1')).toContainText('Mitt konto');
+		await expect(page.locator('h1')).toContainText('Hej,');
 
 		// Sign out
 		await page.getByRole('button', { name: 'Logga ut' }).click();
@@ -23,7 +23,7 @@ test.describe('auth flow', () => {
 		// Login again
 		await login(page, user);
 		await expect(page).toHaveURL('/konto');
-		await expect(page.locator('h1')).toContainText('Mitt konto');
+		await expect(page.locator('h1')).toContainText('Hej,');
 	});
 
 	test('login with wrong password shows error', async ({ page }) => {
@@ -44,7 +44,7 @@ test.describe('auth flow', () => {
 		await login(page, user);
 
 		await page.goto('/konto');
-		await expect(page.locator('h1')).toContainText('Mitt konto');
+		await expect(page.locator('h1')).toContainText('Hej,');
 
 		// Open the edit dialog
 		await page.getByRole('button', { name: 'Ändra' }).first().click();
@@ -64,7 +64,7 @@ test.describe('auth flow', () => {
 
 		// Go to account page
 		await page.goto('/konto');
-		await expect(page.locator('h1')).toContainText('Mitt konto');
+		await expect(page.locator('h1')).toContainText('Hej,');
 
 		// Open the password edit dialog (third "Ändra" button)
 		await page.getByRole('button', { name: 'Ändra' }).nth(2).click();
@@ -84,6 +84,6 @@ test.describe('auth flow', () => {
 		// Login with new password
 		await login(page, { username: user.username, password: newPassword });
 		await expect(page).toHaveURL('/konto');
-		await expect(page.locator('h1')).toContainText('Mitt konto');
+		await expect(page.locator('h1')).toContainText('Hej,');
 	});
 });

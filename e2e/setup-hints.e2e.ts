@@ -67,7 +67,7 @@ test.describe('setup hints', () => {
 
 		// Go to /konto and enable a notification
 		await page.goto('/konto');
-		const checkbox = page.getByLabel('24 timmar före').first();
+		const checkbox = page.getByLabel('1 dygn innan').first();
 		await checkbox.check();
 
 		// Go back to booking page — notification hint should be gone

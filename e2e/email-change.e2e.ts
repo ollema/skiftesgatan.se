@@ -27,7 +27,7 @@ test.describe('email change flow', () => {
 
 		// Verification complete — navigate to account page to confirm
 		await page.goto('/konto');
-		await expect(page.locator('h1')).toContainText('Mitt konto');
+		await expect(page.locator('h1')).toContainText('Hej,');
 		await expect(page.getByText(newEmail)).toBeVisible();
 	});
 });

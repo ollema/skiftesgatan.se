@@ -7,7 +7,7 @@ test.describe('notification preferences', () => {
 		await login(page, user);
 
 		await page.goto('/konto');
-		await expect(page.locator('h1')).toContainText('Mitt konto');
+		await expect(page.locator('h1')).toContainText('Hej,');
 
 		// Find the first switch (laundry 24h) — all start unchecked
 		const laundry24h = page
@@ -24,7 +24,7 @@ test.describe('notification preferences', () => {
 
 		// Reload and verify it persisted
 		await page.reload();
-		await expect(page.locator('h1')).toContainText('Mitt konto');
+		await expect(page.locator('h1')).toContainText('Hej,');
 
 		const laundry24hAfterReload = page
 			.locator('fieldset')
@@ -40,7 +40,7 @@ test.describe('notification preferences', () => {
 
 		// Reload and verify it persisted as off
 		await page.reload();
-		await expect(page.locator('h1')).toContainText('Mitt konto');
+		await expect(page.locator('h1')).toContainText('Hej,');
 
 		const laundry24hFinal = page
 			.locator('fieldset')
