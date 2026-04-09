@@ -23,10 +23,13 @@ function toCalendarDateTime(date: CalendarDate, hour: number) {
 	return new CalendarDateTime(date.year, date.month, date.day, hour);
 }
 
-export const getSlots = query(
+export const getBookingData = query(
 	v.object({ date: calendarDateSchema, resource: resourceSchema }),
 	async ({ date, resource }) => {
-		const rawSlots = await getAvailableSlots(date, resource);
+		const [rawSlots, rawBookings] = await Promise.all([
+			getAvailableSlots(date, resource),
+			getUpcomingBookings(resource)
+		]);
 		const user = getAuthUser();
 		const zdt = now(TIMEZONE);
 		const fetchedAt = new Time(zdt.hour, zdt.minute, zdt.second);
@@ -38,27 +41,18 @@ export const getSlots = query(
 			userId: user ? s.userId : null,
 			username: user ? s.username : null
 		}));
-		return { slots, fetchedAt };
-	}
-);
-
-export const getUpcomingSlots = query(
-	v.object({ resource: resourceSchema }),
-	async ({ resource }) => {
-		const rawBookings = await getUpcomingBookings(resource);
-		const user = getAuthUser();
-		const bookings: UpcomingBooking[] = rawBookings.map((b) => {
-			const date = parseDate(b.date);
+		const upcomingBookings: UpcomingBooking[] = rawBookings.map((b) => {
+			const bDate = parseDate(b.date);
 			return {
 				timeslotId: b.timeslotId,
-				start: toCalendarDateTime(date, b.startHour),
-				end: toCalendarDateTime(date, b.endHour),
+				start: toCalendarDateTime(bDate, b.startHour),
+				end: toCalendarDateTime(bDate, b.endHour),
 				bookingId: b.bookingId,
 				userId: user ? b.userId : null,
 				username: user ? b.username : null
 			};
 		});
-		return bookings;
+		return { slots, fetchedAt, upcomingBookings };
 	}
 );
 
@@ -93,8 +87,7 @@ export const book = command(
 			} catch (e) {
 				log.warn(`[notification] failed to create notifications bookingId=${result.id}: ${e}`);
 			}
-			await getSlots({ date, resource }).refresh();
-			await getUpcomingSlots({ resource }).refresh();
+			await getBookingData({ date, resource }).refresh();
 			emitBookingChanged(resource);
 			return result;
 		} catch (e: unknown) {
@@ -117,7 +110,6 @@ export const cancelBooking = command(v.object({ bookingId: v.number() }), async 
 		error(404, 'Bokningen hittades inte');
 	}
 
-	await requested(getSlots, 5).refreshAll();
-	await requested(getUpcomingSlots, 5).refreshAll();
+	await requested(getBookingData, 5).refreshAll();
 	emitBookingChanged(result.resource);
 });

@@ -14,7 +14,7 @@
 	import { toast } from 'svelte-sonner';
 	import { source } from 'sveltekit-sse';
 	import { getOptionalUser } from '$lib/api/auth.remote';
-	import { getSlots, getUpcomingSlots, book, cancelBooking } from '$lib/api/booking.remote';
+	import { getBookingData, book, cancelBooking } from '$lib/api/booking.remote';
 	import { getSetupHints } from '$lib/api/hints.remote';
 	import Calendar from '$lib/components/Calendar.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -57,8 +57,7 @@
 		const value = connection.select('booking-changed');
 		const unsubscribe = value.subscribe((v) => {
 			if (v !== '') {
-				getSlots({ date, resource }).refresh();
-				getUpcomingSlots({ resource }).refresh();
+				getBookingData({ date, resource }).refresh();
 			}
 		});
 
@@ -76,8 +75,7 @@
 				lastHidden = Date.now();
 			}
 			if (document.visibilityState === 'visible' && Date.now() - lastHidden > 30_000) {
-				getSlots({ date, resource }).refresh();
-				getUpcomingSlots({ resource }).refresh();
+				getBookingData({ date, resource }).refresh();
 			}
 		}
 
@@ -131,10 +129,10 @@
 
 <svelte:boundary>
 	{@const user = await getOptionalUser()}
-	{@const slotsData = await getSlots({ date, resource })}
-	{@const slots = slotsData.slots}
-	{@const fetchedAt = slotsData.fetchedAt}
-	{@const upcomingBookings = await getUpcomingSlots({ resource })}
+	{@const bookingData = await getBookingData({ date, resource })}
+	{@const slots = bookingData.slots}
+	{@const fetchedAt = bookingData.fetchedAt}
+	{@const upcomingBookings = bookingData.upcomingBookings}
 	{@const timeslotIds = slots.map((s) => s.id)}
 	{@const dots = buildDots(upcomingBookings, user?.id ?? '', timeslotIds)}
 	{@const myBooking = user ? upcomingBookings.find((b) => b.userId === user.id) : undefined}
@@ -183,8 +181,7 @@
 			<button
 				class="cursor-pointer text-text-muted underline decoration-1 underline-offset-2"
 				onclick={async () => {
-					await getSlots({ date, resource }).refresh();
-					await getUpcomingSlots({ resource }).refresh();
+					await getBookingData({ date, resource }).refresh();
 				}}>Uppdatera nu</button
 			>
 		</p>
@@ -254,8 +251,7 @@
 				error = '';
 				try {
 					await cancelBooking({ bookingId: cancelBookingId }).updates(
-						getSlots({ date, resource }),
-						getUpcomingSlots({ resource })
+						getBookingData({ date, resource })
 					);
 					toast.success(labels.toastCancelled);
 				} catch (e) {
