@@ -176,8 +176,6 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 - [ ] **Theming** -- favicons and PWA theme colors or whatever those attributes are called should mathc the new color scheme.
 
-- [ ] **Setup hints for notifications and calendar feed** -- Exists but it seems like calendar feed is automatically created when visting the /konto page so we should add a manual toggle for that somehow.
-
 - [ ] **Add contact information for property manager and emergency contact** -- currently missing from the contact page and should be added once we have that information. It should be redacted for users which are not logged in.
 
 ### Medium
@@ -186,7 +184,7 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 - [ ] **Safer error type checking in booking conflict handler** -- `src/lib/api/booking.remote.ts` uses an unsafe cast `(e as { code: string }).code === '23505'` to detect unique constraint violations. Use a proper type guard.
 
-- [ ] **Add database index on booking table** -- `(userId, resource)` composite index for the `hasExistingFutureBooking` query in `src/lib/server/booking.ts`.
+- [ ] **Add database indexes** -- to speed up common queries.
 
 - [ ] **Booking page accessibility** -- add `aria-live="polite"` to error message containers and descriptive `aria-label` attributes to timeslot buttons (currently just show time text).
 

@@ -21,9 +21,10 @@
 	let { date = $bindable(), minValue, maxValue, dots, slotCount }: Props = $props();
 
 	let dotLength: number | undefined = $derived.by(() => {
-		if (!dots) return undefined;
-		const entries = Object.values(dots);
-		if (entries.length > 0) return entries[0].length;
+		if (dots) {
+			const entries = Object.values(dots);
+			if (entries.length > 0) return entries[0].length;
+		}
 		return slotCount;
 	});
 
@@ -94,15 +95,16 @@
 								{#each week as day (day.toString())}
 									<Calendar.Cell date={day} month={month.value} class="p-0">
 										<Calendar.Day
-											class="inline-flex w-full flex-col items-center justify-center py-1 text-sm hover:bg-bg-alt
-												data-disabled:cursor-not-allowed
-												data-disabled:text-border data-disabled:hover:bg-transparent data-outside-month:text-text-muted
-												data-selected:ring-2 data-selected:ring-text-primary/20 data-selected:ring-inset data-today:font-semibold
-												sm:py-2.5"
+											class="inline-flex h-12 w-full flex-col items-center justify-center py-1 text-sm
+												hover:bg-bg-alt
+												data-disabled:cursor-not-allowed data-disabled:text-border data-disabled:hover:bg-transparent
+												data-outside-month:text-text-muted data-selected:ring-2 data-selected:ring-text-primary/20 data-selected:ring-inset
+												data-today:font-semibold sm:py-2.5"
 										>
 											{day.day}
-											{#if dots && dotLength}
+											{#if dotLength}
 												{@const inRange =
+													dots &&
 													(!minValue || day.compare(minValue) >= 0) &&
 													(!maxValue || day.compare(maxValue) <= 0)}
 												{@const dayDots = inRange ? getDotsForDay(day.toString()) : undefined}
