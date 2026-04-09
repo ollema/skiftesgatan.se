@@ -46,9 +46,14 @@ test.describe('auth flow', () => {
 		await page.goto('/konto');
 		await expect(page.locator('h1')).toContainText('Mitt konto');
 
+		// Open the edit dialog
+		await page.getByRole('button', { name: 'Ändra' }).first().click();
+		const dialog = page.getByRole('dialog');
+		await expect(dialog).toBeVisible();
+
 		const newName = 'Nytt Testnamn';
-		await page.getByLabel('Nytt visningsnamn').fill(newName);
-		await page.getByRole('button', { name: 'Byt namn' }).click();
+		await dialog.getByLabel('Nytt visningsnamn').fill(newName);
+		await dialog.getByRole('button', { name: 'Spara' }).click();
 
 		await expect(page.getByText(`Hej, ${newName}.`)).toBeVisible();
 	});
@@ -61,11 +66,16 @@ test.describe('auth flow', () => {
 		await page.goto('/konto');
 		await expect(page.locator('h1')).toContainText('Mitt konto');
 
+		// Open the password edit dialog (third "Ändra" button)
+		await page.getByRole('button', { name: 'Ändra' }).nth(2).click();
+		const dialog = page.getByRole('dialog');
+		await expect(dialog).toBeVisible();
+
 		// Change password
 		const newPassword = 'NewPassword456!';
-		await page.getByLabel('Nuvarande lösenord').fill(user.password);
-		await page.getByLabel('Nytt lösenord').fill(newPassword);
-		await page.getByRole('button', { name: 'Byt lösenord' }).click();
+		await dialog.getByLabel('Nuvarande lösenord').fill(user.password);
+		await dialog.getByLabel('Nytt lösenord').fill(newPassword);
+		await dialog.getByRole('button', { name: 'Spara' }).click();
 
 		// Sign out
 		await page.getByRole('button', { name: 'Logga ut' }).click();

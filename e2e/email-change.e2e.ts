@@ -9,8 +9,14 @@ test.describe('email change flow', () => {
 		// Request email change on account page
 		const newEmail = `changed-${user.username.toLowerCase()}@resend.dev`;
 		await page.goto('/konto');
-		await page.getByLabel('Ny e-post').fill(newEmail);
-		await page.getByRole('button', { name: 'Byt e-post' }).click();
+
+		// Open the email edit dialog (second "Ändra" button)
+		await page.getByRole('button', { name: 'Ändra' }).nth(1).click();
+		const dialog = page.getByRole('dialog');
+		await expect(dialog).toBeVisible();
+
+		await dialog.getByLabel('Ny e-post').fill(newEmail);
+		await dialog.getByRole('button', { name: 'Spara' }).click();
 
 		// Wait for the form to complete (no error shown)
 		await page.waitForLoadState('networkidle');
