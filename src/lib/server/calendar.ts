@@ -7,7 +7,7 @@ import { booking, timeslot, calendarToken } from '$lib/server/db/schema';
 import { TIMEZONE } from '$lib/types/bookings';
 
 const RESOURCE_LABELS = {
-	laundry_room: 'Tvättstuga',
+	laundry_room: 'Tvättid',
 	outdoor_area: 'Uteplats'
 } as const;
 
