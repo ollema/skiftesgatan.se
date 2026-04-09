@@ -12,6 +12,7 @@
 <script lang="ts">
 	import { today, CalendarDate, CalendarDateTime, DateFormatter } from '@internationalized/date';
 	import { toast } from 'svelte-sonner';
+	import { source } from 'sveltekit-sse';
 	import { getOptionalUser } from '$lib/api/auth.remote';
 	import { getSlots, getUpcomingSlots, book, cancelBooking } from '$lib/api/booking.remote';
 	import { getSetupHints } from '$lib/api/hints.remote';
@@ -41,6 +42,48 @@
 		replaceDescription: string;
 	} | null>(null);
 	let showLoginDialog = $state(false);
+
+	$effect(() => {
+		const connection = source('/api/booking-events', {
+			options: {
+				method: 'POST',
+				body: JSON.stringify({ resource })
+			},
+			close({ connect }) {
+				setTimeout(connect, 2000);
+			}
+		});
+
+		const value = connection.select('booking-changed');
+		const unsubscribe = value.subscribe((v) => {
+			if (v !== '') {
+				getSlots({ date, resource }).refresh();
+				getUpcomingSlots({ resource }).refresh();
+			}
+		});
+
+		return () => {
+			unsubscribe();
+			connection.close();
+		};
+	});
+
+	$effect(() => {
+		let lastHidden = 0;
+
+		function onVisibilityChange() {
+			if (document.visibilityState === 'hidden') {
+				lastHidden = Date.now();
+			}
+			if (document.visibilityState === 'visible' && Date.now() - lastHidden > 30_000) {
+				getSlots({ date, resource }).refresh();
+				getUpcomingSlots({ resource }).refresh();
+			}
+		}
+
+		document.addEventListener('visibilitychange', onVisibilityChange);
+		return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+	});
 
 	const dateFormatter = new DateFormatter('sv-SE', {
 		weekday: 'long',

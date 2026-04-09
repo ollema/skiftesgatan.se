@@ -12,6 +12,7 @@ import {
 	cancelBooking as cancelBookingDb,
 	validateBookingDate
 } from '$lib/server/booking';
+import { emitBookingChanged } from '$lib/server/booking-events';
 import { createBookingNotifications } from '$lib/server/notification';
 import { TIMEZONE, RESOURCES, type Slot, type UpcomingBooking } from '$lib/types/bookings';
 
@@ -94,6 +95,7 @@ export const book = command(
 			}
 			await getSlots({ date, resource }).refresh();
 			await getUpcomingSlots({ resource }).refresh();
+			emitBookingChanged(resource);
 			return result;
 		} catch (e: unknown) {
 			if (e instanceof Error && 'code' in e && (e as { code: string }).code === '23505') {
@@ -110,11 +112,12 @@ export const book = command(
 export const cancelBooking = command(v.object({ bookingId: v.number() }), async ({ bookingId }) => {
 	const user = requireAuth();
 
-	const success = await cancelBookingDb(bookingId, user.id);
-	if (!success) {
+	const result = await cancelBookingDb(bookingId, user.id);
+	if (!result) {
 		error(404, 'Bokningen hittades inte');
 	}
 
 	await requested(getSlots, 5).refreshAll();
 	await requested(getUpcomingSlots, 5).refreshAll();
+	emitBookingChanged(result.resource);
 });

@@ -32,10 +32,15 @@ test.describe('concurrent booking', () => {
 		await page1.locator('button[data-slot-status="free"]').first().click();
 		await expect(page1.locator('button[data-slot-status="mine"]')).toHaveCount(1);
 
-		// User2 tries to book the same slot (stale page still shows it as available)
+		// User2's page auto-refreshes via SSE — the booked slot appears
+		await expect(page2.locator('button[data-slot-status="free"]')).toHaveCount(4, {
+			timeout: 5000
+		});
+		await expect(page2.locator('button[data-slot-status="booked"]')).toHaveCount(1);
+
+		// User2 can still book a different slot without conflict
 		await page2.locator('button[data-slot-status="free"]').first().click();
-		// The server should reject with a conflict error — the booking-error element should be visible
-		await expect(page2.getByTestId('booking-error')).toBeVisible();
+		await expect(page2.locator('button[data-slot-status="mine"]')).toHaveCount(1);
 
 		await context1.close();
 		await context2.close();

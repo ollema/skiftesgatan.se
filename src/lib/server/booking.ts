@@ -97,7 +97,10 @@ export async function createBooking(
 	return result;
 }
 
-export async function cancelBooking(bookingId: number, userId: string): Promise<boolean> {
+export async function cancelBooking(
+	bookingId: number,
+	userId: string
+): Promise<{ resource: Resource } | null> {
 	const todayStr = today(TIMEZONE).toString();
 	const result = await db
 		.delete(booking)
@@ -105,6 +108,7 @@ export async function cancelBooking(bookingId: number, userId: string): Promise<
 		.returning();
 	if (result.length > 0) {
 		log.info(`[booking] cancelled bookingId=${bookingId} userId=${userId}`);
+		return result[0];
 	}
-	return result.length > 0;
+	return null;
 }
