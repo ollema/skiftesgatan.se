@@ -37,6 +37,10 @@ export async function regenerateToken(userId: string): Promise<string> {
 	return token;
 }
 
+export async function deleteToken(userId: string): Promise<void> {
+	await db.delete(calendarToken).where(eq(calendarToken.userId, userId));
+}
+
 export async function getUserIdByToken(token: string): Promise<string | null> {
 	const result = await db
 		.select({ userId: calendarToken.userId })

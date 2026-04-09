@@ -41,12 +41,12 @@
 			</AlertDialog.Description>
 			<div class="flex justify-end gap-3">
 				<AlertDialog.Cancel
-					class="rounded-sm border border-border px-6 py-2 text-sm tracking-widest uppercase transition-colors duration-120 hover:bg-bg-alt"
+					class="cursor-pointer rounded-sm border border-border px-6 py-2 text-sm tracking-widest uppercase transition-colors duration-120 hover:bg-bg-alt"
 				>
 					{cancelLabel}
 				</AlertDialog.Cancel>
 				<AlertDialog.Action
-					class="rounded-sm px-6 py-2 text-sm tracking-widest text-surface uppercase transition-colors duration-120 {confirmClass}"
+					class="cursor-pointer rounded-sm px-6 py-2 text-sm tracking-widest text-surface uppercase transition-colors duration-120 {confirmClass}"
 					onclick={onConfirm}
 				>
 					{confirmLabel}

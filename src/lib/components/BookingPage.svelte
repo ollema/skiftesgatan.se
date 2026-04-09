@@ -138,7 +138,7 @@
 			<p class="text-xs text-text-muted">
 				Uppdaterades {fetchedAt.toString()}.
 				<button
-					class="text-text-muted underline decoration-1 underline-offset-2"
+					class="cursor-pointer text-text-muted underline decoration-1 underline-offset-2"
 					onclick={async () => {
 						await getSlots({ date, resource }).refresh();
 						await getUpcomingSlots({ resource }).refresh();
@@ -152,7 +152,7 @@
 				{#if slot.bookingId === null}
 					<button
 						data-slot-status="free"
-						class="rounded-sm border border-border px-2 py-1.5 text-center text-xs whitespace-nowrap text-text-primary transition-colors duration-120 hover:bg-bg-alt sm:text-sm"
+						class="cursor-pointer rounded-sm border border-border px-2 py-1.5 text-center text-xs whitespace-nowrap text-text-primary transition-colors duration-120 hover:bg-bg-alt sm:text-sm"
 						onclick={async () => {
 							if (!user) {
 								showLoginDialog = true;
@@ -181,7 +181,7 @@
 				{:else if user && slot.userId === user.id}
 					<button
 						data-slot-status="mine"
-						class="rounded-sm bg-slot-mine px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface transition-colors duration-120 hover:opacity-90 sm:text-sm"
+						class="cursor-pointer rounded-sm bg-slot-mine px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface transition-colors duration-120 hover:opacity-90 sm:text-sm"
 						onclick={() => {
 							cancelBookingId = slot.bookingId;
 						}}

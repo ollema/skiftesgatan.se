@@ -93,6 +93,32 @@ test.describe('setup hints', () => {
 		await expect(page.getByText('Prenumerera på dina bokningar')).not.toBeVisible();
 	});
 
+	test('calendar hint reappears after deleting calendar link', async ({ page }) => {
+		const user = uniqueUser('C');
+		await login(page, user);
+
+		// Create calendar subscription
+		await page.goto('/konto');
+		await page.getByRole('button', { name: 'Skapa prenumerationslänk' }).click();
+
+		// Verify hint is gone on booking page
+		await page.goto('/tvattstuga');
+		await expect(page.getByText('Prenumerera på dina bokningar')).not.toBeVisible();
+
+		// Go back and delete the link
+		await page.goto('/konto');
+		await page.getByRole('button', { name: 'Ta bort prenumeration' }).click();
+		// Confirm deletion in the dialog
+		await page.getByRole('alertdialog').getByRole('button', { name: 'Ta bort' }).click();
+
+		// Verify the create button is back
+		await expect(page.getByRole('button', { name: 'Skapa prenumerationslänk' })).toBeVisible();
+
+		// Calendar hint should reappear on booking page
+		await page.goto('/tvattstuga');
+		await expect(page.getByText('Prenumerera på dina bokningar')).toBeVisible();
+	});
+
 	test('hints also appear on outdoor area page', async ({ page }) => {
 		const user = uniqueUser('C');
 		await login(page, user);

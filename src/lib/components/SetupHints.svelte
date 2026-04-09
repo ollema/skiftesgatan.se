@@ -46,7 +46,7 @@
 				</p>
 				<button
 					onclick={dismissNotification}
-					class="ml-3 shrink-0 text-base text-text-muted hover:text-text-secondary"
+					class="ml-3 shrink-0 cursor-pointer text-base text-text-muted hover:text-text-secondary"
 					aria-label="Stäng tips">&#215;</button
 				>
 			</div>
@@ -64,14 +64,14 @@
 				</p>
 				<button
 					onclick={dismissCalendar}
-					class="ml-3 shrink-0 text-base text-text-muted hover:text-text-secondary"
+					class="ml-3 shrink-0 cursor-pointer text-base text-text-muted hover:text-text-secondary"
 					aria-label="Stäng tips">&#215;</button
 				>
 			</div>
 		{/if}
 		<button
 			onclick={dismissAll}
-			class="mt-1 self-start text-xs text-text-muted underline decoration-1 underline-offset-2"
+			class="mt-1 cursor-pointer self-start text-xs text-text-muted underline decoration-1 underline-offset-2"
 		>
 			Visa inte tips
 		</button>
