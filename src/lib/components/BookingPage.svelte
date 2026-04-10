@@ -10,7 +10,7 @@
 </script>
 
 <script lang="ts">
-	import { today, CalendarDate, CalendarDateTime, DateFormatter } from '@internationalized/date';
+	import { today, CalendarDate, CalendarDateTime } from '@internationalized/date';
 	import { toast } from 'svelte-sonner';
 	import { source } from 'sveltekit-sse';
 	import { getOptionalUser } from '$lib/api/auth.remote';
@@ -21,6 +21,7 @@
 	import SetupHints from '$lib/components/SetupHints.svelte';
 	import type { DotsByDate, SlotStatus } from '$lib/components/Calendar.svelte';
 	import { TIMEZONE, type Resource } from '$lib/types/bookings';
+	import { formatDate, formatHour } from '$lib/utils/date';
 
 	interface Props {
 		resource: Resource;
@@ -31,10 +32,12 @@
 
 	let { resource, slotCount, gridClass, labels }: Props = $props();
 
+	// booking page state
 	const minDate = today(TIMEZONE);
 	const maxDate = today(TIMEZONE).add({ months: 1 });
 	let date = $state(today(TIMEZONE));
 	let error = $state('');
+	
 	let cancelBookingId = $state<number | null>(null);
 	let pendingBooking = $state<{
 		timeslotId: number;
@@ -43,6 +46,8 @@
 	} | null>(null);
 	let showLoginDialog = $state(false);
 
+	// listen for booking events via SSE and refresh queries when they occur.
+	// reconnect with a delay if the connection is lost
 	$effect(() => {
 		const connection = source('/api/booking-events', {
 			options: {
@@ -67,6 +72,7 @@
 		};
 	});
 
+	// refresh booking data when the page becomes visible after being hidden for more than 30 seconds
 	$effect(() => {
 		let lastHidden = 0;
 
@@ -82,26 +88,6 @@
 		document.addEventListener('visibilitychange', onVisibilityChange);
 		return () => document.removeEventListener('visibilitychange', onVisibilityChange);
 	});
-
-	const dateFormatter = new DateFormatter('sv-SE', {
-		weekday: 'long',
-		day: 'numeric',
-		month: 'long',
-		timeZone: TIMEZONE
-	});
-	const hourFormatter = new DateFormatter('sv-SE', {
-		hour: '2-digit',
-		minute: '2-digit',
-		timeZone: TIMEZONE
-	});
-
-	function formatDate(d: CalendarDate | CalendarDateTime) {
-		return dateFormatter.format(d.toDate(TIMEZONE));
-	}
-
-	function formatHour(d: CalendarDateTime) {
-		return hourFormatter.format(d.toDate(TIMEZONE));
-	}
 
 	function buildDots(
 		monthBookings: Array<{ timeslotId: number; start: CalendarDateTime; userId: string | null }>,

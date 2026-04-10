@@ -24,15 +24,20 @@ function toCalendarDateTime(date: CalendarDate, hour: number) {
 }
 
 export const getBookingData = query(
-	v.object({ date: calendarDateSchema, resource: resourceSchema }),
+	v.object({
+		date: calendarDateSchema,
+		resource: resourceSchema
+	}),
 	async ({ date, resource }) => {
 		const [rawSlots, rawBookings] = await Promise.all([
 			getAvailableSlots(date, resource),
 			getUpcomingBookings(resource)
 		]);
+
 		const user = getAuthUser();
 		const zdt = now(TIMEZONE);
 		const fetchedAt = new Time(zdt.hour, zdt.minute, zdt.second);
+
 		const slots: Slot[] = rawSlots.map((s) => ({
 			id: s.id,
 			start: toCalendarDateTime(date, s.startHour),
@@ -41,6 +46,7 @@ export const getBookingData = query(
 			userId: user ? s.userId : null,
 			username: user ? s.username : null
 		}));
+
 		const upcomingBookings: UpcomingBooking[] = rawBookings.map((b) => {
 			const bDate = parseDate(b.date);
 			return {
@@ -52,7 +58,12 @@ export const getBookingData = query(
 				username: user ? b.username : null
 			};
 		});
-		return { slots, fetchedAt, upcomingBookings };
+
+		return {
+			slots,
+			fetchedAt,
+			upcomingBookings
+		};
 	}
 );
 
