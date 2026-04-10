@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { MetaTags } from 'svelte-meta-tags';
+	import { metaDefaults } from '$lib/meta';
 	import { resetPassword } from '$lib/api/auth.remote';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -7,6 +9,8 @@
 	const token = page.url.searchParams.get('token');
 	const error = page.url.searchParams.get('error');
 </script>
+
+<MetaTags {...metaDefaults} title="Återställ lösenord" robots="noindex,nofollow" />
 
 {#if error}
 	<h1 class="mb-4 font-heading text-2xl font-normal">Ogiltig eller utgången länk</h1>

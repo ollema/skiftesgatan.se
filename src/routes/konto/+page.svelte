@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { MetaTags } from 'svelte-meta-tags';
+	import { metaDefaults } from '$lib/meta';
 	import { toast } from 'svelte-sonner';
 	import { getUser, signout, changeName, changeEmail, changePassword } from '$lib/api/auth.remote';
 	import {
@@ -120,6 +122,8 @@
 		<span class="text-sm text-text-secondary">{label}</span>
 	</label>
 {/snippet}
+
+<MetaTags {...metaDefaults} title="Mitt konto" robots="noindex,nofollow" />
 
 <svelte:boundary>
 	{@const user = await getUser()}

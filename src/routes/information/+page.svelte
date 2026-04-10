@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { MetaTags } from 'svelte-meta-tags';
+	import { metaDefaults, canonical } from '$lib/meta';
+	import { page } from '$app/state';
 	import { allPages } from 'content-collections';
 	import { resolve } from '$app/paths';
 
@@ -6,6 +9,13 @@
 		page._meta.directory.startsWith('information')
 	);
 </script>
+
+<MetaTags
+	{...metaDefaults}
+	title="Information"
+	description="Stadgar, ekonomi, styrelsen och mer."
+	canonical={canonical(page.url)}
+/>
 
 <h1 class="mb-6 font-heading text-3xl font-normal">Information</h1>
 

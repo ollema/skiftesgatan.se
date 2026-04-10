@@ -1,10 +1,19 @@
 <script lang="ts">
+	import { MetaTags } from 'svelte-meta-tags';
+	import { metaDefaults } from '$lib/meta';
 	import BookingPage from '$lib/components/BookingPage.svelte';
 	import { Collapsible } from 'bits-ui';
 	import { allPages } from 'content-collections';
 
 	const info = allPages.find((p) => p._meta.path === 'laundry/about');
 </script>
+
+<MetaTags
+	{...metaDefaults}
+	title="Tvättstuga"
+	description="Boka en tid i tvättstugan."
+	robots="noindex,nofollow"
+/>
 
 <BookingPage resource="laundry_room" />
 

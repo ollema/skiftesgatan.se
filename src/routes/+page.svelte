@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { MetaTags } from 'svelte-meta-tags';
+	import { metaDefaults, canonical } from '$lib/meta';
+	import { page } from '$app/state';
 	import { allNews } from 'content-collections';
 	import { resolve } from '$app/paths';
 	import { parseDate, DateFormatter } from '@internationalized/date';
@@ -15,6 +18,14 @@
 		timeZone: TIMEZONE
 	});
 </script>
+
+<MetaTags
+	{...metaDefaults}
+	title="BRF Skiftesgatan 4"
+	titleTemplate={undefined}
+	description="Medlemssida för BRF Skiftesgatan 4. 32 lägenheter i ett landshövdingehus från 1939."
+	canonical={canonical(page.url)}
+/>
 
 <!-- Hero -->
 <section class="pt-20 pb-28 text-center">

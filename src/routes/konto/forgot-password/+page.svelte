@@ -1,8 +1,12 @@
 <script lang="ts">
+	import { MetaTags } from 'svelte-meta-tags';
+	import { metaDefaults } from '$lib/meta';
 	import { requestPasswordReset } from '$lib/api/auth.remote';
 	import { resolve } from '$app/paths';
 	import Button from '$lib/components/Button.svelte';
 </script>
+
+<MetaTags {...metaDefaults} title="Glömt lösenord" robots="noindex,nofollow" />
 
 <h1 class="mb-4 font-heading text-2xl font-normal">Glömt lösenord</h1>
 <p class="mb-8 text-text-secondary">

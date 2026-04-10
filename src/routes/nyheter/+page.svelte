@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { MetaTags } from 'svelte-meta-tags';
+	import { metaDefaults, canonical } from '$lib/meta';
+	import { page } from '$app/state';
 	import { allNews } from 'content-collections';
 	import { resolve } from '$app/paths';
 	import { parseDate, DateFormatter } from '@internationalized/date';
@@ -13,6 +16,13 @@
 		timeZone: TIMEZONE
 	});
 </script>
+
+<MetaTags
+	{...metaDefaults}
+	title="Nyheter"
+	description="Senaste nyheterna från BRF Skiftesgatan 4."
+	canonical={canonical(page.url)}
+/>
 
 <h1 class="mb-12 font-heading text-3xl font-normal">Nyheter</h1>
 

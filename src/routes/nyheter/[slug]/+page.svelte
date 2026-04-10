@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { MetaTags } from 'svelte-meta-tags';
+	import { metaDefaults, canonical } from '$lib/meta';
 	import { allNews } from 'content-collections';
 	import { page } from '$app/state';
 	import { error } from '@sveltejs/kit';
@@ -20,6 +22,21 @@
 		timeZone: TIMEZONE
 	});
 </script>
+
+<MetaTags
+	{...metaDefaults}
+	title={article.title}
+	description={article.summary}
+	canonical={canonical(page.url)}
+	openGraph={{
+		type: 'article',
+		title: article.title,
+		description: article.summary,
+		locale: 'sv_SE',
+		siteName: 'BRF Skiftesgatan 4',
+		article: { publishedTime: article.date }
+	}}
+/>
 
 <h1 class="mb-3 font-heading text-2xl font-normal">{article.title}</h1>
 

@@ -1,8 +1,12 @@
 <script lang="ts">
+	import { MetaTags } from 'svelte-meta-tags';
+	import { metaDefaults } from '$lib/meta';
 	import { login } from '$lib/api/auth.remote';
 	import { resolve } from '$app/paths';
 	import Button from '$lib/components/Button.svelte';
 </script>
+
+<MetaTags {...metaDefaults} title="Logga in" robots="noindex,nofollow" />
 
 <h1 class="mb-6 font-heading text-2xl font-normal">Logga in</h1>
 <form {...login} class="mb-8 flex max-w-sm flex-col gap-4">

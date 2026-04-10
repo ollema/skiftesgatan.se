@@ -1,9 +1,19 @@
 <script lang="ts">
+	import { MetaTags } from 'svelte-meta-tags';
+	import { metaDefaults, canonical } from '$lib/meta';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { getContactInfo } from '$lib/api/contact.remote';
 
 	const contact = await getContactInfo();
 </script>
+
+<MetaTags
+	{...metaDefaults}
+	title="Kontakt"
+	description="Kontakta styrelsen för BRF Skiftesgatan 4."
+	canonical={canonical(page.url)}
+/>
 
 <h1 class="mb-6 font-heading text-2xl font-normal">Kontakt</h1>
 

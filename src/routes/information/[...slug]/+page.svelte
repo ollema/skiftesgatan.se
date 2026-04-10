@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { MetaTags } from 'svelte-meta-tags';
+	import { metaDefaults, canonical } from '$lib/meta';
 	import { allPages } from 'content-collections';
 	import { page } from '$app/state';
 	import { error } from '@sveltejs/kit';
@@ -12,6 +14,8 @@
 		return found;
 	});
 </script>
+
+<MetaTags {...metaDefaults} title={entry.title} canonical={canonical(page.url)} />
 
 <h1 class="mb-6 font-heading text-2xl font-normal">{entry.title}</h1>
 
