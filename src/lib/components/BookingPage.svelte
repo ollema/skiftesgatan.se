@@ -40,14 +40,14 @@
 			if (document.visibilityState === 'hidden') {
 				lastHidden = Date.now();
 			}
-			if (document.visibilityState === 'visible' && Date.now() - lastHidden > 30_000) {
+			if (document.visibilityState === 'visible' && Date.now() - lastHidden > 5_000) {
 				getBookingData({ resource }).refresh();
 			}
 		}
 
 		const interval = setInterval(() => {
 			getBookingData({ resource }).refresh();
-		}, 60_000);
+		}, 10_000);
 
 		document.addEventListener('visibilitychange', onVisibilityChange);
 		return () => {
