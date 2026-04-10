@@ -19,13 +19,16 @@ export function validateBookingDate(date: CalendarDate): void {
 	}
 }
 
-export async function getAvailableSlots(date: CalendarDate, resource: Resource) {
-	const dateStr = date.toString();
+export async function getBookingCalendar(resource: Resource) {
+	const startDate = today(TIMEZONE).toString();
+	const endDate = maxBookingDate().toString();
+
 	return await db
 		.select({
-			id: timeslot.id,
+			timeslotId: timeslot.id,
 			startHour: timeslot.startHour,
 			endHour: timeslot.endHour,
+			date: booking.date,
 			bookingId: booking.id,
 			userId: booking.userId,
 			username: user.username
@@ -35,35 +38,14 @@ export async function getAvailableSlots(date: CalendarDate, resource: Resource) 
 			booking,
 			and(
 				eq(booking.timeslotId, timeslot.id),
-				eq(booking.date, dateStr),
-				eq(booking.resource, resource)
+				eq(booking.resource, resource),
+				gte(booking.date, startDate),
+				lte(booking.date, endDate)
 			)
 		)
 		.leftJoin(user, eq(booking.userId, user.id))
 		.where(eq(timeslot.resource, resource))
 		.orderBy(timeslot.startHour);
-}
-
-export async function getUpcomingBookings(resource: Resource) {
-	const startDate = today(TIMEZONE).toString();
-	const endDate = maxBookingDate().toString();
-
-	return await db
-		.select({
-			timeslotId: booking.timeslotId,
-			date: booking.date,
-			bookingId: booking.id,
-			userId: booking.userId,
-			username: user.username,
-			startHour: timeslot.startHour,
-			endHour: timeslot.endHour
-		})
-		.from(booking)
-		.innerJoin(user, eq(booking.userId, user.id))
-		.innerJoin(timeslot, eq(booking.timeslotId, timeslot.id))
-		.where(
-			and(eq(booking.resource, resource), gte(booking.date, startDate), lte(booking.date, endDate))
-		);
 }
 
 export async function hasExistingFutureBooking(

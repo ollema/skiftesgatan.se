@@ -1,34 +1,20 @@
-<script module lang="ts">
-	export type SlotStatus = 'free' | 'mine' | 'other';
-	export type DotsByDate = Record<string, SlotStatus[]>;
-</script>
-
 <script lang="ts">
 	import { Calendar } from 'bits-ui';
-	import { DateFormatter, type CalendarDate, type DateValue } from '@internationalized/date';
-	import { TIMEZONE } from '$lib/types/bookings';
-
-	const monthFormatter = new DateFormatter('sv-SE', { month: 'long', timeZone: TIMEZONE });
+	import { type CalendarDate, type DateValue } from '@internationalized/date';
+	import { type BookingTimeSlot, type BookingTimeSlotStatus } from '$lib/types/bookings';
+	import { formatMonth } from '$lib/utils/date';
 
 	interface Props {
 		date: CalendarDate;
-		minValue?: CalendarDate;
-		maxValue?: CalendarDate;
-		dots?: DotsByDate;
-		slotCount?: number;
+		minValue: CalendarDate;
+		maxValue: CalendarDate;
+		bookingCalendar: Record<string, BookingTimeSlot[]>;
+		slotCount: number;
 	}
 
-	let { date = $bindable(), minValue, maxValue, dots, slotCount }: Props = $props();
+	let { date = $bindable(), minValue, maxValue, bookingCalendar }: Props = $props();
 
-	let dotLength: number | undefined = $derived.by(() => {
-		if (dots) {
-			const entries = Object.values(dots);
-			if (entries.length > 0) return entries[0].length;
-		}
-		return slotCount;
-	});
-
-	const statusColorMap: Record<SlotStatus, string> = {
+	const statusColorMap: Record<BookingTimeSlotStatus, string> = {
 		free: 'border border-border',
 		mine: 'bg-slot-mine',
 		other: 'bg-slot-occupied'
@@ -38,11 +24,6 @@
 		if (newValue) {
 			date = newValue as CalendarDate;
 		}
-	}
-
-	function getDotsForDay(dayStr: string): SlotStatus[] | undefined {
-		if (!dots || dotLength === undefined) return undefined;
-		return dots[dayStr] ?? Array(dotLength).fill('free' as SlotStatus);
 	}
 </script>
 
@@ -67,7 +48,7 @@
 				</Calendar.PrevButton>
 
 				<Calendar.Heading class="w-[10ch] text-center font-heading text-sm font-normal">
-					{monthFormatter.format(months[0].value.toDate(TIMEZONE))}
+					{formatMonth(months[0].value)}
 				</Calendar.Heading>
 
 				<Calendar.NextButton
@@ -102,19 +83,12 @@
 												data-today:font-semibold sm:py-2.5"
 										>
 											{day.day}
-											{#if dotLength}
-												{@const inRange =
-													dots &&
-													(!minValue || day.compare(minValue) >= 0) &&
-													(!maxValue || day.compare(maxValue) <= 0)}
-												{@const dayDots = inRange ? getDotsForDay(day.toString()) : undefined}
-												{@const fallbackDots: SlotStatus[] = Array(dotLength).fill('free')}
-												<div class="mt-0.5 flex gap-0.5" class:invisible={!dayDots}>
-													{#each dayDots ?? fallbackDots as status, i (i)}
-														<span class="box-border size-1.5 {statusColorMap[status]}"></span>
-													{/each}
-												</div>
-											{/if}
+											<div class="mt-0.5 flex gap-0.5">
+												{#each bookingCalendar[day.toString()] as timeslot (timeslot.start)}
+													<span class="box-border size-1.5 {statusColorMap[timeslot.status]}"
+													></span>
+												{/each}
+											</div>
 										</Calendar.Day>
 									</Calendar.Cell>
 								{/each}

@@ -1,5 +1,7 @@
 import { TIMEZONE } from '$lib/types/bookings';
-import { CalendarDate, CalendarDateTime, DateFormatter } from '@internationalized/date';
+import { type CalendarDate, DateFormatter, type DateValue } from '@internationalized/date';
+
+const monthFormatter = new DateFormatter('sv-SE', { month: 'long', timeZone: TIMEZONE });
 
 const dateFormatter = new DateFormatter('sv-SE', {
 	weekday: 'long',
@@ -7,16 +9,15 @@ const dateFormatter = new DateFormatter('sv-SE', {
 	month: 'long',
 	timeZone: TIMEZONE
 });
-const hourFormatter = new DateFormatter('sv-SE', {
-	hour: '2-digit',
-	minute: '2-digit',
-	timeZone: TIMEZONE
-});
 
-export function formatDate(d: CalendarDate | CalendarDateTime) {
+export function formatMonth(d: DateValue) {
+	return monthFormatter.format(d.toDate(TIMEZONE));
+}
+
+export function formatDate(d: CalendarDate) {
 	return dateFormatter.format(d.toDate(TIMEZONE));
 }
 
-export function formatHour(d: CalendarDateTime) {
-	return hourFormatter.format(d.toDate(TIMEZONE));
+export function formatHourNum(hour: number) {
+	return `${hour.toString().padStart(2, '0')}:00`;
 }

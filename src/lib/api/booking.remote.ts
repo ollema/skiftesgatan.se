@@ -1,12 +1,11 @@
 import * as v from 'valibot';
-import { CalendarDate, CalendarDateTime, Time, now, parseDate } from '@internationalized/date';
+import { CalendarDate, Time, now, today } from '@internationalized/date';
 import { error } from '@sveltejs/kit';
 import { query, command, requested } from '$app/server';
 import { requireAuth, getAuthUser } from '$lib/server/auth';
 import { log } from '$lib/server/log';
 import {
-	getAvailableSlots,
-	getUpcomingBookings,
+	getBookingCalendar,
 	hasExistingFutureBooking,
 	createBooking as createBookingDb,
 	cancelBooking as cancelBookingDb,
@@ -14,56 +13,92 @@ import {
 } from '$lib/server/booking';
 import { emitBookingChanged } from '$lib/server/booking-events';
 import { createBookingNotifications } from '$lib/server/notification';
-import { TIMEZONE, RESOURCES, type Slot, type UpcomingBooking } from '$lib/types/bookings';
+import { TIMEZONE, RESOURCES, type BookingTimeSlot } from '$lib/types/bookings';
 
 const resourceSchema = v.picklist(RESOURCES);
 const calendarDateSchema = v.instance(CalendarDate);
 
-function toCalendarDateTime(date: CalendarDate, hour: number) {
-	return new CalendarDateTime(date.year, date.month, date.day, hour);
-}
-
 export const getBookingData = query(
 	v.object({
-		date: calendarDateSchema,
 		resource: resourceSchema
 	}),
-	async ({ date, resource }) => {
-		const [rawSlots, rawBookings] = await Promise.all([
-			getAvailableSlots(date, resource),
-			getUpcomingBookings(resource)
-		]);
-
+	async ({ resource }) => {
+		const rawRows = await getBookingCalendar(resource);
 		const user = getAuthUser();
 		const zdt = now(TIMEZONE);
 		const fetchedAt = new Time(zdt.hour, zdt.minute, zdt.second);
 
-		const slots: Slot[] = rawSlots.map((s) => ({
-			id: s.id,
-			start: toCalendarDateTime(date, s.startHour),
-			end: toCalendarDateTime(date, s.endHour),
-			bookingId: s.bookingId,
-			userId: user ? s.userId : null,
-			username: user ? s.username : null
-		}));
+		// Extract unique timeslots (ordered by startHour from the query)
+		const timeslotSet = new Map<number, { startHour: number; endHour: number }>();
+		for (const row of rawRows) {
+			if (!timeslotSet.has(row.timeslotId)) {
+				timeslotSet.set(row.timeslotId, {
+					startHour: row.startHour,
+					endHour: row.endHour
+				});
+			}
+		}
+		const timeslots = [...timeslotSet.entries()];
 
-		const upcomingBookings: UpcomingBooking[] = rawBookings.map((b) => {
-			const bDate = parseDate(b.date);
-			return {
-				timeslotId: b.timeslotId,
-				start: toCalendarDateTime(bDate, b.startHour),
-				end: toCalendarDateTime(bDate, b.endHour),
-				bookingId: b.bookingId,
-				userId: user ? b.userId : null,
-				username: user ? b.username : null
-			};
-		});
+		// Build a map of (date:timeslotId) -> booking info
+		const bookingMap = new Map<
+			string,
+			{ bookingId: number; userId: string; username: string | null }
+		>();
+		for (const row of rawRows) {
+			if (row.date !== null && row.bookingId !== null) {
+				bookingMap.set(`${row.date}:${row.timeslotId}`, {
+					bookingId: row.bookingId,
+					userId: row.userId!,
+					username: row.username
+				});
+			}
+		}
 
-		return {
-			slots,
-			fetchedAt,
-			upcomingBookings
-		};
+		// Generate calendar for each day in range
+		const start = today(TIMEZONE);
+		const end = start.add({ months: 1 });
+
+		const bookingCalendar: Record<string, BookingTimeSlot[]> = {};
+		let activeBooking: BookingTimeSlot | undefined = undefined;
+
+		let current = start;
+		while (current.compare(end) <= 0) {
+			const dateStr = current.toString();
+			const bookingsTimeSlots: BookingTimeSlot[] = [];
+
+			for (const [tid, ts] of timeslots) {
+				const b = bookingMap.get(`${dateStr}:${tid}`);
+				const status = b === undefined ? 'free' : b.userId === user?.id ? 'mine' : 'other';
+
+				bookingsTimeSlots.push({
+					timeslotId: tid,
+					date: current,
+					start: ts.startHour,
+					end: ts.endHour,
+					status,
+					bookingId: b?.bookingId ?? null,
+					username: user ? (b?.username ?? null) : null
+				});
+
+				if (activeBooking === undefined && b !== undefined && b?.userId === user?.id) {
+					activeBooking = {
+						timeslotId: tid,
+						date: current,
+						start: ts.startHour,
+						end: ts.endHour,
+						status,
+						bookingId: b.bookingId,
+						username: b.username
+					};
+				}
+			}
+
+			bookingCalendar[dateStr] = bookingsTimeSlots;
+			current = current.add({ days: 1 });
+		}
+
+		return { bookingCalendar, activeBooking, fetchedAt };
 	}
 );
 
@@ -98,7 +133,7 @@ export const book = command(
 			} catch (e) {
 				log.warn(`[notification] failed to create notifications bookingId=${result.id}: ${e}`);
 			}
-			await getBookingData({ date, resource }).refresh();
+			await getBookingData({ resource }).refresh();
 			emitBookingChanged(resource);
 			return result;
 		} catch (e: unknown) {

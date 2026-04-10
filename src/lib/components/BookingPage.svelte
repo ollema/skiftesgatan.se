@@ -1,50 +1,37 @@
-<script module lang="ts">
-	export interface BookingPageLabels {
-		title: string;
-		hasBooking: string;
-		noBooking: string;
-		toastBooked: string;
-		toastCancelled: string;
-		cancelDescription: string;
-	}
-</script>
-
 <script lang="ts">
-	import { today, CalendarDate, CalendarDateTime } from '@internationalized/date';
-	import { toast } from 'svelte-sonner';
-	import { source } from 'sveltekit-sse';
-	import { getOptionalUser } from '$lib/api/auth.remote';
-	import { getBookingData, book, cancelBooking } from '$lib/api/booking.remote';
-	import { getSetupHints } from '$lib/api/hints.remote';
-	import Calendar from '$lib/components/Calendar.svelte';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import SetupHints from '$lib/components/SetupHints.svelte';
-	import type { DotsByDate, SlotStatus } from '$lib/components/Calendar.svelte';
+	import Calendar from '$lib/components/Calendar.svelte';
+	import TimeSlots from '$lib/components/TimeSlots.svelte';
+	import { getOptionalUser } from '$lib/api/auth.remote';
+	import { getSetupHints } from '$lib/api/hints.remote';
+	import { getBookingData } from '$lib/api/booking.remote';
 	import { TIMEZONE, type Resource } from '$lib/types/bookings';
-	import { formatDate, formatHour } from '$lib/utils/date';
+	import { formatDate, formatHourNum } from '$lib/utils/date';
+	import { today } from '@internationalized/date';
+	import { source } from 'sveltekit-sse';
 
-	interface Props {
-		resource: Resource;
-		slotCount: number;
-		gridClass: string;
-		labels: BookingPageLabels;
-	}
-
-	let { resource, slotCount, gridClass, labels }: Props = $props();
-
-	// booking page state
+	// TODO: will this cause a bug if the user leaves the page open past midnight?
+	// maybe we should also update the date at midnight?
 	const minDate = today(TIMEZONE);
-	const maxDate = today(TIMEZONE).add({ months: 1 });
-	let date = $state(today(TIMEZONE));
-	let error = $state('');
-	
-	let cancelBookingId = $state<number | null>(null);
-	let pendingBooking = $state<{
-		timeslotId: number;
-		replaceBookingId: number;
-		replaceDescription: string;
-	} | null>(null);
-	let showLoginDialog = $state(false);
+	const maxDate = minDate.add({ months: 1 });
+
+	let { resource }: { resource: Resource } = $props();
+
+	// load data
+	let user = await getOptionalUser();
+	let hints = await getSetupHints();
+	let data = $derived(await getBookingData({ resource }));
+
+	// calendar state
+	let date = $state(minDate);
+
+	// derived state/data
+	let laundryRoom = $derived(resource === 'laundry_room');
+	let plural = $derived(user?.name?.includes('&') ?? false);
+	let slotCount = $derived(laundryRoom ? 5 : 1);
+	let bookingCalendar = $derived(data.bookingCalendar);
+	let activeBooking = $derived(data.activeBooking);
+	let timeslots = $derived(bookingCalendar[date.toString()] ?? []);
 
 	// listen for booking events via SSE and refresh queries when they occur.
 	// reconnect with a delay if the connection is lost
@@ -62,7 +49,7 @@
 		const value = connection.select('booking-changed');
 		const unsubscribe = value.subscribe((v) => {
 			if (v !== '') {
-				getBookingData({ date, resource }).refresh();
+				getBookingData({ resource }).refresh();
 			}
 		});
 
@@ -81,7 +68,7 @@
 				lastHidden = Date.now();
 			}
 			if (document.visibilityState === 'visible' && Date.now() - lastHidden > 30_000) {
-				getBookingData({ date, resource }).refresh();
+				getBookingData({ resource }).refresh();
 			}
 		}
 
@@ -89,239 +76,54 @@
 		return () => document.removeEventListener('visibilitychange', onVisibilityChange);
 	});
 
-	function buildDots(
-		monthBookings: Array<{ timeslotId: number; start: CalendarDateTime; userId: string | null }>,
-		currentUserId: string,
-		timeslotIds: number[]
-	): DotsByDate {
-		const result: DotsByDate = {};
-		const byDate: Record<string, Record<number, string | null>> = {};
-		for (const b of monthBookings) {
-			const dateKey = new CalendarDate(b.start.year, b.start.month, b.start.day).toString();
-			if (!byDate[dateKey]) byDate[dateKey] = {};
-			byDate[dateKey][b.timeslotId] = b.userId;
+	// derived text
+	let title = $derived(laundryRoom ? 'Tvättstuga' : 'Uteplats');
+	let greeting = $derived.by(() => {
+		if (!user) return 'Hej!';
+		if (plural) return `Hej ${user.name}!`;
+		return `Hej ${user.name.split('&')[0]}!`;
+	});
+	let message = $derived.by(() => {
+		if (!user) return 'Du måste logga in för att boka en tid.';
+		if (activeBooking) {
+			return `Du har bokat ${laundryRoom ? 'tvättstugan' : 'uteplatsen'} ${formatDate(activeBooking.date)}, ${formatHourNum(activeBooking.start)}–${formatHourNum(activeBooking.end)}.`;
 		}
-		for (const dateStr in byDate) {
-			const slotMap = byDate[dateStr];
-			result[dateStr] = timeslotIds.map((tid): SlotStatus => {
-				const userId = slotMap[tid];
-				if (userId === undefined) return 'free';
-				return userId === currentUserId ? 'mine' : 'other';
-			});
-		}
-		return result;
-	}
+		return `Du har inte bokat ${laundryRoom ? 'någon tvättid' : 'uteplatsen'}.`;
+	});
 </script>
 
-<svelte:boundary>
-	{@const user = await getOptionalUser()}
-	{@const bookingData = await getBookingData({ date, resource })}
-	{@const slots = bookingData.slots}
-	{@const fetchedAt = bookingData.fetchedAt}
-	{@const upcomingBookings = bookingData.upcomingBookings}
-	{@const timeslotIds = slots.map((s) => s.id)}
-	{@const dots = buildDots(upcomingBookings, user?.id ?? '', timeslotIds)}
-	{@const myBooking = user ? upcomingBookings.find((b) => b.userId === user.id) : undefined}
-	{@const hints = await getSetupHints()}
+<!-- title, greeting and message -->
+<h1 class="mb-4 font-heading text-2xl font-normal">{title}</h1>
+<p class="mb-2 text-text-secondary">{greeting}</p>
+<p class="text-text-secondary">{message}</p>
 
-	<h1 class="font-heading text-2xl font-normal">{labels.title}</h1>
-	<div class="min-h-20">
-		{#if user}
-			<p class="text-text-secondary">Hej, {user.name}!</p>
-		{/if}
-		{#if myBooking}
-			<p class="mt-2 text-text-secondary">
-				{labels.hasBooking}
-				{formatDate(myBooking.start)}, {formatHour(myBooking.start)}&ndash;{formatHour(
-					myBooking.end
-				)}.
-			</p>
-		{:else if user}
-			<p class="mt-2 text-text-muted">{labels.noBooking}</p>
-		{/if}
-	</div>
-
-	{#if user}
-		<SetupHints
-			showNotificationHint={hints.showNotificationHint}
-			showCalendarHint={hints.showCalendarHint}
-		/>
-	{/if}
-
-	<div>
-		<Calendar bind:date minValue={minDate} maxValue={maxDate} {dots} {slotCount} />
-	</div>
-
-	{#if error}
-		<p class="mt-3 text-error" data-testid="booking-error">{error}</p>
-	{/if}
-
-	<div
-		class="mt-8 mb-3 flex flex-col-reverse gap-1 sm:flex-row sm:items-baseline sm:justify-between"
-	>
-		<h2 class="font-heading text-lg font-normal">
-			{formatDate(date)}
-		</h2>
-		<p class="text-xs text-text-muted">
-			Uppdaterades {fetchedAt.toString()}.
-			<button
-				class="cursor-pointer text-text-muted underline decoration-1 underline-offset-2"
-				onclick={async () => {
-					await getBookingData({ date, resource }).refresh();
-				}}>Uppdatera nu</button
-			>
-		</p>
-	</div>
-
-	<div class={gridClass}>
-		{#each slots as slot (slot.id)}
-			{#if slot.bookingId === null}
-				<button
-					data-slot-status="free"
-					class="cursor-pointer rounded-sm border border-border px-2 py-1.5 text-center text-xs whitespace-nowrap text-text-primary transition-colors duration-120 hover:bg-bg-alt sm:text-sm"
-					onclick={async () => {
-						if (!user) {
-							showLoginDialog = true;
-							return;
-						}
-						error = '';
-						const existing = upcomingBookings.find((b) => b.userId === user.id);
-						if (existing) {
-							pendingBooking = {
-								timeslotId: slot.id,
-								replaceBookingId: existing.bookingId,
-								replaceDescription: `${formatDate(existing.start)}, ${formatHour(existing.start)}–${formatHour(existing.end)}`
-							};
-							return;
-						}
-						try {
-							await book({ timeslotId: slot.id, resource, date });
-							toast.success(labels.toastBooked);
-						} catch (e) {
-							error = e instanceof Error ? e.message : String(e);
-						}
-					}}
-				>
-					{slot.start.hour}&ndash;{slot.end.hour}
-				</button>
-			{:else if user && slot.userId === user.id}
-				<button
-					data-slot-status="mine"
-					class="cursor-pointer rounded-sm bg-slot-mine px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface transition-colors duration-120 hover:opacity-90 sm:text-sm"
-					onclick={() => {
-						cancelBookingId = slot.bookingId;
-					}}
-				>
-					{slot.username}
-				</button>
-			{:else}
-				<button
-					data-slot-status="booked"
-					class="cursor-not-allowed rounded-sm bg-slot-occupied px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface sm:text-sm"
-					disabled
-				>
-					{slot.username}
-				</button>
-			{/if}
-		{/each}
-	</div>
-
-	{#if user}
-		<ConfirmDialog
-			open={cancelBookingId !== null}
-			onClose={() => (cancelBookingId = null)}
-			title="Avboka?"
-			description={labels.cancelDescription}
-			onConfirm={async () => {
-				if (cancelBookingId === null) return;
-				error = '';
-				try {
-					await cancelBooking({ bookingId: cancelBookingId }).updates(
-						getBookingData({ date, resource })
-					);
-					toast.success(labels.toastCancelled);
-				} catch (e) {
-					error = e instanceof Error ? e.message : String(e);
-				}
-				cancelBookingId = null;
-			}}
-		/>
-
-		<ConfirmDialog
-			open={pendingBooking !== null}
-			onClose={() => (pendingBooking = null)}
-			title="Ersätt din bokning?"
-			description="Du har redan en bokning {pendingBooking?.replaceDescription}. Den avbokas och ersätts med den nya tiden."
-			confirmLabel="Ersätt"
-			confirmClass="bg-accent hover:bg-accent-hover"
-			onConfirm={async () => {
-				if (pendingBooking === null) return;
-				error = '';
-				try {
-					await book({
-						timeslotId: pendingBooking.timeslotId,
-						resource,
-						date,
-						replaceBookingId: pendingBooking.replaceBookingId
-					});
-					toast.success(labels.toastBooked);
-				} catch (e) {
-					error = e instanceof Error ? e.message : String(e);
-				}
-				pendingBooking = null;
-			}}
-		/>
-	{/if}
-
-	<ConfirmDialog
-		open={showLoginDialog}
-		onClose={() => (showLoginDialog = false)}
-		title="Inloggning krävs"
-		description="Du måste logga in för att boka en tid."
-		confirmLabel="Logga in"
-		confirmClass="bg-accent hover:bg-accent-hover"
-		onConfirm={() => {
-			window.location.href = '/konto/login';
-		}}
+<!-- setup hints -->
+{#if user}
+	<SetupHints
+		showNotificationHint={hints.showNotificationHint}
+		showCalendarHint={hints.showCalendarHint}
 	/>
+{/if}
 
-	{#snippet pending()}
-		<h1 class="font-heading text-2xl font-normal">{labels.title}</h1>
-		<div class="min-h-20">
-			<p class="text-text-secondary">Hej!</p>
-			<p class="mt-2 text-text-muted">&ndash;</p>
-		</div>
+<!-- calendar -->
+<div>
+	<Calendar bind:date minValue={minDate} maxValue={maxDate} {slotCount} {bookingCalendar} />
+</div>
 
-		<div>
-			<Calendar bind:date minValue={minDate} maxValue={maxDate} {slotCount} />
-		</div>
-
-		<div
-			class="mt-8 mb-3 flex flex-col-reverse gap-1 sm:flex-row sm:items-baseline sm:justify-between"
+<div class="mt-8 mb-3 flex flex-col-reverse gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+	<h2 class="font-heading text-lg font-normal">
+		{formatDate(date)}
+	</h2>
+	<p class="text-xs text-text-muted">
+		Uppdaterades {data.fetchedAt.toString()}.
+		<button
+			class="cursor-pointer text-text-muted underline decoration-1 underline-offset-2"
+			onclick={async () => {
+				await getBookingData({ resource }).refresh();
+			}}>Uppdatera nu</button
 		>
-			<h2 class="font-heading text-lg font-normal">
-				{formatDate(date)}
-			</h2>
-			<p class="text-xs text-text-muted">
-				Uppdaterades XX:YY:ZZ.
-				<span class="text-text-muted underline decoration-1 underline-offset-2">Uppdatera nu</span>
-			</p>
-		</div>
+	</p>
+</div>
 
-		<div class={gridClass}>
-			{#each Array.from({ length: slotCount }, (_, i) => i) as i (i)}
-				<button
-					disabled
-					class="cursor-default rounded-sm border border-border px-2 py-1.5 text-center text-xs whitespace-nowrap text-text-muted sm:text-sm"
-				>
-					&ndash;
-				</button>
-			{/each}
-		</div>
-	{/snippet}
-
-	{#snippet failed(err)}
-		<h1 class="font-heading text-2xl font-normal">{labels.title}</h1>
-		<p class="mt-3 text-error">Kunde inte ladda: {String(err)}</p>
-	{/snippet}
-</svelte:boundary>
+<!-- time slots -->
+<TimeSlots {resource} {date} {timeslots} {activeBooking} />

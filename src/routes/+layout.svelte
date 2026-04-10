@@ -7,6 +7,8 @@
 	import MobileMenu from '$lib/components/MobileMenu.svelte';
 
 	let { children } = $props();
+
+	const user = await getOptionalUser();
 </script>
 
 <Toaster richColors />
@@ -23,53 +25,24 @@
 					>
 					<Navbar />
 				</div>
-
-				<svelte:boundary>
-					{@const user = await getOptionalUser()}
-					<div class="flex items-center gap-4">
-						{#if user}
-							<a
-								href={resolve('/konto')}
-								class="hidden text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent lg:block"
-							>
-								{user.username}
-							</a>
-						{:else}
-							<a
-								href={resolve('/konto/login')}
-								class="hidden text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent lg:block"
-							>
-								Logga in
-							</a>
-						{/if}
-						<MobileMenu {user} />
-					</div>
-
-					{#snippet pending()}
-						<div class="flex items-center gap-4">
-							<div class="hidden h-5 w-12 animate-pulse rounded-sm bg-border-subtle lg:block"></div>
-							<div
-								class="inline-flex size-9 items-center justify-center text-text-primary lg:hidden"
-							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="24"
-									height="24"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-								>
-									<line x1="3" y1="6" x2="21" y2="6" />
-									<line x1="3" y1="12" x2="21" y2="12" />
-									<line x1="3" y1="18" x2="21" y2="18" />
-								</svg>
-							</div>
-						</div>
-					{/snippet}
-				</svelte:boundary>
+				<div class="flex items-center gap-4">
+					{#if user}
+						<a
+							href={resolve('/konto')}
+							class="hidden text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent lg:block"
+						>
+							{user.username}
+						</a>
+					{:else}
+						<a
+							href={resolve('/konto/login')}
+							class="hidden text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent lg:block"
+						>
+							Logga in
+						</a>
+					{/if}
+					<MobileMenu {user} />
+				</div>
 			</div>
 		</div>
 	</nav>

@@ -1,23 +1,17 @@
-import type { CalendarDateTime } from '@internationalized/date';
+import type { CalendarDate } from '@internationalized/date';
 
 export const TIMEZONE = 'Europe/Stockholm';
 export const RESOURCES = ['laundry_room', 'outdoor_area'] as const;
 export type Resource = (typeof RESOURCES)[number];
 
-export type Slot = {
-	id: number;
-	start: CalendarDateTime;
-	end: CalendarDateTime;
-	bookingId: number | null;
-	userId: string | null;
-	username: string | null;
-};
+export type BookingTimeSlotStatus = 'free' | 'mine' | 'other';
 
-export type UpcomingBooking = {
+export type BookingTimeSlot = {
 	timeslotId: number;
-	start: CalendarDateTime;
-	end: CalendarDateTime;
-	bookingId: number;
-	userId: string | null;
+	date: CalendarDate;
+	start: number;
+	end: number;
+	status: BookingTimeSlotStatus;
+	bookingId: number | null;
 	username: string | null;
 };
