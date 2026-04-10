@@ -21,3 +21,7 @@ export function formatDate(d: CalendarDate) {
 export function formatHourNum(hour: number) {
 	return `${hour.toString().padStart(2, '0')}:00`;
 }
+
+export function formatHourNumShort(hour: number) {
+	return `${hour.toString().padStart(2, '0')}`;
+}

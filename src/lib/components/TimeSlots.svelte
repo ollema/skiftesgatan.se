@@ -5,7 +5,7 @@
 	import { getOptionalUser } from '$lib/api/auth.remote';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { type BookingTimeSlot, type Resource } from '$lib/types/bookings';
-	import { formatDate, formatHourNum } from '$lib/utils/date';
+	import { formatDate, formatHourNumShort } from '$lib/utils/date';
 
 	interface Props {
 		resource: Resource;
@@ -46,7 +46,7 @@
 						pendingBooking = {
 							timeslotId: slot.timeslotId,
 							replaceBookingId: activeBooking.bookingId!,
-							replaceDescription: `${formatDate(activeBooking.date)}, ${formatHourNum(activeBooking.start)}–${formatHourNum(activeBooking.end)}`
+							replaceDescription: `${formatDate(activeBooking.date)}, ${formatHourNumShort(activeBooking.start)}–${formatHourNumShort(activeBooking.end)}`
 						};
 						return;
 					}
@@ -58,7 +58,7 @@
 					}
 				}}
 			>
-				{formatHourNum(slot.start)}&ndash;{formatHourNum(slot.end)}
+				{formatHourNumShort(slot.start)}&ndash;{formatHourNumShort(slot.end)}
 			</button>
 		{:else if slot.status === 'mine'}
 			<button
