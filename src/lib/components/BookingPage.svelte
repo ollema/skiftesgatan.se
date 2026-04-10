@@ -8,8 +8,6 @@
 	import { TIMEZONE, type Resource } from '$lib/types/bookings';
 	import { formatDate, formatHourNum } from '$lib/utils/date';
 	import { today } from '@internationalized/date';
-	import { source } from 'sveltekit-sse';
-
 	// TODO: will this cause a bug if the user leaves the page open past midnight?
 	// maybe we should also update the date at midnight?
 	const minDate = today(TIMEZONE);
@@ -33,33 +31,8 @@
 	let activeBooking = $derived(data.activeBooking);
 	let timeslots = $derived(bookingCalendar[date.toString()] ?? []);
 
-	// listen for booking events via SSE and refresh queries when they occur.
-	// reconnect with a delay if the connection is lost
-	$effect(() => {
-		const connection = source('/api/booking-events', {
-			options: {
-				method: 'POST',
-				body: JSON.stringify({ resource })
-			},
-			close({ connect }) {
-				setTimeout(connect, 2000);
-			}
-		});
-
-		const value = connection.select('booking-changed');
-		const unsubscribe = value.subscribe((v) => {
-			if (v !== '') {
-				getBookingData({ resource }).refresh();
-			}
-		});
-
-		return () => {
-			unsubscribe();
-			connection.close();
-		};
-	});
-
-	// refresh booking data when the page becomes visible after being hidden for more than 30 seconds
+	// TODO: replace polling with SSE once $derived(await ...) + .refresh() is stable
+	// poll for booking changes and refresh when the page becomes visible after being hidden
 	$effect(() => {
 		let lastHidden = 0;
 
@@ -72,8 +45,15 @@
 			}
 		}
 
+		const interval = setInterval(() => {
+			getBookingData({ resource }).refresh();
+		}, 60_000);
+
 		document.addEventListener('visibilitychange', onVisibilityChange);
-		return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+		return () => {
+			clearInterval(interval);
+			document.removeEventListener('visibilitychange', onVisibilityChange);
+		};
 	});
 
 	// derived text

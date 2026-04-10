@@ -64,7 +64,6 @@
 		"svelte": "^5.55.2",
 		"svelte-check": "^4.4.6",
 		"svelte-sonner": "^1.1.0",
-		"sveltekit-sse": "^0.14.3",
 		"tailwindcss": "^4.2.2",
 		"typescript": "^6.0.2",
 		"typescript-eslint": "^8.58.1",

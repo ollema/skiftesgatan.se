@@ -11,7 +11,6 @@ import {
 	cancelBooking as cancelBookingDb,
 	validateBookingDate
 } from '$lib/server/booking';
-import { emitBookingChanged } from '$lib/server/booking-events';
 import { createBookingNotifications } from '$lib/server/notification';
 import { TIMEZONE, RESOURCES, type BookingTimeSlot } from '$lib/types/bookings';
 
@@ -134,7 +133,6 @@ export const book = command(
 				log.warn(`[notification] failed to create notifications bookingId=${result.id}: ${e}`);
 			}
 			await getBookingData({ resource }).refresh();
-			emitBookingChanged(resource);
 			return result;
 		} catch (e: unknown) {
 			if (e instanceof Error && 'code' in e && (e as { code: string }).code === '23505') {
@@ -157,5 +155,4 @@ export const cancelBooking = command(v.object({ bookingId: v.number() }), async 
 	}
 
 	await requested(getBookingData, 5).refreshAll();
-	emitBookingChanged(result.resource);
 });
