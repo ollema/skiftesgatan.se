@@ -88,7 +88,7 @@
 	}
 
 	const LINK_CLASS =
-		'cursor-pointer self-start text-left text-sm text-accent underline decoration-1 underline-offset-3 transition-colors duration-120 hover:text-accent-hover';
+		'cursor-pointer self-start text-left text-sm text-link underline decoration-1 underline-offset-3 transition-colors duration-120 hover:text-link-hover';
 </script>
 
 {#snippet settingsRow(label: string, value: string, onEdit: () => void)}

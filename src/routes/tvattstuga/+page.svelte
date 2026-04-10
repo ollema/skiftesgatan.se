@@ -11,7 +11,7 @@
 {#if info}
 	<Collapsible.Root class="mt-6">
 		<Collapsible.Trigger
-			class="group inline-flex cursor-pointer items-center gap-2 text-sm tracking-widest text-text-secondary underline transition-colors duration-120 hover:text-accent data-[state=open]:text-accent"
+			class="group inline-flex cursor-pointer items-center gap-2 text-sm tracking-widest text-text-secondary underline transition-colors duration-120 hover:text-text-primary data-[state=open]:text-text-primary"
 		>
 			Om tvättstugan
 			<svg

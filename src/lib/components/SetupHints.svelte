@@ -40,7 +40,7 @@
 				<p class="text-sm text-text-secondary">
 					Aktivera <a
 						href={resolve('/konto')}
-						class="text-accent underline decoration-1 underline-offset-2 hover:text-accent-hover"
+						class="text-link underline decoration-1 underline-offset-2 hover:text-link-hover"
 						>e-postaviseringar</a
 					> för att få en påminnelse innan din bokning.
 				</p>
@@ -58,7 +58,7 @@
 				<p class="text-sm text-text-secondary">
 					<a
 						href={resolve('/konto')}
-						class="text-accent underline decoration-1 underline-offset-2 hover:text-accent-hover"
+						class="text-link underline decoration-1 underline-offset-2 hover:text-link-hover"
 						>Prenumerera på dina bokningar</a
 					> i din kalenderapp.
 				</p>

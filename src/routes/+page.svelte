@@ -17,7 +17,7 @@
 </script>
 
 <!-- Hero -->
-<section class="pt-16 pb-24 text-center lg:pt-24 lg:pb-32">
+<section class="pt-20 pb-28 text-center">
 	<p class="mb-4 text-xs tracking-widest text-text-muted uppercase">Bostadsrättsföreningen</p>
 	<h1 class="mb-6 font-heading text-3xl font-normal lg:text-[2.75rem] lg:leading-tight">
 		BRF Skiftesgatan 4
@@ -29,7 +29,7 @@
 </section>
 
 <!-- About -->
-<section class="mx-auto max-w-170 pb-12 lg:pb-16">
+<section class="mx-auto mb-16 max-w-170">
 	<h2 class="font-heading text-xl font-normal">Om föreningen</h2>
 	<p class="leading-loose text-text-secondary">
 		Bostadsrättsföreningen Skiftesgatan 4 bildades 2012 och äger fastigheten Brämaregården 45:11 i
@@ -40,8 +40,8 @@
 </section>
 
 <!-- Latest News -->
-<section class="mx-auto max-w-170 pb-12 lg:pb-16">
-	<h2 class="mb-10 font-heading text-xl font-normal">Nyheter</h2>
+<section class="mx-auto mb-16 max-w-170">
+	<h2 class="mb-6 font-heading text-xl font-normal">Nyheter</h2>
 	<div class="flex flex-col gap-10">
 		{#each latestNews as item (item._meta.path)}
 			<a
@@ -63,8 +63,8 @@
 </section>
 
 <!-- Resident Services -->
-<section class="mx-auto max-w-170 pb-12 lg:pb-16">
-	<h2 class="mb-10 font-heading text-xl font-normal">För boende</h2>
+<section class="mx-auto max-w-170 pb-16">
+	<h2 class="mb-8 font-heading text-xl font-normal">För boende</h2>
 	<div class="grid gap-6 sm:grid-cols-2">
 		<a
 			href={resolve('/tvattstuga')}
@@ -98,7 +98,7 @@
 </section>
 
 <!-- Contact -->
-<section class="mx-auto max-w-170 pb-16 lg:pb-24">
+<section class="mx-auto mb-16 max-w-170">
 	<h2 class="mb-6 font-heading text-xl font-normal">Kontakt</h2>
 	<p class="text-text-secondary">
 		Har du frågor? Kontakta styrelsen på

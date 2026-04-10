@@ -20,10 +20,10 @@
 	});
 
 	const linkClass =
-		'text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent data-active:text-accent';
+		'text-sm text-bg/70 no-underline transition-colors duration-120 hover:text-bg data-active:text-bg';
 
 	const triggerClass =
-		'inline-flex items-center gap-1 text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent data-[state=open]:text-accent';
+		'inline-flex items-center gap-1 text-sm text-bg/70 no-underline transition-colors duration-120 hover:text-bg data-[state=open]:text-bg';
 </script>
 
 <NavigationMenu.Root>
@@ -71,7 +71,7 @@
 						<div class="mt-2 border-t border-border-subtle pt-2">
 							<NavigationMenu.Link
 								href={resolve('/nyheter')}
-								class="block rounded-sm p-2 text-sm text-text-secondary no-underline transition-colors duration-120 hover:bg-bg hover:text-accent"
+								class="block rounded-sm p-2 text-sm text-text-secondary no-underline transition-colors duration-120 hover:bg-bg hover:text-text-primary"
 							>
 								Alla nyheter
 							</NavigationMenu.Link>
@@ -104,7 +104,7 @@
 								<li>
 									<NavigationMenu.Link
 										href={resolve(`/${infoPage._meta.path}` as `/information/${string}`)}
-										class="block rounded-sm p-2 text-sm text-text-secondary no-underline transition-colors duration-120 hover:bg-bg hover:text-accent"
+										class="block rounded-sm p-2 text-sm text-text-secondary no-underline transition-colors duration-120 hover:bg-bg hover:text-text-primary"
 									>
 										{infoPage.title}
 									</NavigationMenu.Link>

@@ -13,13 +13,14 @@
 	--color-text-secondary: #6b6560;
 	--color-text-muted: #9c9590;
 
-	/* Accent */
+	/* Accent (backgrounds/structural only — never as text color) */
 	--color-accent: #4a6741;
 	--color-accent-hover: #3b5334;
 	--color-accent-subtle: #e8eedf;
 
-	/* Warm (sparingly) */
-	--color-warm: #8b7355;
+	/* Links */
+	--color-link: #8b7355;
+	--color-link-hover: #725f47;
 
 	/* Borders */
 	--color-border: #ddd7cc;
@@ -31,7 +32,7 @@
 	--color-success: #4a6741;
 
 	/* Slot colors (booking system) */
-	--color-slot-occupied: #9c9590;
+	--color-slot-occupied: #4a6741;
 	--color-slot-mine: #b8634b;
 
 	/* Typography */
@@ -49,7 +50,7 @@
 	html {
 		font-family: var(--font-body);
 		color: var(--color-text-primary);
-		background-color: var(--color-bg);
+		background-color: var(--color-accent);
 		line-height: 1.6;
 	}
 
@@ -65,7 +66,7 @@
 	}
 
 	a {
-		color: var(--color-accent);
+		color: var(--color-link);
 		text-decoration: underline;
 		text-underline-offset: 3px;
 		text-decoration-thickness: 1px;
@@ -73,14 +74,14 @@
 	}
 
 	a:hover {
-		color: var(--color-accent-hover);
+		color: var(--color-link-hover);
 	}
 
 	/* Prose customization for markdown content */
 	.prose {
 		--tw-prose-body: var(--color-text-primary);
 		--tw-prose-headings: var(--color-text-primary);
-		--tw-prose-links: var(--color-accent);
+		--tw-prose-links: var(--color-link);
 		--tw-prose-bold: var(--color-text-primary);
 		--tw-prose-counters: var(--color-text-secondary);
 		--tw-prose-bullets: var(--color-text-muted);

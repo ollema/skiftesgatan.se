@@ -14,13 +14,11 @@
 <Toaster richColors />
 
 <div class="min-h-screen bg-bg font-body text-text-primary">
-	<nav class="border-b border-border-subtle bg-surface">
+	<nav class="bg-accent">
 		<div class="mx-auto max-w-240 px-4 lg:px-10">
 			<div class="flex h-16 items-center justify-between">
 				<div class="flex items-center gap-8">
-					<a
-						href={resolve('/')}
-						class="font-heading text-xl font-normal text-text-primary no-underline"
+					<a href={resolve('/')} class="font-heading text-xl font-normal text-bg no-underline"
 						>BRF Skiftesgatan 4</a
 					>
 					<Navbar />
@@ -29,14 +27,14 @@
 					{#if user}
 						<a
 							href={resolve('/konto')}
-							class="hidden text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent lg:block"
+							class="hidden text-sm text-bg/70 no-underline transition-colors duration-120 hover:text-bg lg:block"
 						>
 							{user.username}
 						</a>
 					{:else}
 						<a
 							href={resolve('/konto/login')}
-							class="hidden text-sm text-text-secondary no-underline transition-colors duration-120 hover:text-accent lg:block"
+							class="hidden text-sm text-bg/70 no-underline transition-colors duration-120 hover:text-bg lg:block"
 						>
 							Logga in
 						</a>

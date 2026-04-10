@@ -25,16 +25,16 @@
 		.slice(0, 3);
 
 	const linkClass =
-		'text-base text-text-secondary no-underline transition-colors duration-120 hover:text-accent';
+		'text-base text-text-secondary no-underline transition-colors duration-120 hover:text-text-primary';
 
 	const subLinkClass =
-		'text-sm text-text-muted no-underline transition-colors duration-120 hover:text-accent';
+		'text-sm text-text-muted no-underline transition-colors duration-120 hover:text-text-primary';
 </script>
 
 <Dialog.Root bind:open>
 	<Dialog.Trigger
 		aria-label="Öppna meny"
-		class="inline-flex size-9 items-center justify-center text-text-primary lg:hidden"
+		class="inline-flex size-9 items-center justify-center text-bg lg:hidden"
 	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -86,7 +86,7 @@
 					<a
 						href={resolve('/nyheter')}
 						class={linkClass}
-						class:text-accent={page.url.pathname === '/nyheter'}
+						class:text-text-primary={page.url.pathname === '/nyheter'}
 					>
 						Nyheter
 					</a>
@@ -95,7 +95,7 @@
 							<a
 								href={resolve(`/nyheter/${item._meta.path}` as `/nyheter/${string}`)}
 								class={subLinkClass}
-								class:text-accent={page.url.pathname === `/nyheter/${item._meta.path}`}
+								class:text-text-primary={page.url.pathname === `/nyheter/${item._meta.path}`}
 							>
 								{item.title}
 							</a>
@@ -108,7 +108,7 @@
 					<a
 						href={resolve('/information')}
 						class={linkClass}
-						class:text-accent={page.url.pathname === '/information'}
+						class:text-text-primary={page.url.pathname === '/information'}
 					>
 						Information
 					</a>
@@ -117,7 +117,7 @@
 							<a
 								href={resolve(`/${infoPage._meta.path}` as `/information/${string}`)}
 								class={subLinkClass}
-								class:text-accent={page.url.pathname === `/${infoPage._meta.path}`}
+								class:text-text-primary={page.url.pathname === `/${infoPage._meta.path}`}
 							>
 								{infoPage.title}
 							</a>
@@ -129,21 +129,21 @@
 				<a
 					href={resolve('/tvattstuga')}
 					class={linkClass}
-					class:text-accent={page.url.pathname.startsWith('/tvattstuga')}
+					class:text-text-primary={page.url.pathname.startsWith('/tvattstuga')}
 				>
 					Tvättstuga
 				</a>
 				<a
 					href={resolve('/uteplats')}
 					class={linkClass}
-					class:text-accent={page.url.pathname.startsWith('/uteplats')}
+					class:text-text-primary={page.url.pathname.startsWith('/uteplats')}
 				>
 					Uteplats
 				</a>
 				<a
 					href={resolve('/kontakt')}
 					class={linkClass}
-					class:text-accent={page.url.pathname.startsWith('/kontakt')}
+					class:text-text-primary={page.url.pathname.startsWith('/kontakt')}
 				>
 					Kontakt
 				</a>
@@ -154,7 +154,7 @@
 					<a
 						href={resolve('/konto')}
 						class={linkClass}
-						class:text-accent={page.url.pathname.startsWith('/konto')}
+						class:text-text-primary={page.url.pathname.startsWith('/konto')}
 					>
 						{user.username}
 					</a>
