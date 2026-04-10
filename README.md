@@ -143,6 +143,7 @@ Copy `.env.example` to `.env` and fill in values.
 | `BETTER_AUTH_SECRET` | Yes      | 32-character high-entropy secret for session signing  |
 | `RESEND_API_KEY`     | Prod     | Resend API key for email delivery (file mock in dev)  |
 | `EMAIL_FROM`         | Yes      | Sender email address                                  |
+| `CONTACT_MANAGER_*`  | Prod     | Property manager name, phone, and email               |
 
 **`.env.prod`** -- production database commands (copy from `.env.prod.example`):
 
@@ -176,8 +177,6 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 - [ ] **Theming** -- favicons and PWA theme colors or whatever those attributes are called should mathc the new color scheme.
 
-- [ ] **Add contact information for property manager and emergency contact** -- currently missing from the contact page and should be added once we have that information. It should be redacted for users which are not logged in.
-
 ### Medium
 
 - [ ] **Consolidate Drizzle relations** -- `relations()` for the `user` table is declared in three files (`auth.schema.ts`, `booking.schema.ts`, `notification.schema.ts`). Drizzle only supports one `relations()` per table -- the last one wins. This doesn't cause issues today (no code uses Drizzle relational queries), but should be merged into a single file before using `.query.user.findMany({ with: ... })`.
@@ -199,8 +198,6 @@ Code quality improvements identified during codebase review, ordered by impact.
 - [ ] **Auto-refresh booking calendar** -- if a user leaves the tab open, slot availability can go stale. Consider periodic re-fetch or visibility-change refresh. Better yet, let's use SSE!
 
 - [ ] **Better logging** -- log actual apartment numbers and timeslot start hours and so on instead of IDs.
-
-- [ ] **Use intelligent status texts** -- If the user's name contains & then use "Ni" instead of "Du"
 
 ## Design
 
