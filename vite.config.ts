@@ -1,5 +1,4 @@
 import type { Plugin } from 'vite';
-import devtoolsJson from 'vite-plugin-devtools-json';
 import tailwindcss from '@tailwindcss/vite';
 import contentCollections from '@content-collections/vite';
 import { defineConfig } from 'vitest/config';
@@ -40,7 +39,6 @@ export default defineConfig({
 		tailwindcss(),
 		!process.env.VITEST && contentCollections(),
 		sveltekit(),
-		devtoolsJson(),
 		suppressAdapterWarnings()
 	],
 	server: {
