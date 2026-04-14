@@ -5,7 +5,7 @@
 	import { resolve } from '$app/paths';
 	import { getContactInfo } from '$lib/api/contact.remote';
 
-	const contact = await getContactInfo();
+	let contact = $derived(await getContactInfo());
 </script>
 
 <MetaTags

@@ -113,7 +113,7 @@
 	<h2 class="mb-6 font-heading text-xl font-normal">Kontakt</h2>
 	<p class="text-text-secondary">
 		Har du frågor? Kontakta styrelsen på
-		<a href="mailto:brfskiftesgatan@gmail.com">brfskiftesgatan@gmail.com</a>.
+		<a href="mailto:styrelsen@skiftesgatan.se">styrelsen@skiftesgatan.se</a>.
 	</p>
 	<a href={resolve('/kontakt')} class="mt-4 inline-block text-sm">Alla kontaktuppgifter</a>
 </section>

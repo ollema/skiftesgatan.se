@@ -16,8 +16,8 @@
 	let { resource }: { resource: Resource } = $props();
 
 	// load data
-	let user = await getOptionalUser();
-	let hints = await getSetupHints();
+	let user = $derived(await getOptionalUser());
+	let hints = $derived(await getSetupHints());
 	let data = $derived(await getBookingData({ resource }));
 
 	// calendar state

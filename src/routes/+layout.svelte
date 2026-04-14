@@ -8,7 +8,7 @@
 
 	let { children } = $props();
 
-	const user = await getOptionalUser();
+	let user = $derived(await getOptionalUser());
 </script>
 
 <Toaster richColors />
