@@ -1,17 +1,13 @@
 ---
-title: Kallelse till årsmöte
+title: Årsmöte 2026
 date: '2026-04-12'
-summary: Kallelse till årsmöte för BRF Skiftesgatan 4 den 10 juni kl. 18:00.
+summary: Preliminärt datum för årsmöte i BRF Skiftesgatan 4 är satt till den 10 juni 2026. Mer information kommer närmare mötet.
 ---
 
-## BRF Skiftesgatan 4 – Kallelse till årsmöte!
+## Preliminärt datum för årsmöte i BRF Skiftesgatan 4
 
-**Onsdagen den 10 juni kl. 18:00** är du välkommen på årsmöte för BRF Skiftesgatan 4. Om vädret tillåter kommer vi att hålla mötet utomhus på vår fantastiska innergård. Vid dåligt väder ses vi i pannrummet nere i källaren vid C-uppgången.
+Preliminärt datum för årsmöte i BRF Skiftesgatan 4 är satt till den 10 juni 2026.
 
-Se bifogad dagordning för de punkter som kommer behandlas under mötet. Årsredovisningen för 2025 finns tillgänglig i Facebookgruppen.
+Mer information kommer närmare mötet. Vi uppmuntrar alla medlemmar att delta och vara delaktiga i föreningens beslut och framtid.
 
-### Kan du inte närvara?
-
-Skulle du inte kunna vara med den 10:e juni finns en fullmakt nedan som du kan fylla i. Du kan skicka ett ombud (make/maka/sambo eller annan medlem) som med fullmakten får rösta åt dig. Hjälp oss att nå beslutsförhet så att vi slipper hålla ett extrainsatt årsmöte.
-
-Välkomna!
+Håll utkik efter mer detaljerad information om tid och plats!
