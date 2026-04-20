@@ -21,10 +21,10 @@ test.describe('content pages', () => {
 
 		// Open Nyheter dropdown and click the other article
 		await page.locator('nav').getByRole('button', { name: 'Nyheter' }).click();
-		await page.locator('nav').getByRole('link', { name: 'Kallelse till årsmöte' }).click();
+		await page.locator('nav').getByRole('link', { name: 'Årsmöte 2026' }).click();
 
 		await expect(page).toHaveURL('/nyheter/arsmote-26');
-		await expect(page.locator('h1')).toHaveText('Kallelse till årsmöte');
+		await expect(page.locator('h1')).toHaveText('Årsmöte 2026');
 	});
 
 	test('information listing and detail pages', async ({ page }) => {

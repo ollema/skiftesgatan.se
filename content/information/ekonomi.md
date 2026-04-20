@@ -10,4 +10,4 @@ Föreningen har ett gruppavtal med Telenor, och fiber är indraget till varje l�
 
 ### Årsredovisning
 
-[Årsredovisning 2023](https://hemma.sbc.se/shared/rapporter/arsredovisningPopup.php?bokslutsdatum=2023-12-31)
+[Årsredovisning 2025](/arsredovisning-2025.pdf)
