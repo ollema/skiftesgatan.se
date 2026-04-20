@@ -169,6 +169,8 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ### High
 
+- [ ] **Remove temporary booking freeze** -- until 2026-04-27 the old website is the source of truth for earlier dates, so new bookings are restricted to 2026-04-27 and onwards. When the freeze ends, remove the TODO-marked blocks in `src/lib/api/booking.remote.ts` (server-side 503), `src/lib/components/BookingPage.svelte` (red banner + calendar `minValue` override), and un-skip the TODO-marked tests in `e2e/booking.e2e.ts` and `e2e/concurrent-booking.e2e.ts`.
+
 - [ ] **Use actual content and proper facts** -- Currently we have a lot of incorrect placeholder content.
 
 - [ ] **PWA readyness** -- add manifest.json, icons, and service worker for offline support and installability.

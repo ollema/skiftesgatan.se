@@ -7,11 +7,17 @@
 	import { getBookingData } from '$lib/api/booking.remote';
 	import { TIMEZONE, type Resource } from '$lib/types/bookings';
 	import { formatDate, formatHourNum } from '$lib/utils/date';
-	import { today } from '@internationalized/date';
+	import { CalendarDate, today } from '@internationalized/date';
 	// TODO: will this cause a bug if the user leaves the page open past midnight?
 	// maybe we should also update the date at midnight?
-	const minDate = today(TIMEZONE);
-	const maxDate = minDate.add({ months: 1 });
+	const todayDate = today(TIMEZONE);
+
+	// TODO: temporary — until 2026-04-27 the old website is source of truth for earlier dates; remove after the freeze ends
+	const freezeEnd = new CalendarDate(2026, 4, 27);
+	const bookingsFrozen = todayDate.compare(freezeEnd) < 0;
+
+	const minDate = bookingsFrozen ? freezeEnd : todayDate;
+	const maxDate = todayDate.add({ months: 1 });
 
 	let { resource }: { resource: Resource } = $props();
 
@@ -76,6 +82,13 @@
 <h1 class="mb-4 font-heading text-2xl font-normal">{title}</h1>
 <p class="mb-2 text-text-secondary">{greeting}</p>
 <p class="text-text-secondary">{message}</p>
+
+<!-- TODO: temporary booking freeze notice — remove after 2026-04-27 -->
+{#if bookingsFrozen}
+	<div class="mt-4 border border-error px-4 py-3 text-error" role="alert">
+		Bokningar kan endast göras för datum från och med måndag 27 april.
+	</div>
+{/if}
 
 <!-- setup hints -->
 {#if user}

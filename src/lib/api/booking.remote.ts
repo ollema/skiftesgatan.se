@@ -111,6 +111,14 @@ export const book = command(
 	async ({ timeslotId, resource, date, replaceBookingId }) => {
 		const user = requireAuth();
 
+		// TODO: temporary — until 2026-04-27 the old website is source of truth for earlier dates; remove this block after the freeze ends
+		if (date.compare(new CalendarDate(2026, 4, 27)) < 0) {
+			error(
+				503,
+				'Bokningar kan endast göras för datum från och med måndag 27 april. Använd den gamla hemsidan för tidigare datum.'
+			);
+		}
+
 		validateBookingDate(date);
 
 		if (replaceBookingId !== undefined) {
