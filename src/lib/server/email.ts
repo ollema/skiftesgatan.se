@@ -5,21 +5,23 @@ import { log } from '$lib/server/log';
 
 export async function sendEmail(options: {
 	to: string;
-	subject: string;
-	html: string;
+	templateAlias: string;
+	variables: Record<string, string | number>;
 }): Promise<string | null> {
-	const label = `to ${options.to} subject="${options.subject}"`;
+	const label = `to ${options.to} template=${options.templateAlias}`;
 
 	if (!env.RESEND_API_KEY) {
-		const type = /verif(?:y|iera)/i.test(options.subject)
-			? 'verify'
-			: /påminnelse/i.test(options.subject)
-				? 'notification'
-				: 'reset';
 		const recipient = options.to.replace(/[@.]/g, '-');
-		const file = `.test-emails/${type}-${recipient}.json`;
+		const file = `.test-emails/${options.templateAlias}-${recipient}.json`;
 		mkdirSync('.test-emails', { recursive: true });
-		writeFileSync(file, JSON.stringify(options));
+		writeFileSync(
+			file,
+			JSON.stringify({
+				to: options.to,
+				templateAlias: options.templateAlias,
+				variables: options.variables
+			})
+		);
 		log.info(`[email] sent ${label} (no Resend API key, written to ${file})`);
 		return null;
 	}
@@ -28,8 +30,10 @@ export async function sendEmail(options: {
 	const { data, error } = await resend.emails.send({
 		from: env.EMAIL_FROM || 'Skiftesgatan <onboarding@resend.dev>',
 		to: [options.to],
-		subject: options.subject,
-		html: options.html
+		template: {
+			id: options.templateAlias,
+			variables: options.variables
+		}
 	});
 
 	if (error) {

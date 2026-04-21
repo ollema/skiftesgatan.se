@@ -2,24 +2,25 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
+import { EMAIL_TEMPLATES } from '../src/lib/server/email.templates';
 
 const TEST_EMAILS_DIR = '.test-emails';
 
-function readEmailUrl(type: string, email: string): string {
+function readEmailUrl(templateAlias: string, email: string): string {
 	const recipient = email.replace(/[@.]/g, '-');
-	const filePath = path.join(TEST_EMAILS_DIR, `${type}-${recipient}.json`);
+	const filePath = path.join(TEST_EMAILS_DIR, `${templateAlias}-${recipient}.json`);
 	const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-	const match = data.html.match(/href="([^"]+)"/);
-	if (!match) throw new Error(`No URL found in ${filePath}`);
-	return match[1];
+	const url = data.variables?.URL;
+	if (!url) throw new Error(`No URL variable found in ${filePath}`);
+	return url;
 }
 
 export function readResetPasswordUrl(email: string): string {
-	return readEmailUrl('reset', email);
+	return readEmailUrl(EMAIL_TEMPLATES.resetPassword.alias, email);
 }
 
 export function readVerificationUrl(email: string): string {
-	return readEmailUrl('verify', email);
+	return readEmailUrl(EMAIL_TEMPLATES.verifyEmail.alias, email);
 }
 
 const VALID_SUFFIXES = ['1001', '1002', '1101', '1102', '1201', '1202', '1301', '1302'];

@@ -4,10 +4,11 @@ import { eq, and, lte } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { log } from '$lib/server/log';
 import { sendEmail } from '$lib/server/email';
+import { EMAIL_TEMPLATES } from '$lib/server/email.templates';
 import { bookingNotification } from '$lib/server/db/notification.schema';
 import { booking, timeslot } from '$lib/server/db/booking.schema';
 import { user } from '$lib/server/db/auth.schema';
-import { buildNotificationEmail } from '$lib/server/notification.email';
+import { buildBookingReminderVariables } from '$lib/server/notification.email';
 
 export async function processNotifications(): Promise<number> {
 	const currentTime = now(TIMEZONE).toDate();
@@ -32,7 +33,7 @@ export async function processNotifications(): Promise<number> {
 		.limit(50);
 
 	for (const notification of due) {
-		const { subject, html } = buildNotificationEmail({
+		const variables = buildBookingReminderVariables({
 			resource: notification.resource,
 			date: notification.date,
 			startHour: notification.startHour,
@@ -40,7 +41,11 @@ export async function processNotifications(): Promise<number> {
 		});
 
 		try {
-			const resendId = await sendEmail({ to: notification.email, subject, html });
+			const resendId = await sendEmail({
+				to: notification.email,
+				templateAlias: EMAIL_TEMPLATES.bookingReminder.alias,
+				variables
+			});
 			await db
 				.update(bookingNotification)
 				.set({ status: 'sent', sentAt: currentTime, resendId })

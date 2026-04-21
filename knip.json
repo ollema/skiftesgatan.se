@@ -6,7 +6,8 @@
 		"src/lib/server/notification.scheduler.ts",
 		"content-collections.ts",
 		"scripts/db/*.ts",
-		"scripts/generate-icons.ts"
+		"scripts/generate-icons.ts",
+		"scripts/sync-email-templates.ts"
 	],
 	"ignoreDependencies": ["vitest-browser-svelte"]
 }

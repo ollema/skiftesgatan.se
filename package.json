@@ -21,7 +21,8 @@
 		"db:studio": "pnpx tsx scripts/db/studio.ts",
 		"db:tunnel": "pnpx tsx scripts/db/tunnel.ts",
 		"knip": "knip",
-		"icons": "pnpx tsx scripts/generate-icons.ts"
+		"icons": "pnpx tsx scripts/generate-icons.ts",
+		"email:sync": "pnpx tsx scripts/sync-email-templates.ts"
 	},
 	"devDependencies": {
 		"@better-auth/cli": "~1.4.21",

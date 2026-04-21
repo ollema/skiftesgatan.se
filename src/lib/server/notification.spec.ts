@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { CalendarDate } from '@internationalized/date';
 import { computeNotifyAt } from './notification';
-import { buildNotificationEmail } from './notification.email';
+import { buildBookingReminderVariables } from './notification.email';
 
 describe('computeNotifyAt', () => {
 	it('subtracts 60 minutes from booking start', () => {
@@ -33,67 +33,57 @@ describe('computeNotifyAt', () => {
 	});
 });
 
-describe('buildNotificationEmail', () => {
+describe('buildBookingReminderVariables', () => {
 	const ref = new CalendarDate(2026, 4, 15);
 
-	it('includes Påminnelse in subject', () => {
-		const { subject } = buildNotificationEmail({
-			resource: 'laundry_room',
-			date: '2026-04-16',
-			startHour: 10,
-			endHour: 13,
-			referenceDate: ref
-		});
-		expect(subject).toContain('Påminnelse');
-	});
-
 	it('uses Swedish resource name for laundry', () => {
-		const { subject, html } = buildNotificationEmail({
+		const vars = buildBookingReminderVariables({
 			resource: 'laundry_room',
 			date: '2026-04-16',
 			startHour: 10,
 			endHour: 13,
 			referenceDate: ref
 		});
-		expect(subject).toContain('Tvättstugan');
-		expect(html).toContain('tvättstugan');
+		expect(vars.RESOURCE).toBe('Tvättstugan');
+		expect(vars.RESOURCE_LOWER).toBe('tvättstugan');
 	});
 
 	it('uses Swedish resource name for outdoor area', () => {
-		const { subject } = buildNotificationEmail({
+		const vars = buildBookingReminderVariables({
 			resource: 'outdoor_area',
 			date: '2026-04-16',
 			startHour: 7,
 			endHour: 22,
 			referenceDate: ref
 		});
-		expect(subject).toContain('Uteplats');
+		expect(vars.RESOURCE).toBe('Uteplats');
+		expect(vars.RESOURCE_LOWER).toBe('uteplats');
 	});
 
 	it('says imorgon when date is tomorrow', () => {
-		const { subject } = buildNotificationEmail({
+		const vars = buildBookingReminderVariables({
 			resource: 'laundry_room',
 			date: '2026-04-16',
 			startHour: 10,
 			endHour: 13,
 			referenceDate: ref
 		});
-		expect(subject).toContain('imorgon');
+		expect(vars.RELATIVE_DAY).toBe('imorgon');
 	});
 
 	it('says idag when date is today', () => {
-		const { subject } = buildNotificationEmail({
+		const vars = buildBookingReminderVariables({
 			resource: 'laundry_room',
 			date: '2026-04-15',
 			startHour: 10,
 			endHour: 13,
 			referenceDate: ref
 		});
-		expect(subject).toContain('idag');
+		expect(vars.RELATIVE_DAY).toBe('idag');
 	});
 
 	it('uses weekday and date for dates further away', () => {
-		const { subject } = buildNotificationEmail({
+		const vars = buildBookingReminderVariables({
 			resource: 'laundry_room',
 			date: '2026-04-20',
 			startHour: 7,
@@ -101,17 +91,17 @@ describe('buildNotificationEmail', () => {
 			referenceDate: ref
 		});
 		// 2026-04-20 is a Monday
-		expect(subject).toContain('måndag 20 april');
+		expect(vars.RELATIVE_DAY).toBe('måndag 20 april');
 	});
 
 	it('formats time range with zero-padded hours and en-dash', () => {
-		const { subject } = buildNotificationEmail({
+		const vars = buildBookingReminderVariables({
 			resource: 'laundry_room',
 			date: '2026-04-16',
 			startHour: 7,
 			endHour: 10,
 			referenceDate: ref
 		});
-		expect(subject).toContain('07:00\u201310:00');
+		expect(vars.TIME_RANGE).toBe('07:00\u201310:00');
 	});
 });

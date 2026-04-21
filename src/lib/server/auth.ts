@@ -6,6 +6,7 @@ import { env } from '$env/dynamic/private';
 import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
 import { sendEmail } from '$lib/server/email';
+import { EMAIL_TEMPLATES } from '$lib/server/email.templates';
 import { PASSWORD_CONFIG, usernamePlugin } from '$lib/server/auth.config';
 
 export const auth = betterAuth({
@@ -17,8 +18,8 @@ export const auth = betterAuth({
 		sendVerificationEmail: async ({ user, url }) => {
 			await sendEmail({
 				to: user.email,
-				subject: 'Verifiera din e-postadress',
-				html: `<p>Klicka på länken för att verifiera din e-post: <a href="${url}">${url}</a></p>`
+				templateAlias: EMAIL_TEMPLATES.verifyEmail.alias,
+				variables: { URL: url }
 			});
 		},
 		autoSignInAfterVerification: true
@@ -32,8 +33,8 @@ export const auth = betterAuth({
 		sendResetPassword: async ({ user, url }) => {
 			await sendEmail({
 				to: user.email,
-				subject: 'Återställ ditt lösenord',
-				html: `<p>Klicka på länken för att återställa ditt lösenord: <a href="${url}">${url}</a></p>`
+				templateAlias: EMAIL_TEMPLATES.resetPassword.alias,
+				variables: { URL: url }
 			});
 		}
 	},
