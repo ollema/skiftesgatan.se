@@ -8,6 +8,11 @@ import { db } from '$lib/server/db';
 import { user as userTable } from '$lib/server/db/auth.schema';
 import { APIError } from 'better-auth/api';
 import { log } from '$lib/server/log';
+import { checkRateLimit } from '$lib/server/rate-limit';
+
+function rateLimitMinutes(seconds: number): number {
+	return Math.max(1, Math.ceil(seconds / 60));
+}
 
 export const getUser = query(() => requireAuth());
 
@@ -19,6 +24,11 @@ export const login = form(
 		_password: v.pipe(v.string(), v.nonEmpty())
 	}),
 	async ({ username, _password }) => {
+		const retry = checkRateLimit('login', 30, 60);
+		if (retry !== null) {
+			invalid(`För många inloggningsförsök. Försök igen om ${retry} sekunder.`);
+		}
+
 		const { request } = getRequestEvent();
 		try {
 			await auth.api.signInUsername({
@@ -54,6 +64,11 @@ export const requestPasswordReset = form(
 		username: apartmentSchema
 	}),
 	async ({ username }) => {
+		const retry = checkRateLimit('password-reset-request', 5, 3600);
+		if (retry !== null) {
+			invalid(`För många återställningsförsök. Försök igen om ${rateLimitMinutes(retry)} minuter.`);
+		}
+
 		try {
 			const [found] = await db
 				.select({ email: userTable.email })
@@ -80,6 +95,11 @@ export const resetPassword = form(
 		token: v.pipe(v.string(), v.nonEmpty())
 	}),
 	async ({ _newPassword, token }) => {
+		const retry = checkRateLimit('password-reset-submit', 10, 3600);
+		if (retry !== null) {
+			invalid(`För många försök. Försök igen om ${rateLimitMinutes(retry)} minuter.`);
+		}
+
 		try {
 			await auth.api.resetPassword({
 				body: { newPassword: _newPassword, token }

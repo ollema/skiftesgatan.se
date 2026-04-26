@@ -15,6 +15,13 @@ export const auth = betterAuth({
 	secret: env.BETTER_AUTH_SECRET,
 	logger: env.LOG_LEVEL === 'error' ? { disabled: true } : undefined,
 	database: drizzleAdapter(db, { provider: 'pg' }),
+	// Better Auth's rate limiter only covers client-initiated requests to
+	// /api/auth/* (e.g. email verification link clicks, direct API hits).
+	// It does NOT apply to auth.api.* calls from our remote functions —
+	// those are protected separately by checkRateLimit() in $lib/server/rate-limit.
+	rateLimit: {
+		enabled: true
+	},
 	emailVerification: {
 		sendVerificationEmail: async ({ user, url }) => {
 			await sendEmail({
