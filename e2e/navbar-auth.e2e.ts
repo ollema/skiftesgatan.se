@@ -13,7 +13,7 @@ test.describe('navbar auth reactivity', () => {
 		await expect(nav.getByRole('link', { name: user.username })).toBeVisible();
 
 		await page.getByRole('button', { name: 'Logga ut' }).click();
-		await expect(page).toHaveURL(/\/konto\/login/);
+		await expect(page).toHaveURL(/\/konto\/logga-in/);
 
 		await expect(nav.getByRole('link', { name: 'Logga in' })).toBeVisible();
 		await expect(nav.getByRole('link', { name: user.username })).toHaveCount(0);

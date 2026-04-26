@@ -168,7 +168,7 @@
 						{user.username}
 					</a>
 				{:else}
-					<a href={resolve('/konto/login')} class={linkClass}>Logga in</a>
+					<a href={resolve('/konto/logga-in')} class={linkClass}>Logga in</a>
 				{/if}
 			</div>
 		</Dialog.Content>

@@ -151,6 +151,6 @@
 	confirmLabel="Logga in"
 	confirmClass="bg-accent hover:bg-accent-hover"
 	onConfirm={() => {
-		window.location.href = '/konto/login';
+		window.location.href = '/konto/logga-in';
 	}}
 />

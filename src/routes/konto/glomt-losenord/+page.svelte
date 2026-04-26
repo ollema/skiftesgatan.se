@@ -29,4 +29,4 @@
 	{/each}
 </form>
 
-<a href={resolve('/konto/login')} class="text-sm">Tillbaka till inloggning</a>
+<a href={resolve('/konto/logga-in')} class="text-sm">Tillbaka till inloggning</a>

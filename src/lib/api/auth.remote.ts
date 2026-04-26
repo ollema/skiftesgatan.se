@@ -50,7 +50,7 @@ export const signout = form(async () => {
 	const { request, locals } = getRequestEvent();
 	log.info(`[auth] signout username=${locals.user?.username}`);
 	await auth.api.signOut({ headers: request.headers });
-	redirect(303, '/konto/login');
+	redirect(303, '/konto/logga-in');
 });
 
 export const requestPasswordReset = form(
@@ -71,13 +71,13 @@ export const requestPasswordReset = form(
 				.limit(1);
 			if (found) {
 				await auth.api.requestPasswordReset({
-					body: { email: found.email, redirectTo: '/konto/reset-password' }
+					body: { email: found.email, redirectTo: '/konto/aterstall-losenord' }
 				});
 			}
 		} catch {
 			// Always redirect to prevent username enumeration
 		}
-		redirect(303, '/konto/forgot-password/sent');
+		redirect(303, '/konto/glomt-losenord/skickat');
 	}
 );
 
@@ -98,7 +98,7 @@ export const resetPassword = form(
 			throw e;
 		}
 		log.info('[auth] password reset completed');
-		redirect(303, '/konto/login');
+		redirect(303, '/konto/logga-in');
 	}
 );
 

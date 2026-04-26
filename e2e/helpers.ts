@@ -85,7 +85,7 @@ export async function confirmCancelDialog(page: Page) {
 }
 
 export async function login(page: Page, user: { username: string; password: string }) {
-	await page.goto('/konto/login');
+	await page.goto('/konto/logga-in');
 	const loginForm = page.locator('form').nth(0);
 	await loginForm.getByLabel('Lägenhet').fill(user.username);
 	await loginForm.getByLabel('Lösenord').fill(user.password);

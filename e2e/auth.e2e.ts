@@ -7,7 +7,7 @@ test.describe('auth flow', () => {
 
 		// Visit protected page → should redirect to login
 		await page.goto('/konto');
-		await expect(page).toHaveURL(/\/login/);
+		await expect(page).toHaveURL(/\/logga-in/);
 
 		// Login with pre-seeded account
 		await login(page, user);
@@ -18,7 +18,7 @@ test.describe('auth flow', () => {
 
 		// Sign out
 		await page.getByRole('button', { name: 'Logga ut' }).click();
-		await expect(page).toHaveURL(/\/login/);
+		await expect(page).toHaveURL(/\/logga-in/);
 
 		// Login again
 		await login(page, user);
@@ -29,13 +29,13 @@ test.describe('auth flow', () => {
 	test('login with wrong password shows error', async ({ page }) => {
 		const user = uniqueUser('A');
 
-		await page.goto('/konto/login');
+		await page.goto('/konto/logga-in');
 		const loginForm = page.locator('form').nth(0);
 		await loginForm.getByLabel('Lägenhet').fill(user.username);
 		await loginForm.getByLabel('Lösenord').fill('wrong-password');
 		await loginForm.getByRole('button', { name: 'Logga in' }).click();
 
-		await expect(page).toHaveURL(/\/login/);
+		await expect(page).toHaveURL(/\/logga-in/);
 		await expect(page.locator('.text-error')).toContainText('Felaktigt');
 	});
 
@@ -79,7 +79,7 @@ test.describe('auth flow', () => {
 
 		// Sign out
 		await page.getByRole('button', { name: 'Logga ut' }).click();
-		await expect(page).toHaveURL(/\/login/);
+		await expect(page).toHaveURL(/\/logga-in/);
 
 		// Login with new password
 		await login(page, { username: user.username, password: newPassword });

@@ -24,7 +24,7 @@
 		<input {...login.fields._password.as('password')} class="input-field" />
 	</label>
 	<Button>Logga in</Button>
-	<a href={resolve('/konto/forgot-password')} class="text-sm">Glömt lösenordet?</a>
+	<a href={resolve('/konto/glomt-losenord')} class="text-sm">Glömt lösenordet?</a>
 	{#each login.fields.allIssues() as issue (issue.message)}
 		<p class="text-sm text-error">{issue.message}</p>
 	{/each}

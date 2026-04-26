@@ -18,7 +18,7 @@ test.describe('navigation', () => {
 		// Navigate to login (shown as "Logga in" when not authenticated)
 		await page.goto('/');
 		await nav.getByRole('link', { name: 'Logga in' }).click();
-		await expect(page).toHaveURL(/\/konto\/login/);
+		await expect(page).toHaveURL(/\/konto\/logga-in/);
 
 		// Site title links back to home
 		await page.getByRole('link', { name: 'BRF Skiftesgatan 4' }).click();

@@ -11,12 +11,12 @@ test.describe('password reset flow', () => {
 		await page.getByRole('button', { name: 'Logga ut' }).click();
 
 		// Go to forgot password page
-		await page.goto('/konto/forgot-password');
+		await page.goto('/konto/glomt-losenord');
 		await page.getByLabel('Lägenhet').fill(user.username);
 		await page.getByRole('button', { name: 'Skicka återställningslänk' }).click();
 
 		// Should land on sent confirmation page
-		await expect(page).toHaveURL('/konto/forgot-password/sent');
+		await expect(page).toHaveURL('/konto/glomt-losenord/skickat');
 		await expect(page.getByText('Kolla din e-post')).toBeVisible();
 
 		// Read the reset URL from the file written by the server
@@ -32,7 +32,7 @@ test.describe('password reset flow', () => {
 		await page.getByRole('button', { name: 'Återställ lösenord' }).click();
 
 		// Should redirect to login
-		await expect(page).toHaveURL(/\/login/);
+		await expect(page).toHaveURL(/\/logga-in/);
 
 		// Login with new password
 		await login(page, { username: user.username, password: newPassword });

@@ -46,7 +46,7 @@
 			{/if}
 		{:else}
 			<p class="text-text-muted">
-				<a href={resolve('/konto/login')}>Logga in</a> för att se kontaktuppgifter.
+				<a href={resolve('/konto/logga-in')}>Logga in</a> för att se kontaktuppgifter.
 			</p>
 		{/if}
 	</section>

@@ -130,7 +130,7 @@ export const sendPasswordResetForUser = command(
 		if (!target) error(404, 'Hittade inte lägenheten');
 
 		await auth.api.requestPasswordReset({
-			body: { email: target.email, redirectTo: '/konto/reset-password' }
+			body: { email: target.email, redirectTo: '/konto/aterstall-losenord' }
 		});
 		log.info(`[admin] password reset email sent username=${username}`);
 		return { email: target.email };

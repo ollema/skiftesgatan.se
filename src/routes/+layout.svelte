@@ -41,7 +41,7 @@
 						</a>
 					{:else}
 						<a
-							href={resolve('/konto/login')}
+							href={resolve('/konto/logga-in')}
 							class="hidden text-sm text-bg/70 no-underline transition-colors duration-120 hover:text-bg lg:block"
 						>
 							Logga in
