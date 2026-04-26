@@ -3,7 +3,7 @@ import { invalid, redirect } from '@sveltejs/kit';
 import { getRequestEvent, query, form } from '$app/server';
 import { eq } from 'drizzle-orm';
 import { auth, requireAuth, getAuthUser } from '$lib/server/auth';
-import { APARTMENT_REGEX } from '$lib/server/auth.config';
+import { apartmentSchema } from '$lib/server/auth.config';
 import { db } from '$lib/server/db';
 import { user as userTable } from '$lib/server/db/auth.schema';
 import { APIError } from 'better-auth/api';
@@ -15,11 +15,7 @@ export const getOptionalUser = query(() => getAuthUser());
 
 export const login = form(
 	v.object({
-		username: v.pipe(
-			v.string(),
-			v.length(5),
-			v.regex(APARTMENT_REGEX, 'Måste vara en giltig lägenhet (t.ex. A1001)')
-		),
+		username: apartmentSchema,
 		_password: v.pipe(v.string(), v.nonEmpty())
 	}),
 	async ({ username, _password }) => {
@@ -55,12 +51,7 @@ export const signout = form(async () => {
 
 export const requestPasswordReset = form(
 	v.object({
-		username: v.pipe(
-			v.string(),
-			v.transform((u) => u.toUpperCase()),
-			v.length(5),
-			v.regex(APARTMENT_REGEX, 'Måste vara en giltig lägenhet (t.ex. A1001)')
-		)
+		username: apartmentSchema
 	}),
 	async ({ username }) => {
 		try {

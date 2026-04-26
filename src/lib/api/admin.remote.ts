@@ -5,19 +5,13 @@ import { eq } from 'drizzle-orm';
 import { APIError } from 'better-auth/api';
 import { env } from '$env/dynamic/private';
 import { auth, requireAdmin } from '$lib/server/auth';
-import { APARTMENT_REGEX } from '$lib/server/auth.config';
+import { apartmentSchema } from '$lib/server/auth.config';
 import { db } from '$lib/server/db';
 import { user as userTable } from '$lib/server/db/auth.schema';
 import { getNotificationPreferences, setNotificationPreference } from '$lib/server/notification';
 import { getExistingToken, createToken, regenerateToken, deleteToken } from '$lib/server/calendar';
 import { RESOURCES } from '$lib/types/bookings';
 import { log } from '$lib/server/log';
-
-const usernameSchema = v.pipe(
-	v.string(),
-	v.transform((u) => u.toUpperCase()),
-	v.regex(APARTMENT_REGEX, 'Ogiltig lägenhet')
-);
 
 async function findByUsername(username: string) {
 	const [row] = await db
@@ -55,7 +49,7 @@ export const listUsers = query(async () => {
 });
 
 export const getUserByUsername = query(
-	v.object({ username: usernameSchema }),
+	v.object({ username: apartmentSchema }),
 	async ({ username }) => {
 		requireAdmin();
 		const target = await findByUsername(username);
@@ -76,7 +70,7 @@ export const getUserByUsername = query(
 
 export const updateUserName = form(
 	v.object({
-		username: usernameSchema,
+		username: apartmentSchema,
 		name: v.pipe(v.string(), v.minLength(1), v.maxLength(100))
 	}),
 	async ({ username, name }) => {
@@ -100,7 +94,7 @@ export const updateUserName = form(
 
 export const updateUserEmail = form(
 	v.object({
-		username: usernameSchema,
+		username: apartmentSchema,
 		email: v.pipe(v.string(), v.email('Ogiltig e-postadress'))
 	}),
 	async ({ username, email }) => {
@@ -123,7 +117,7 @@ export const updateUserEmail = form(
 );
 
 export const sendPasswordResetForUser = command(
-	v.object({ username: usernameSchema }),
+	v.object({ username: apartmentSchema }),
 	async ({ username }) => {
 		requireAdmin();
 		const target = await findByUsername(username);
@@ -139,7 +133,7 @@ export const sendPasswordResetForUser = command(
 
 export const setUserRole = command(
 	v.object({
-		username: usernameSchema,
+		username: apartmentSchema,
 		role: v.picklist(['user', 'admin'])
 	}),
 	async ({ username, role }) => {
@@ -159,7 +153,7 @@ export const setUserRole = command(
 
 export const setUserNotificationPreference = command(
 	v.object({
-		username: usernameSchema,
+		username: apartmentSchema,
 		resource: v.picklist(RESOURCES),
 		offsetMinutes: v.picklist([60, 1440]),
 		enabled: v.boolean()
@@ -174,7 +168,7 @@ export const setUserNotificationPreference = command(
 );
 
 export const createUserCalendarUrl = command(
-	v.object({ username: usernameSchema }),
+	v.object({ username: apartmentSchema }),
 	async ({ username }) => {
 		requireAdmin();
 		const target = await findByUsername(username);
@@ -186,7 +180,7 @@ export const createUserCalendarUrl = command(
 );
 
 export const regenerateUserCalendarUrl = command(
-	v.object({ username: usernameSchema }),
+	v.object({ username: apartmentSchema }),
 	async ({ username }) => {
 		requireAdmin();
 		const target = await findByUsername(username);
@@ -198,7 +192,7 @@ export const regenerateUserCalendarUrl = command(
 );
 
 export const deleteUserCalendarUrl = command(
-	v.object({ username: usernameSchema }),
+	v.object({ username: apartmentSchema }),
 	async ({ username }) => {
 		requireAdmin();
 		const target = await findByUsername(username);

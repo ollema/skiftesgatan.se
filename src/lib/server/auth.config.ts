@@ -1,15 +1,13 @@
+import * as v from 'valibot';
 import { username } from 'better-auth/plugins';
 
-export const APARTMENTS: string[] = [];
-for (const block of ['A', 'B', 'C', 'D']) {
-	for (const floor of [0, 1, 2, 3]) {
-		for (const door of [1, 2]) {
-			APARTMENTS.push(`${block}1${floor}0${door}`);
-		}
-	}
-}
+const APARTMENT_REGEX = /^[ABCD]1[0-3]0[12]$/;
 
-export const APARTMENT_REGEX = /^[ABCD]1[0-3]0[12]$/;
+export const apartmentSchema = v.pipe(
+	v.string(),
+	v.transform((u) => u.toUpperCase()),
+	v.regex(APARTMENT_REGEX, 'Måste vara en giltig lägenhet (t.ex. A1001)')
+);
 
 export const PASSWORD_CONFIG = {
 	minPasswordLength: 8,

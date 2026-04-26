@@ -38,6 +38,15 @@ const DEV_NAMES = [
 	'Mikael Fransson'
 ];
 
+const APARTMENTS: string[] = [];
+for (const block of ['A', 'B', 'C', 'D']) {
+	for (const floor of [0, 1, 2, 3]) {
+		for (const door of [1, 2]) {
+			APARTMENTS.push(`${block}1${floor}0${door}`);
+		}
+	}
+}
+
 const TIMESLOT_SEEDS = [
 	{ startHour: 7, endHour: 10, resource: 'laundry_room' as const },
 	{ startHour: 10, endHour: 13, resource: 'laundry_room' as const },
@@ -66,8 +75,7 @@ setEnvVars(env);
 const { db } = await import('../../src/lib/server/db/index.js');
 const { timeslot, booking } = await import('../../src/lib/server/db/booking.schema.js');
 const { user } = await import('../../src/lib/server/db/auth.schema.js');
-const { APARTMENTS, PASSWORD_CONFIG, usernamePlugin } =
-	await import('../../src/lib/server/auth.config.js');
+const { PASSWORD_CONFIG, usernamePlugin } = await import('../../src/lib/server/auth.config.js');
 
 const { betterAuth } = await import('better-auth/minimal');
 const { drizzleAdapter } = await import('better-auth/adapters/drizzle');

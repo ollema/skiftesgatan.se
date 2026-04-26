@@ -221,8 +221,4 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 - [ ] **Service worker references missing `/offline.html`** -- `src/service-worker.ts:76` falls back to `/offline.html` on navigation failure, but the file doesn't exist in `static/`. Either add it or remove the navigate handler.
 
-- [ ] **Apartment validation duplicated in three places** -- `APARTMENT_REGEX` is rebuilt into a Valibot schema in `src/lib/api/auth.remote.ts:18-22`, `auth.remote.ts:58-63`, and `admin.remote.ts:16-20`, each with a different error message. Export a single `apartmentSchema` from `auth.config.ts` (or a shared `lib/validation.ts`).
-
-- [ ] **`APARTMENTS` array lives in `auth.config.ts` but only seed scripts use it** -- `src/lib/server/auth.config.ts:3-10` is consumed only by `scripts/db/seed.ts`. Move it into `scripts/db/` so the prod bundle doesn't carry it and the auth config stays focused on the regex.
-
 - [ ] **Auto-refresh booking calendar** -- if a user leaves the tab open, slot availability can go stale. Consider periodic re-fetch or visibility-change refresh. Better yet, let's use SSE!
