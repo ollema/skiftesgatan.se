@@ -1,4 +1,3 @@
-import { relations } from 'drizzle-orm';
 import {
 	pgTable,
 	pgEnum,
@@ -64,30 +63,3 @@ export const bookingNotification = pgTable(
 		index('booking_notification_booking_idx').on(table.bookingId)
 	]
 );
-
-export const userNotificationRelations = relations(user, ({ many }) => ({
-	notificationPreferences: many(notificationPreference),
-	bookingNotifications: many(bookingNotification)
-}));
-
-export const bookingNotificationListRelations = relations(booking, ({ many }) => ({
-	notifications: many(bookingNotification)
-}));
-
-export const notificationPreferenceRelations = relations(notificationPreference, ({ one }) => ({
-	user: one(user, {
-		fields: [notificationPreference.userId],
-		references: [user.id]
-	})
-}));
-
-export const bookingNotificationRelations = relations(bookingNotification, ({ one }) => ({
-	booking: one(booking, {
-		fields: [bookingNotification.bookingId],
-		references: [booking.id]
-	}),
-	user: one(user, {
-		fields: [bookingNotification.userId],
-		references: [user.id]
-	})
-}));

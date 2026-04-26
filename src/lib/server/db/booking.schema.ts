@@ -1,4 +1,3 @@
-import { relations } from 'drizzle-orm';
 import {
 	pgTable,
 	pgEnum,
@@ -53,22 +52,3 @@ export const booking = pgTable(
 		unique('booking_resource_timeslot_date_unique').on(table.resource, table.timeslotId, table.date)
 	]
 );
-
-export const userBookingRelations = relations(user, ({ many }) => ({
-	bookings: many(booking)
-}));
-
-export const timeslotRelations = relations(timeslot, ({ many }) => ({
-	bookings: many(booking)
-}));
-
-export const bookingRelations = relations(booking, ({ one }) => ({
-	user: one(user, {
-		fields: [booking.userId],
-		references: [user.id]
-	}),
-	timeslot: one(timeslot, {
-		fields: [booking.timeslotId],
-		references: [timeslot.id]
-	})
-}));
