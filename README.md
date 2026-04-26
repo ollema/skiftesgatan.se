@@ -217,6 +217,4 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ### Low
 
-- [ ] **Service worker references missing `/offline.html`** -- `src/service-worker.ts:76` falls back to `/offline.html` on navigation failure, but the file doesn't exist in `static/`. Either add it or remove the navigate handler.
-
 - [ ] **Auto-refresh booking calendar** -- if a user leaves the tab open, slot availability can go stale. Consider periodic re-fetch or visibility-change refresh. Better yet, let's use SSE!
