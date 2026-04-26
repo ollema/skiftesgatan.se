@@ -20,7 +20,7 @@ test.describe('password reset flow', () => {
 		await expect(page.getByText('Kolla din e-post')).toBeVisible();
 
 		// Read the reset URL from the file written by the server
-		const resetUrl = readResetPasswordUrl(user.email);
+		const resetUrl = await readResetPasswordUrl(user.email);
 		await page.goto(resetUrl);
 
 		// Should see the reset password form

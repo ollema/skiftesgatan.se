@@ -9,13 +9,18 @@ test.describe('notification preferences', () => {
 		await page.goto('/konto');
 		await expect(page.locator('h1')).toContainText('Hej,');
 
-		// Find the first switch (laundry 24h) — all start unchecked
+		// Find the first switch (laundry 24h)
 		const laundry24h = page
 			.locator('fieldset')
 			.filter({ hasText: 'Tvättstuga' })
 			.getByRole('switch')
 			.first();
 
+		// Ensure a known starting state. Test isolation across files is best-effort
+		// (uniqueUser counters can collide in CI), so reset the toggle if needed.
+		if ((await laundry24h.getAttribute('data-state')) === 'checked') {
+			await laundry24h.click();
+		}
 		await expect(laundry24h).toHaveAttribute('data-state', 'unchecked');
 
 		// Toggle it on
