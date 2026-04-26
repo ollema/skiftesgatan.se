@@ -36,37 +36,60 @@ src/
       db/
         auth.schema.ts         # Better Auth tables (user, session, account, verification)
         booking.schema.ts      # Booking domain (timeslot, booking)
+        calendar.schema.ts     # iCal subscription tokens
+        notification.schema.ts # Notification preferences and scheduled reminders
+        schema.ts              # Re-exports all schemas for Drizzle
         index.ts               # Database client (auto-detects PGLite vs PostgreSQL)
-        seed/                  # Seed scripts for timeslots, accounts, bookings
       auth.ts                  # Better Auth server config
       auth.config.ts           # Username plugin, apartment validation
       booking.ts               # Booking queries and business logic
+      calendar.ts              # iCal feed generation and token management
+      notification.ts          # Notification preferences and reminder scheduling
+      notification.scheduler.ts # Periodic worker that sends due reminders
+      notification.email.ts    # Reminder email template variables
       email.ts                 # Resend integration with file-based fallback
+      email.templates.ts       # Email template aliases
+      hints.ts                 # Setup-hint helpers (notifications, calendar)
+      env.ts                   # Required-env-var validation at startup
+      log.ts                   # Console-based logger
     api/
-      auth.remote.ts           # Auth remote functions (login, signup, password reset, etc.)
+      auth.remote.ts           # Auth remote functions (login, password reset, etc.)
       booking.remote.ts        # Booking remote functions (get slots, book, cancel)
+      admin.remote.ts          # Admin-only remote functions
+      calendar.remote.ts       # iCal token regeneration / removal
+      contact.remote.ts        # Contact form submission
+      hints.remote.ts          # Onboarding-hint state
+      notification.remote.ts   # Notification preference toggles
     components/
       Button.svelte            # Primary/destructive button variants
       Calendar.svelte          # Month-view calendar with availability dots
       ConfirmDialog.svelte     # Modal confirmation (cancel, replace, login prompt)
+      EditDialog.svelte        # Generic edit-in-dialog wrapper
       Navbar.svelte            # Desktop navigation with dropdowns
       MobileMenu.svelte        # Slide-out mobile navigation
+      BookingPage.svelte       # Shared layout for laundry/outdoor booking pages
+      TimeSlots.svelte         # Time-slot grid with book/cancel/replace flow
+      SetupHints.svelte        # Dismissible onboarding hints
   routes/
     +layout.svelte             # Global layout (navbar, toaster, user state)
     +page.svelte               # Home page (hero, about, latest news, services)
-    konto/                     # Account management
-      +page.svelte             # Profile, change email/password, logout
-      login/                   # Login form
-      forgot-password/         # Password reset request + confirmation
-      reset-password/          # Token-based password reset
+    +error.svelte              # Custom error page
+    sitemap.xml/               # Generated sitemap
+    konto/                     # Account management (profile, password, email)
+    admin/                     # Admin dashboard (per-user views)
     tvattstuga/                # Laundry room booking page
     uteplats/                  # Outdoor area booking page
+    kalender/[token].ics/      # Per-user iCal feed
     nyheter/                   # News listing and [slug] detail pages
     information/               # Markdown information pages
     kontakt/                   # Contact page
 content/
   news/                        # Markdown news articles
   information/                 # Markdown info pages (stadgar, ekonomi, styrelsen, etc.)
+scripts/
+  db/                          # db:reset, db:seed, db:push, db:studio, db:tunnel
+  generate-icons.ts            # Generates favicons / PWA icons
+  sync-email-templates.ts      # Syncs email templates to Resend
 e2e/                           # Playwright E2E tests
 ```
 
@@ -130,6 +153,8 @@ Production uses PostgreSQL on a CapRover VPS. The database is not publicly acces
 | `pnpm db:studio <dev\|prod>` | Open Drizzle Studio GUI                                      |
 | `pnpm db:tunnel`             | Open SSH tunnel to production database                       |
 | `pnpm auth:schema`           | Generate Better Auth schema                                  |
+| `pnpm icons`                 | Generate favicons and PWA icons                              |
+| `pnpm email:sync`            | Sync email templates to Resend                               |
 
 ## Environment Variables
 
@@ -179,4 +204,4 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ## Design
 
-See [DESIGN.md](DESIGN.md) for the full design system: color palette, typography, layout rules, booking calendar colors, and anti-patterns.
+See [DESIGN.md](DESIGN.md) for the full design system: color palette, typography, spacing layout rules, booking calendar colors, and anti-patterns.
