@@ -33,6 +33,16 @@
 	let calendarUrlOverride = $state<string | null | undefined>(undefined);
 	let preferenceOverrides = $state<Record<string, boolean>>({});
 
+	let data = $derived(await getUserByUsername({ username }));
+	let currentUser = $derived(await getUser());
+	let target = $derived(data.user);
+	let isSelf = $derived(currentUser.id === target.id);
+	let initialCalendarUrl = $derived(data.calendarUrl);
+	let calendarUrl = $derived(
+		calendarUrlOverride !== undefined ? calendarUrlOverride : initialCalendarUrl
+	);
+	let isAdmin = $derived(target.role === 'admin');
+
 	async function handleSendReset(email: string) {
 		try {
 			await sendPasswordResetForUser({ username });
@@ -125,188 +135,173 @@
 
 <MetaTags {...metaDefaults} title="Admin – {username}" robots="noindex,nofollow" />
 
-<svelte:boundary>
-	{@const data = await getUserByUsername({ username })}
-	{@const currentUser = await getUser()}
-	{@const target = data.user}
-	{@const isSelf = currentUser.id === target.id}
-	{@const initialCalendarUrl = data.calendarUrl}
-	{@const calendarUrl =
-		calendarUrlOverride !== undefined ? calendarUrlOverride : initialCalendarUrl}
-	{@const isAdmin = target.role === 'admin'}
+<a
+	href={resolve('/admin')}
+	class="mb-4 inline-block text-sm text-link underline decoration-1 underline-offset-3 transition-colors duration-120 hover:text-link-hover"
+>
+	← Lägenheter
+</a>
 
-	<a
-		href={resolve('/admin')}
-		class="mb-4 inline-block text-sm text-link underline decoration-1 underline-offset-3 transition-colors duration-120 hover:text-link-hover"
-	>
-		← Lägenheter
-	</a>
+<h1 class="mb-8 font-heading text-2xl font-normal">
+	{target.username} — {target.name}
+</h1>
 
-	<h1 class="mb-8 font-heading text-2xl font-normal">
-		{target.username} — {target.name}
-	</h1>
-
-	<section class="mb-8 max-w-md">
-		<h2 class="mb-3 font-heading text-xl font-normal">Konto</h2>
-		<div class="flex flex-col gap-3">
-			{@render settingsRow('Visningsnamn', target.name, () => (editingName = true))}
-			{@render settingsRow('E-post', target.email, () => (editingEmail = true))}
-			{@render settingsRow(
-				'Roll',
-				isAdmin ? 'Admin' : 'Användare',
-				() => (confirmRoleChange = true),
-				isSelf
-			)}
-			{#if isSelf}
-				<p class="text-xs text-text-muted">Du kan inte ändra din egen roll.</p>
-			{/if}
-		</div>
-	</section>
-
-	<section class="mb-8 max-w-md">
-		<h2 class="mb-2 font-heading text-xl font-normal">Lösenord</h2>
-		<p class="mb-3 text-sm text-text-secondary">
-			Skickar ett återställningsmejl till {target.email}.
-		</p>
-		<Button onclick={() => handleSendReset(target.email)}>Skicka återställningsmejl</Button>
-	</section>
-
-	<section class="mb-8 max-w-md">
-		<h2 class="mb-2 font-heading text-xl font-normal">Aviseringar</h2>
-		<p class="mb-3 text-sm text-text-secondary">
-			Påminnelser via e-post innan {target.username}s bokningar.
-		</p>
-
-		<div class="flex flex-col gap-4">
-			<fieldset>
-				<legend class="mb-3 text-sm font-medium text-text-primary">Tvättstuga</legend>
-				<div class="flex flex-col gap-4">
-					{@render notificationSwitch('1 timme innan', data.preferences, 'laundry_room', 60)}
-					{@render notificationSwitch('1 dygn innan', data.preferences, 'laundry_room', 1440)}
-				</div>
-			</fieldset>
-
-			<fieldset>
-				<legend class="mb-3 text-sm font-medium text-text-primary">Uteplats</legend>
-				<div class="flex flex-col gap-4">
-					{@render notificationSwitch('1 dygn innan', data.preferences, 'outdoor_area', 1440)}
-				</div>
-			</fieldset>
-		</div>
-	</section>
-
-	<section class="mb-12 max-w-md">
-		<h2 class="mb-2 font-heading text-xl font-normal">Kalenderprenumeration</h2>
-		{#if calendarUrl}
-			<p class="mb-2 text-sm text-text-secondary">Aktiv prenumerationslänk.</p>
-			<input
-				type="text"
-				readonly
-				tabindex={-1}
-				value={calendarUrl}
-				class="pointer-events-none mb-4 w-full border-none bg-transparent p-0 text-xs text-text-muted outline-none select-none"
-			/>
-			<div class="flex flex-col gap-3">
-				<button class={LINK_CLASS} onclick={() => (confirmRegenerate = true)}>Skapa ny länk</button>
-				<button class={LINK_CLASS} onclick={() => (confirmDelete = true)}
-					>Ta bort prenumeration</button
-				>
-			</div>
-		{:else}
-			<p class="mb-3 text-sm text-text-secondary">Användaren har ingen prenumerationslänk.</p>
-			<Button onclick={handleCreateCalendarUrl}>Skapa prenumerationslänk</Button>
+<section class="mb-8 max-w-md">
+	<h2 class="mb-3 font-heading text-xl font-normal">Konto</h2>
+	<div class="flex flex-col gap-3">
+		{@render settingsRow('Visningsnamn', target.name, () => (editingName = true))}
+		{@render settingsRow('E-post', target.email, () => (editingEmail = true))}
+		{@render settingsRow(
+			'Roll',
+			isAdmin ? 'Admin' : 'Användare',
+			() => (confirmRoleChange = true),
+			isSelf
+		)}
+		{#if isSelf}
+			<p class="text-xs text-text-muted">Du kan inte ändra din egen roll.</p>
 		{/if}
-	</section>
+	</div>
+</section>
 
-	<EditDialog open={editingName} onClose={() => (editingName = false)} title="Byt visningsnamn">
-		<form
-			{...updateUserName.enhance(async ({ submit, form }) => {
-				try {
-					await submit();
-					form.reset();
-					editingName = false;
-					toast.success('Namn uppdaterat');
-				} catch {
-					toast.error('Kunde inte byta namn');
-				}
-			})}
-			class="flex flex-col gap-4"
-		>
-			<input type="hidden" name="username" value={target.username} />
-			<label class="flex flex-col gap-1 text-sm text-text-secondary">
-				Nytt visningsnamn
-				<input {...updateUserName.fields.name.as('text')} class="input-field" />
-			</label>
-			<Button>Spara</Button>
-			{#each updateUserName.fields.allIssues() as issue (issue.message)}
-				<p class="text-sm text-error">{issue.message}</p>
-			{/each}
-		</form>
-	</EditDialog>
+<section class="mb-8 max-w-md">
+	<h2 class="mb-2 font-heading text-xl font-normal">Lösenord</h2>
+	<p class="mb-3 text-sm text-text-secondary">
+		Skickar ett återställningsmejl till {target.email}.
+	</p>
+	<Button onclick={() => handleSendReset(target.email)}>Skicka återställningsmejl</Button>
+</section>
 
-	<EditDialog open={editingEmail} onClose={() => (editingEmail = false)} title="Byt e-post">
-		<form
-			{...updateUserEmail.enhance(async ({ submit, form }) => {
-				try {
-					await submit();
-					form.reset();
-					editingEmail = false;
-					toast.success('E-post uppdaterad');
-				} catch {
-					toast.error('Kunde inte byta e-post');
-				}
-			})}
-			class="flex flex-col gap-4"
-		>
-			<input type="hidden" name="username" value={target.username} />
-			<label class="flex flex-col gap-1 text-sm text-text-secondary">
-				Ny e-post
-				<input {...updateUserEmail.fields.email.as('email')} class="input-field" />
-			</label>
-			<Button>Spara</Button>
-			{#each updateUserEmail.fields.allIssues() as issue (issue.message)}
-				<p class="text-sm text-error">{issue.message}</p>
-			{/each}
-		</form>
-	</EditDialog>
+<section class="mb-8 max-w-md">
+	<h2 class="mb-2 font-heading text-xl font-normal">Aviseringar</h2>
+	<p class="mb-3 text-sm text-text-secondary">
+		Påminnelser via e-post innan {target.username}s bokningar.
+	</p>
 
-	<ConfirmDialog
-		open={confirmRoleChange}
-		onClose={() => (confirmRoleChange = false)}
-		onConfirm={() => handleRoleChange(isAdmin ? 'user' : 'admin')}
-		title={isAdmin ? 'Ta bort admin-behörighet?' : 'Gör till admin?'}
-		description={isAdmin
-			? `${target.username} kommer inte längre kunna hantera andra användare.`
-			: `${target.username} kommer kunna hantera alla användares konton.`}
-		confirmLabel={isAdmin ? 'Ta bort' : 'Gör till admin'}
-		cancelLabel="Avbryt"
-		confirmClass={isAdmin ? 'bg-error hover:bg-error-hover' : 'bg-accent hover:bg-accent-hover'}
-	/>
+	<div class="flex flex-col gap-4">
+		<fieldset>
+			<legend class="mb-3 text-sm font-medium text-text-primary">Tvättstuga</legend>
+			<div class="flex flex-col gap-4">
+				{@render notificationSwitch('1 timme innan', data.preferences, 'laundry_room', 60)}
+				{@render notificationSwitch('1 dygn innan', data.preferences, 'laundry_room', 1440)}
+			</div>
+		</fieldset>
 
-	<ConfirmDialog
-		open={confirmRegenerate}
-		onClose={() => (confirmRegenerate = false)}
-		onConfirm={handleRegenerateCalendarUrl}
-		title="Skapa ny kalenderlänk?"
-		description="Den gamla länken slutar fungera. Användaren behöver den nya länken."
-		confirmLabel="Skapa ny"
-		cancelLabel="Avbryt"
-	/>
+		<fieldset>
+			<legend class="mb-3 text-sm font-medium text-text-primary">Uteplats</legend>
+			<div class="flex flex-col gap-4">
+				{@render notificationSwitch('1 dygn innan', data.preferences, 'outdoor_area', 1440)}
+			</div>
+		</fieldset>
+	</div>
+</section>
 
-	<ConfirmDialog
-		open={confirmDelete}
-		onClose={() => (confirmDelete = false)}
-		onConfirm={handleDeleteCalendarUrl}
-		title="Ta bort kalenderlänk?"
-		description="Länken slutar fungera omedelbart."
-		confirmLabel="Ta bort"
-		cancelLabel="Avbryt"
-	/>
+<section class="mb-12 max-w-md">
+	<h2 class="mb-2 font-heading text-xl font-normal">Kalenderprenumeration</h2>
+	{#if calendarUrl}
+		<p class="mb-2 text-sm text-text-secondary">Aktiv prenumerationslänk.</p>
+		<input
+			type="text"
+			readonly
+			tabindex={-1}
+			value={calendarUrl}
+			class="pointer-events-none mb-4 w-full border-none bg-transparent p-0 text-xs text-text-muted outline-none select-none"
+		/>
+		<div class="flex flex-col gap-3">
+			<button class={LINK_CLASS} onclick={() => (confirmRegenerate = true)}>Skapa ny länk</button>
+			<button class={LINK_CLASS} onclick={() => (confirmDelete = true)}
+				>Ta bort prenumeration</button
+			>
+		</div>
+	{:else}
+		<p class="mb-3 text-sm text-text-secondary">Användaren har ingen prenumerationslänk.</p>
+		<Button onclick={handleCreateCalendarUrl}>Skapa prenumerationslänk</Button>
+	{/if}
+</section>
 
-	{#snippet pending()}
-		<p class="text-text-secondary">Laddar...</p>
-	{/snippet}
-</svelte:boundary>
+<EditDialog open={editingName} onClose={() => (editingName = false)} title="Byt visningsnamn">
+	<form
+		{...updateUserName.enhance(async ({ submit, form }) => {
+			try {
+				await submit();
+				form.reset();
+				editingName = false;
+				toast.success('Namn uppdaterat');
+			} catch {
+				toast.error('Kunde inte byta namn');
+			}
+		})}
+		class="flex flex-col gap-4"
+	>
+		<input type="hidden" name="username" value={target.username} />
+		<label class="flex flex-col gap-1 text-sm text-text-secondary">
+			Nytt visningsnamn
+			<input {...updateUserName.fields.name.as('text')} class="input-field" />
+		</label>
+		<Button>Spara</Button>
+		{#each updateUserName.fields.allIssues() as issue (issue.message)}
+			<p class="text-sm text-error">{issue.message}</p>
+		{/each}
+	</form>
+</EditDialog>
+
+<EditDialog open={editingEmail} onClose={() => (editingEmail = false)} title="Byt e-post">
+	<form
+		{...updateUserEmail.enhance(async ({ submit, form }) => {
+			try {
+				await submit();
+				form.reset();
+				editingEmail = false;
+				toast.success('E-post uppdaterad');
+			} catch {
+				toast.error('Kunde inte byta e-post');
+			}
+		})}
+		class="flex flex-col gap-4"
+	>
+		<input type="hidden" name="username" value={target.username} />
+		<label class="flex flex-col gap-1 text-sm text-text-secondary">
+			Ny e-post
+			<input {...updateUserEmail.fields.email.as('email')} class="input-field" />
+		</label>
+		<Button>Spara</Button>
+		{#each updateUserEmail.fields.allIssues() as issue (issue.message)}
+			<p class="text-sm text-error">{issue.message}</p>
+		{/each}
+	</form>
+</EditDialog>
+
+<ConfirmDialog
+	open={confirmRoleChange}
+	onClose={() => (confirmRoleChange = false)}
+	onConfirm={() => handleRoleChange(isAdmin ? 'user' : 'admin')}
+	title={isAdmin ? 'Ta bort admin-behörighet?' : 'Gör till admin?'}
+	description={isAdmin
+		? `${target.username} kommer inte längre kunna hantera andra användare.`
+		: `${target.username} kommer kunna hantera alla användares konton.`}
+	confirmLabel={isAdmin ? 'Ta bort' : 'Gör till admin'}
+	cancelLabel="Avbryt"
+	confirmClass={isAdmin ? 'bg-error hover:bg-error-hover' : 'bg-accent hover:bg-accent-hover'}
+/>
+
+<ConfirmDialog
+	open={confirmRegenerate}
+	onClose={() => (confirmRegenerate = false)}
+	onConfirm={handleRegenerateCalendarUrl}
+	title="Skapa ny kalenderlänk?"
+	description="Den gamla länken slutar fungera. Användaren behöver den nya länken."
+	confirmLabel="Skapa ny"
+	cancelLabel="Avbryt"
+/>
+
+<ConfirmDialog
+	open={confirmDelete}
+	onClose={() => (confirmDelete = false)}
+	onConfirm={handleDeleteCalendarUrl}
+	title="Ta bort kalenderlänk?"
+	description="Länken slutar fungera omedelbart."
+	confirmLabel="Ta bort"
+	cancelLabel="Avbryt"
+/>
 
 {#snippet notificationSwitch(
 	label: string,

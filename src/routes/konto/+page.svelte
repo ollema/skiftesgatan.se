@@ -25,6 +25,13 @@
 	let confirmRegenerate = $state(false);
 	let confirmDelete = $state(false);
 
+	let user = $derived(await getUser());
+	let preferences = $derived(await getPreferences());
+	let initialCalendarUrl = $derived(await getCalendarUrl());
+	let calendarUrl = $derived(
+		calendarUrlOverride !== undefined ? calendarUrlOverride : initialCalendarUrl
+	);
+
 	async function handleCreateCalendarUrl() {
 		try {
 			calendarUrlOverride = await createCalendarUrl();
@@ -125,183 +132,169 @@
 
 <MetaTags {...metaDefaults} title="Mitt konto" robots="noindex,nofollow" />
 
-<svelte:boundary>
-	{@const user = await getUser()}
-	{@const preferences = await getPreferences()}
-	{@const initialCalendarUrl = await getCalendarUrl()}
-	{@const calendarUrl =
-		calendarUrlOverride !== undefined ? calendarUrlOverride : initialCalendarUrl}
+<h1 class="mb-8 font-heading text-2xl font-normal">Hej, {user.name}.</h1>
 
-	<h1 class="mb-8 font-heading text-2xl font-normal">Hej, {user.name}.</h1>
+<section class="mb-8 max-w-md">
+	<div class="flex flex-col gap-3">
+		{@render settingsRow('Visningsnamn', user.name, () => (editingName = true))}
+		{@render settingsRow('E-post', user.email, () => (editingEmail = true))}
+		{@render settingsRow('Lösenord', '••••••••', () => (editingPassword = true))}
+	</div>
+</section>
 
-	<section class="mb-8 max-w-md">
-		<div class="flex flex-col gap-3">
-			{@render settingsRow('Visningsnamn', user.name, () => (editingName = true))}
-			{@render settingsRow('E-post', user.email, () => (editingEmail = true))}
-			{@render settingsRow('Lösenord', '••••••••', () => (editingPassword = true))}
-		</div>
-	</section>
+<section class="mb-8 max-w-md">
+	<h2 class="mb-2 font-heading text-xl font-normal">Aviseringar</h2>
+	<p class="mb-3 text-sm text-text-secondary">Påminnelser via e-post innan din bokning.</p>
 
-	<section class="mb-8 max-w-md">
-		<h2 class="mb-2 font-heading text-xl font-normal">Aviseringar</h2>
-		<p class="mb-3 text-sm text-text-secondary">Påminnelser via e-post innan din bokning.</p>
-
-		<div class="flex flex-col gap-4">
-			<fieldset>
-				<legend class="mb-3 text-sm font-medium text-text-primary">Tvättstuga</legend>
-				<div class="flex flex-col gap-4">
-					{@render notificationSwitch('1 timme innan', preferences, 'laundry_room', 60)}
-					{@render notificationSwitch('1 dygn innan', preferences, 'laundry_room', 1440)}
-				</div>
-			</fieldset>
-
-			<fieldset>
-				<legend class="mb-3 text-sm font-medium text-text-primary">Uteplats</legend>
-				<div class="flex flex-col gap-4">
-					{@render notificationSwitch('1 dygn innan', preferences, 'outdoor_area', 1440)}
-				</div>
-			</fieldset>
-		</div>
-	</section>
-
-	<section class="mb-12 max-w-md">
-		<h2 class="mb-2 font-heading text-xl font-normal">Kalenderprenumeration</h2>
-		<p class="mb-2 text-sm text-text-secondary">Prenumerera på dina bokningar i din kalender.</p>
-		{#if calendarUrl}
-			<input
-				type="text"
-				readonly
-				tabindex={-1}
-				value={calendarUrl}
-				class="pointer-events-none mb-4 w-full border-none bg-transparent p-0 text-xs text-text-muted outline-none select-none"
-			/>
-			<div class="flex flex-col gap-3">
-				<button class={LINK_CLASS} onclick={() => handleCopyCalendarUrl(calendarUrl)}>
-					Kopiera länk
-				</button>
-				<!-- eslint-disable svelte/no-navigation-without-resolve -- webcal:// is an external protocol -->
-				<a href={calendarUrl.replace('https://', 'webcal://')} class={LINK_CLASS}>
-					Öppna i kalender
-				</a>
-				<!-- eslint-enable svelte/no-navigation-without-resolve -->
-				<button class={LINK_CLASS} onclick={() => (confirmRegenerate = true)}>
-					Skapa ny länk
-				</button>
-				<button class={LINK_CLASS} onclick={() => (confirmDelete = true)}>
-					Ta bort prenumeration
-				</button>
+	<div class="flex flex-col gap-4">
+		<fieldset>
+			<legend class="mb-3 text-sm font-medium text-text-primary">Tvättstuga</legend>
+			<div class="flex flex-col gap-4">
+				{@render notificationSwitch('1 timme innan', preferences, 'laundry_room', 60)}
+				{@render notificationSwitch('1 dygn innan', preferences, 'laundry_room', 1440)}
 			</div>
-		{:else}
-			<Button onclick={handleCreateCalendarUrl}>Skapa prenumerationslänk</Button>
-		{/if}
-	</section>
+		</fieldset>
 
-	<section class="max-w-md">
-		<form {...signout}>
-			<Button>Logga ut</Button>
-		</form>
-	</section>
+		<fieldset>
+			<legend class="mb-3 text-sm font-medium text-text-primary">Uteplats</legend>
+			<div class="flex flex-col gap-4">
+				{@render notificationSwitch('1 dygn innan', preferences, 'outdoor_area', 1440)}
+			</div>
+		</fieldset>
+	</div>
+</section>
 
-	<EditDialog open={editingName} onClose={() => (editingName = false)} title="Byt visningsnamn">
-		<form
-			{...changeName.enhance(async ({ submit, form }) => {
-				try {
-					await submit();
-					form.reset();
-					editingName = false;
-					toast.success('Namn uppdaterat');
-				} catch {
-					toast.error('Kunde inte byta namn');
-				}
-			})}
-			class="flex flex-col gap-4"
-		>
-			<label class="flex flex-col gap-1 text-sm text-text-secondary">
-				Nytt visningsnamn
-				<input {...changeName.fields.name.as('text')} class="input-field" />
-			</label>
-			<Button>Spara</Button>
-			{#each changeName.fields.allIssues() as issue (issue.message)}
-				<p class="text-sm text-error">{issue.message}</p>
-			{/each}
-		</form>
-	</EditDialog>
+<section class="mb-12 max-w-md">
+	<h2 class="mb-2 font-heading text-xl font-normal">Kalenderprenumeration</h2>
+	<p class="mb-2 text-sm text-text-secondary">Prenumerera på dina bokningar i din kalender.</p>
+	{#if calendarUrl}
+		<input
+			type="text"
+			readonly
+			tabindex={-1}
+			value={calendarUrl}
+			class="pointer-events-none mb-4 w-full border-none bg-transparent p-0 text-xs text-text-muted outline-none select-none"
+		/>
+		<div class="flex flex-col gap-3">
+			<button class={LINK_CLASS} onclick={() => handleCopyCalendarUrl(calendarUrl)}>
+				Kopiera länk
+			</button>
+			<!-- eslint-disable svelte/no-navigation-without-resolve -- webcal:// is an external protocol -->
+			<a href={calendarUrl.replace('https://', 'webcal://')} class={LINK_CLASS}>
+				Öppna i kalender
+			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
+			<button class={LINK_CLASS} onclick={() => (confirmRegenerate = true)}> Skapa ny länk </button>
+			<button class={LINK_CLASS} onclick={() => (confirmDelete = true)}>
+				Ta bort prenumeration
+			</button>
+		</div>
+	{:else}
+		<Button onclick={handleCreateCalendarUrl}>Skapa prenumerationslänk</Button>
+	{/if}
+</section>
 
-	<EditDialog open={editingEmail} onClose={() => (editingEmail = false)} title="Byt e-post">
-		<form
-			{...changeEmail.enhance(async ({ submit, form }) => {
-				try {
-					await submit();
-					form.reset();
-					editingEmail = false;
-					toast.success('Verifieringsmail skickat');
-				} catch {
-					toast.error('Kunde inte byta e-post');
-				}
-			})}
-			class="flex flex-col gap-4"
-		>
-			<label class="flex flex-col gap-1 text-sm text-text-secondary">
-				Ny e-post
-				<input {...changeEmail.fields.email.as('email')} class="input-field" />
-			</label>
-			<Button>Spara</Button>
-			{#each changeEmail.fields.allIssues() as issue (issue.message)}
-				<p class="text-sm text-error">{issue.message}</p>
-			{/each}
-		</form>
-	</EditDialog>
+<section class="max-w-md">
+	<form {...signout}>
+		<Button>Logga ut</Button>
+	</form>
+</section>
 
-	<EditDialog open={editingPassword} onClose={() => (editingPassword = false)} title="Byt lösenord">
-		<form
-			{...changePassword.enhance(async ({ submit, form }) => {
-				try {
-					await submit();
-					form.reset();
-					editingPassword = false;
-					toast.success('Lösenordet ändrat');
-				} catch {
-					toast.error('Kunde inte byta lösenord');
-				}
-			})}
-			class="flex flex-col gap-4"
-		>
-			<label class="flex flex-col gap-1 text-sm text-text-secondary">
-				Nuvarande lösenord
-				<input {...changePassword.fields._currentPassword.as('password')} class="input-field" />
-			</label>
-			<label class="flex flex-col gap-1 text-sm text-text-secondary">
-				Nytt lösenord
-				<input {...changePassword.fields._newPassword.as('password')} class="input-field" />
-			</label>
-			<Button>Spara</Button>
-			{#each changePassword.fields.allIssues() as issue (issue.message)}
-				<p class="text-sm text-error">{issue.message}</p>
-			{/each}
-		</form>
-	</EditDialog>
+<EditDialog open={editingName} onClose={() => (editingName = false)} title="Byt visningsnamn">
+	<form
+		{...changeName.enhance(async ({ submit, form }) => {
+			try {
+				await submit();
+				form.reset();
+				editingName = false;
+				toast.success('Namn uppdaterat');
+			} catch {
+				toast.error('Kunde inte byta namn');
+			}
+		})}
+		class="flex flex-col gap-4"
+	>
+		<label class="flex flex-col gap-1 text-sm text-text-secondary">
+			Nytt visningsnamn
+			<input {...changeName.fields.name.as('text')} class="input-field" />
+		</label>
+		<Button>Spara</Button>
+		{#each changeName.fields.allIssues() as issue (issue.message)}
+			<p class="text-sm text-error">{issue.message}</p>
+		{/each}
+	</form>
+</EditDialog>
 
-	<ConfirmDialog
-		open={confirmRegenerate}
-		onClose={() => (confirmRegenerate = false)}
-		onConfirm={handleRegenerateCalendarUrl}
-		title="Skapa ny kalenderlänk?"
-		description="Den gamla länken slutar fungera. Alla som prenumererar behöver den nya länken."
-		confirmLabel="Skapa ny"
-		cancelLabel="Avbryt"
-	/>
+<EditDialog open={editingEmail} onClose={() => (editingEmail = false)} title="Byt e-post">
+	<form
+		{...changeEmail.enhance(async ({ submit, form }) => {
+			try {
+				await submit();
+				form.reset();
+				editingEmail = false;
+				toast.success('Verifieringsmail skickat');
+			} catch {
+				toast.error('Kunde inte byta e-post');
+			}
+		})}
+		class="flex flex-col gap-4"
+	>
+		<label class="flex flex-col gap-1 text-sm text-text-secondary">
+			Ny e-post
+			<input {...changeEmail.fields.email.as('email')} class="input-field" />
+		</label>
+		<Button>Spara</Button>
+		{#each changeEmail.fields.allIssues() as issue (issue.message)}
+			<p class="text-sm text-error">{issue.message}</p>
+		{/each}
+	</form>
+</EditDialog>
 
-	<ConfirmDialog
-		open={confirmDelete}
-		onClose={() => (confirmDelete = false)}
-		onConfirm={handleDeleteCalendarUrl}
-		title="Ta bort kalenderlänk?"
-		description="Länken slutar fungera omedelbart. Du kan skapa en ny länk när som helst."
-		confirmLabel="Ta bort"
-		cancelLabel="Avbryt"
-	/>
+<EditDialog open={editingPassword} onClose={() => (editingPassword = false)} title="Byt lösenord">
+	<form
+		{...changePassword.enhance(async ({ submit, form }) => {
+			try {
+				await submit();
+				form.reset();
+				editingPassword = false;
+				toast.success('Lösenordet ändrat');
+			} catch {
+				toast.error('Kunde inte byta lösenord');
+			}
+		})}
+		class="flex flex-col gap-4"
+	>
+		<label class="flex flex-col gap-1 text-sm text-text-secondary">
+			Nuvarande lösenord
+			<input {...changePassword.fields._currentPassword.as('password')} class="input-field" />
+		</label>
+		<label class="flex flex-col gap-1 text-sm text-text-secondary">
+			Nytt lösenord
+			<input {...changePassword.fields._newPassword.as('password')} class="input-field" />
+		</label>
+		<Button>Spara</Button>
+		{#each changePassword.fields.allIssues() as issue (issue.message)}
+			<p class="text-sm text-error">{issue.message}</p>
+		{/each}
+	</form>
+</EditDialog>
 
-	{#snippet pending()}
-		<p class="text-text-secondary">Laddar...</p>
-	{/snippet}
-</svelte:boundary>
+<ConfirmDialog
+	open={confirmRegenerate}
+	onClose={() => (confirmRegenerate = false)}
+	onConfirm={handleRegenerateCalendarUrl}
+	title="Skapa ny kalenderlänk?"
+	description="Den gamla länken slutar fungera. Alla som prenumererar behöver den nya länken."
+	confirmLabel="Skapa ny"
+	cancelLabel="Avbryt"
+/>
+
+<ConfirmDialog
+	open={confirmDelete}
+	onClose={() => (confirmDelete = false)}
+	onConfirm={handleDeleteCalendarUrl}
+	title="Ta bort kalenderlänk?"
+	description="Länken slutar fungera omedelbart. Du kan skapa en ny länk när som helst."
+	confirmLabel="Ta bort"
+	cancelLabel="Avbryt"
+/>
