@@ -99,9 +99,9 @@ for (const ts of TIMESLOT_SEEDS) {
 }
 log.info('Seeded 6 timeslots (5 laundry + 1 outdoor)');
 
-// Accounts + bookings (dev only)
+// Accounts (dev + test); bookings (dev only)
+await seedDevAccounts();
 if (env === 'dev') {
-	await seedDevAccounts();
 	await seedBookings();
 }
 
