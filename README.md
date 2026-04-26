@@ -183,8 +183,6 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 - [ ] **Booking page accessibility** -- add `aria-live="polite"` to error message containers and descriptive `aria-label` attributes to timeslot buttons (currently just show time text).
 
-- [ ] **Environment variable validation at startup** -- fail fast if required variables (`BETTER_AUTH_SECRET`, `EMAIL_FROM`) are missing in production, rather than failing on first use.
-
 ### Low
 
 - [ ] **Extract inline onclick handlers** -- booking pages have multi-line async functions inlined in `onclick`. Extract to named functions for readability.

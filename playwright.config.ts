@@ -9,7 +9,8 @@ export default defineConfig({
 			PGLITE_PATH: '.pglite-test',
 			RESEND_API_KEY: '',
 			ORIGIN: 'http://localhost:4173',
-			LOG_LEVEL: 'error'
+			LOG_LEVEL: 'error',
+			SKIP_ENV_VALIDATION: '1'
 		}
 	},
 	testDir: 'e2e',
