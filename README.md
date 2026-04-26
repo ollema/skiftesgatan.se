@@ -171,11 +171,7 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 - [ ] **PWA readyness** -- add manifest.json, icons, and service worker for offline support and installability.
 
-- [ ] **Theming** -- favicons and PWA theme colors or whatever those attributes are called should mathc the new color scheme.
-
-### Medium
-
-- [ ] **Add database indexes** -- to speed up common queries.
+- [ ] **Theming** -- favicons and PWA theme colors or whatever those attributes are called should match the new color scheme.
 
 ### Low
 
@@ -185,4 +181,4 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ## Design
 
-See [DESIGN.md](DESIGN.md) for the full design system: color palette, typography, spacing, layout rules, booking calendar colors, and anti-patterns.
+See [DESIGN.md](DESIGN.md) for the full design system: color palette, typography, layout rules, booking calendar colors, and anti-patterns.
