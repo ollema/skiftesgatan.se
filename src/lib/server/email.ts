@@ -11,7 +11,7 @@ export async function sendEmail(options: {
 	const label = `to ${options.to} template=${options.templateAlias}`;
 
 	if (!env.RESEND_API_KEY) {
-		const recipient = options.to.replace(/[@.]/g, '-');
+		const recipient = options.to.toLowerCase().replace(/[@.]/g, '-');
 		const file = `.test-emails/${options.templateAlias}-${recipient}.json`;
 		mkdirSync('.test-emails', { recursive: true });
 		writeFileSync(

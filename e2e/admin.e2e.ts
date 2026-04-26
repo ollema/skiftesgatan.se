@@ -55,7 +55,7 @@ test.describe('admin', () => {
 		await expect(page.getByText(/Återställningsmejl skickat/)).toBeVisible();
 
 		// Server writes the reset link to .test-emails/ — same path as the public flow.
-		const resetUrl = await readResetPasswordUrl(target.email);
+		const resetUrl = readResetPasswordUrl(target.email);
 		expect(resetUrl).toMatch(/\/api\/auth\/reset-password\//);
 	});
 

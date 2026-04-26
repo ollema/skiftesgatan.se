@@ -22,7 +22,7 @@ test.describe('email change flow', () => {
 		await page.waitForLoadState('networkidle');
 
 		// Read verification email sent to the new address and follow the link
-		const verifyUrl = await readVerificationUrl(newEmail);
+		const verifyUrl = readVerificationUrl(newEmail);
 		await page.goto(verifyUrl);
 
 		// Verification complete — navigate to account page to confirm

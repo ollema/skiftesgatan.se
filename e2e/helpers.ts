@@ -6,35 +6,23 @@ import { EMAIL_TEMPLATES } from '../src/lib/server/email.templates';
 
 const TEST_EMAILS_DIR = '.test-emails';
 
-// The server writes the email JSON synchronously inside the request handler,
-// but on slow CI runners the response can reach the browser before the file
-// is visible to the test process (page-cache flush timing). Poll briefly with
-// exponential backoff before giving up — total budget ~3.1s.
-async function readEmailUrl(templateAlias: string, email: string): Promise<string> {
-	const recipient = email.replace(/[@.]/g, '-');
+// Better-auth lowercases email addresses before invoking the email send,
+// so the server writes files with lowercase recipients. Lowercase here too
+// so we match on case-sensitive filesystems (Linux CI vs macOS dev).
+function readEmailUrl(templateAlias: string, email: string): string {
+	const recipient = email.toLowerCase().replace(/[@.]/g, '-');
 	const filePath = path.join(TEST_EMAILS_DIR, `${templateAlias}-${recipient}.json`);
-	const delays = [50, 100, 200, 400, 800, 1600];
-	let lastError: unknown;
-	for (let attempt = 0; attempt <= delays.length; attempt++) {
-		try {
-			const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-			const url = data.variables?.URL;
-			if (!url) throw new Error(`No URL variable found in ${filePath}`);
-			return url;
-		} catch (e) {
-			lastError = e;
-			if (attempt === delays.length) break;
-			await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
-		}
-	}
-	throw lastError;
+	const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+	const url = data.variables?.URL;
+	if (!url) throw new Error(`No URL variable found in ${filePath}`);
+	return url;
 }
 
-export function readResetPasswordUrl(email: string): Promise<string> {
+export function readResetPasswordUrl(email: string): string {
 	return readEmailUrl(EMAIL_TEMPLATES.resetPassword.alias, email);
 }
 
-export function readVerificationUrl(email: string): Promise<string> {
+export function readVerificationUrl(email: string): string {
 	return readEmailUrl(EMAIL_TEMPLATES.verifyEmail.alias, email);
 }
 
