@@ -211,6 +211,8 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 - [ ] **No rate limiting on auth endpoints** -- `hooks.server.ts` has no limiter and `auth.ts` doesn't pass `rateLimit` to `betterAuth(...)`. Login is unbounded and `requestPasswordReset` is a free email-spam relay through Resend. Enable Better Auth's built-in rate limiting on `/api/auth/*`.
 
+- [ ] **Redirect skiftesgatan.com → skiftesgatan.se and set up Search Console** -- both domains are currently owned. Configure a 301 redirect from the .com to the .se (canonical) so any inbound links/typed traffic land in one place, then verify the .se in Google Search Console and submit `sitemap.xml` for SEO coverage. Worth doing while we still control both names.
+
 - [ ] **PWA readyness** -- add manifest.json, icons, and service worker for offline support and installability.
 
 - [ ] **Theming** -- favicons and PWA theme colors or whatever those attributes are called should match the new color scheme.
