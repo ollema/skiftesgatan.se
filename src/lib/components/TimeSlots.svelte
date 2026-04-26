@@ -32,9 +32,13 @@
 
 <div class="grid grid-cols-5 gap-2">
 	{#each timeslots as slot (slot.timeslotId)}
+		{@const timeRange = `${formatHourNumShort(slot.start)}–${formatHourNumShort(slot.end)}`}
 		{#if slot.status === 'free'}
 			<button
 				data-slot-status="free"
+				aria-label={activeBooking
+					? `Ledig tid ${timeRange}, ersätt din bokning`
+					: `Ledig tid ${timeRange}, boka`}
 				class="cursor-pointer rounded-sm border border-border px-2 py-1.5 text-center text-xs whitespace-nowrap text-text-primary transition-colors duration-120 hover:bg-bg-alt sm:text-sm"
 				onclick={async () => {
 					if (!user) {
@@ -63,6 +67,7 @@
 		{:else if slot.status === 'mine'}
 			<button
 				data-slot-status="mine"
+				aria-label={`Din bokning ${timeRange}, avboka`}
 				class="cursor-pointer rounded-sm bg-slot-mine px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface transition-colors duration-120 hover:opacity-90 sm:text-sm"
 				onclick={() => {
 					cancelBookingId = slot.bookingId;
@@ -73,6 +78,7 @@
 		{:else}
 			<button
 				data-slot-status="booked"
+				aria-label={`Bokad av ${slot.username}, ${timeRange}`}
 				class="cursor-not-allowed rounded-sm bg-slot-occupied px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface sm:text-sm"
 				disabled
 			>
@@ -82,9 +88,9 @@
 	{/each}
 </div>
 
-{#if error}
-	<p class="mt-3 text-error" data-testid="booking-error">{error}</p>
-{/if}
+<p class="mt-3 text-error empty:hidden" aria-live="polite" data-testid="booking-error">
+	{error}
+</p>
 
 {#if user}
 	<ConfirmDialog

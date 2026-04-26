@@ -181,8 +181,6 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 - [ ] **Add database indexes** -- to speed up common queries.
 
-- [ ] **Booking page accessibility** -- add `aria-live="polite"` to error message containers and descriptive `aria-label` attributes to timeslot buttons (currently just show time text).
-
 ### Low
 
 - [ ] **Extract inline onclick handlers** -- booking pages have multi-line async functions inlined in `onclick`. Extract to named functions for readability.
