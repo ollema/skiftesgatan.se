@@ -33,9 +33,6 @@ test-results
 # Test email tokens
 .test-emails
 
-# Production seed data
-accounts.csv
-
 # Docker-specific
 Dockerfile
 .dockerignore

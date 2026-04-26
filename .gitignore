@@ -16,6 +16,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+!.env.prod.example
 !.env.test
 
 # Content Collections
@@ -32,6 +33,3 @@ test-results
 
 # Test email tokens
 .test-emails
-
-# Production seed data
-accounts.csv
