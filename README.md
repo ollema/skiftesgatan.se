@@ -6,6 +6,19 @@ Residents log in with their apartment number to book shared facilities, read ass
 
 There is no self-registration. Accounts are pre-created by an admin via Drizzle Studio against the production database (`pnpm db:tunnel` + `pnpm db:studio prod`). Emails are marked as verified at creation time. Each resident can then log in and reset their password via email.
 
+## Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [Scripts](#scripts)
+- [Environment Variables](#environment-variables)
+- [Testing](#testing)
+- [Production Database](#production-database)
+- [Design](#design)
+- [TODO](#todo)
+
 ## Features
 
 - **Closed user system** -- no self-registration; accounts are provisioned by admin for each of the 32 apartments. Username is the apartment number (e.g. A1001). Supports password reset via email, email address changes with re-verification, and customizable display names.
@@ -26,6 +39,26 @@ There is no self-registration. Accounts are pre-created by an admin via Drizzle 
 - **Resend** -- email delivery for verification and password reset (file-based mock in dev)
 - **Valibot** -- schema validation for form inputs
 - **@internationalized/date** -- timezone-aware calendar date handling
+
+## Getting Started
+
+**Prerequisites:** Node.js 22, pnpm
+
+```sh
+pnpm install
+pnpm dev
+```
+
+PGLite runs in-process locally -- no external database needed.
+
+```sh
+pnpm db:reset dev             # delete, push schema
+pnpm db:seed dev              # seed timeslots, accounts, bookings
+```
+
+Both commands accept `-y` to skip confirmation: `pnpm db:reset dev -- -y`.
+
+Dev accounts use apartment numbers A1001 through D1302. Password for each is `password-{username}`, e.g. `password-A1001`. Each dev account has a fictional display name that can be changed on the /konto page.
 
 ## Project Structure
 
@@ -93,46 +126,6 @@ scripts/
 e2e/                           # Playwright E2E tests
 ```
 
-## Getting Started
-
-**Prerequisites:** Node.js 22, pnpm
-
-```sh
-pnpm install
-pnpm dev
-```
-
-### Database Setup
-
-PGLite runs in-process locally -- no external database needed.
-
-```sh
-pnpm db:reset dev             # delete, push schema
-pnpm db:seed dev              # seed timeslots, accounts, bookings
-```
-
-Both commands accept `-y` to skip confirmation: `pnpm db:reset dev -- -y`.
-
-Dev accounts use apartment numbers A1001 through D1302. Password for each is `password-{username}`, e.g. `password-A1001`. Each dev account has a fictional display name that can be changed on the /konto page.
-
-### Production Database
-
-Production uses PostgreSQL on a CapRover VPS. The database is not publicly accessible -- you connect via SSH tunnel.
-
-**One-time CapRover setup:**
-
-1. Open CapRover UI > Apps > `skiftesgatan-prod-db` > App Config
-2. Add port mapping: Server Port `54321` → Container Port `5432`
-3. Save & Update
-
-**Local setup:**
-
-1. Copy `.env.prod.example` to `.env.prod` and fill in your VPS SSH details and database password
-2. Open the tunnel in one terminal: `pnpm db:tunnel`
-3. In another terminal, run prod commands: `pnpm db:push prod` (apply schema changes) or `pnpm db:studio prod` (browse data).
-
-`pnpm db:push prod` requires you to type the database name to confirm, then runs `drizzle-kit push` interactively so you can review and approve any destructive diffs (dropped columns, etc.).
-
 ## Scripts
 
 | Script                       | Description                                                  |
@@ -188,6 +181,28 @@ E2E tests use a separate PGLite database (`.pglite-test`) via `pnpm db:reset tes
 
 **CI pipeline** (GitHub Actions): lint + typecheck + knip, unit tests, E2E tests with artifact upload on failure.
 
+## Production Database
+
+Production uses PostgreSQL on a CapRover VPS. The database is not publicly accessible -- you connect via SSH tunnel.
+
+**One-time CapRover setup:**
+
+1. Open CapRover UI > Apps > `skiftesgatan-prod-db` > App Config
+2. Add port mapping: Server Port `54321` → Container Port `5432`
+3. Save & Update
+
+**Local setup:**
+
+1. Copy `.env.prod.example` to `.env.prod` and fill in your VPS SSH details and database password
+2. Open the tunnel in one terminal: `pnpm db:tunnel`
+3. In another terminal, run prod commands: `pnpm db:push prod` (apply schema changes) or `pnpm db:studio prod` (browse data).
+
+`pnpm db:push prod` requires you to type the database name to confirm, then runs `drizzle-kit push` interactively so you can review and approve any destructive diffs (dropped columns, etc.).
+
+## Design
+
+See [DESIGN.md](DESIGN.md) for the full design system: color palette, typography, spacing layout rules, booking calendar colors, and anti-patterns.
+
 ## TODO
 
 Code quality improvements identified during codebase review, ordered by impact.
@@ -201,7 +216,3 @@ Code quality improvements identified during codebase review, ordered by impact.
 ### Low
 
 - [ ] **Auto-refresh booking calendar** -- if a user leaves the tab open, slot availability can go stale. Consider periodic re-fetch or visibility-change refresh. Better yet, let's use SSE!
-
-## Design
-
-See [DESIGN.md](DESIGN.md) for the full design system: color palette, typography, spacing layout rules, booking calendar colors, and anti-patterns.
