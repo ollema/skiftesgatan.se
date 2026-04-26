@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth/minimal';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { admin } from 'better-auth/plugins';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
@@ -36,7 +37,16 @@ export const auth = betterAuth({
 				templateAlias: EMAIL_TEMPLATES.resetPassword.alias,
 				variables: { URL: url }
 			});
-		}
+		},
+		customSyntheticUser: ({ coreFields, additionalFields, id }) => ({
+			...coreFields,
+			role: 'user',
+			banned: false,
+			banReason: null,
+			banExpires: null,
+			...additionalFields,
+			id
+		})
 	},
 	user: {
 		changeEmail: {
@@ -45,6 +55,7 @@ export const auth = betterAuth({
 	},
 	plugins: [
 		usernamePlugin(),
+		admin(),
 		sveltekitCookies(getRequestEvent) // make sure this is the last plugin in the array
 	]
 });
@@ -53,6 +64,12 @@ export function requireAuth() {
 	const { locals } = getRequestEvent();
 	if (!locals.user) redirect(307, '/konto/login');
 	return locals.user;
+}
+
+export function requireAdmin() {
+	const user = requireAuth();
+	if (user.role !== 'admin') redirect(307, '/konto');
+	return user;
 }
 
 export function getAuthUser() {

@@ -7,7 +7,7 @@
 	import { parseDate } from '@internationalized/date';
 
 	interface Props {
-		user: { username?: string | null } | null;
+		user: { username?: string | null; role?: string | null } | null;
 	}
 
 	let { user }: Props = $props();
@@ -149,8 +149,17 @@
 				</a>
 			</nav>
 
-			<div class="mt-auto border-t border-border-subtle pt-4">
+			<div class="mt-auto flex flex-col gap-3 border-t border-border-subtle pt-4">
 				{#if user}
+					{#if user.role === 'admin'}
+						<a
+							href={resolve('/admin')}
+							class={linkClass}
+							class:text-text-primary={page.url.pathname.startsWith('/admin')}
+						>
+							Admin
+						</a>
+					{/if}
 					<a
 						href={resolve('/konto')}
 						class={linkClass}

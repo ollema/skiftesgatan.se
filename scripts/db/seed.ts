@@ -125,7 +125,7 @@ async function seedDevAccounts() {
 		try {
 			await seedAuth.api.signUpEmail({
 				body: {
-					email: `${apt.toLowerCase()}@resend.dev`,
+					email: `delivered+${apt}@resend.dev`,
 					password: `password-${apt}`,
 					name: DEV_NAMES[i],
 					username: apt
@@ -138,7 +138,10 @@ async function seedDevAccounts() {
 	}
 
 	await db.update(user).set({ emailVerified: true }).where(eq(user.emailVerified, false));
-	log.info(`Seeded ${created} accounts (${APARTMENTS.length - created} already existed)`);
+	await db.update(user).set({ role: 'admin' }).where(eq(user.username, 'B1001'));
+	log.info(
+		`Seeded ${created} accounts (${APARTMENTS.length - created} already existed); B1001 is admin`
+	);
 }
 
 async function seedProdAccounts() {

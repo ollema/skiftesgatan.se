@@ -25,6 +25,14 @@
 				</div>
 				<div class="flex items-center gap-4">
 					{#if user}
+						{#if user.role === 'admin'}
+							<a
+								href={resolve('/admin')}
+								class="hidden text-sm text-bg/70 no-underline transition-colors duration-120 hover:text-bg lg:block"
+							>
+								Admin
+							</a>
+						{/if}
 						<a
 							href={resolve('/konto')}
 							class="hidden text-sm text-bg/70 no-underline transition-colors duration-120 hover:text-bg lg:block"

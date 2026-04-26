@@ -23,21 +23,31 @@ export function readVerificationUrl(email: string): string {
 	return readEmailUrl(EMAIL_TEMPLATES.verifyEmail.alias, email);
 }
 
-const VALID_SUFFIXES = ['1001', '1002', '1101', '1102', '1201', '1202', '1301', '1302'];
+const ALL_SUFFIXES = ['1001', '1002', '1101', '1102', '1201', '1202', '1301', '1302'];
 const counters: Record<string, number> = {};
 
 export function uniqueUser(prefix: string) {
 	const key = prefix.toUpperCase();
+	// B1001 is the seeded admin — skip it so tests never collide with admin state.
+	const suffixes = key === 'B' ? ALL_SUFFIXES.filter((s) => s !== '1001') : ALL_SUFFIXES;
 	const index = counters[key] ?? 0;
 	counters[key] = index + 1;
-	if (index >= VALID_SUFFIXES.length) {
-		throw new Error(`Exhausted all ${VALID_SUFFIXES.length} valid apartments for prefix "${key}"`);
+	if (index >= suffixes.length) {
+		throw new Error(`Exhausted all ${suffixes.length} valid apartments for prefix "${key}"`);
 	}
-	const username = `${key}${VALID_SUFFIXES[index]}`;
+	const username = `${key}${suffixes[index]}`;
 	return {
 		username,
 		password: `password-${username}`,
-		email: `${username.toLowerCase()}@resend.dev`
+		email: `delivered+${username}@resend.dev`
+	};
+}
+
+export function adminUser() {
+	return {
+		username: 'B1001',
+		password: 'password-B1001',
+		email: 'delivered+B1001@resend.dev'
 	};
 }
 

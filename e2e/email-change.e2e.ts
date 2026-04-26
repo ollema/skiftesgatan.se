@@ -7,7 +7,7 @@ test.describe('email change flow', () => {
 		await login(page, user);
 
 		// Request email change on account page
-		const newEmail = `changed-${user.username.toLowerCase()}@resend.dev`;
+		const newEmail = `delivered+changed-${user.username}@resend.dev`;
 		await page.goto('/konto');
 
 		// Open the email edit dialog (second "Ändra" button)
