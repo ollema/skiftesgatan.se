@@ -169,13 +169,7 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ### High
 
-- [ ] **Remove temporary booking freeze** -- until 2026-04-27 the old website is the source of truth for earlier dates, so new bookings are restricted to 2026-04-27 and onwards. When the freeze ends, remove the TODO-marked blocks in `src/lib/api/booking.remote.ts` (server-side 503), `src/lib/components/BookingPage.svelte` (red banner + calendar `minValue` override), and un-skip the TODO-marked tests in `e2e/booking.e2e.ts` and `e2e/concurrent-booking.e2e.ts`.
-
-- [ ] **Use actual content and proper facts** -- Currently we have a lot of incorrect placeholder content.
-
 - [ ] **PWA readyness** -- add manifest.json, icons, and service worker for offline support and installability.
-
-- [ ] **Updated color scheme** -- current palette is a bit dull. Consider refreshing with more vibrant colors while maintaining accessibility.
 
 - [ ] **Theming** -- favicons and PWA theme colors or whatever those attributes are called should mathc the new color scheme.
 
@@ -198,8 +192,6 @@ Code quality improvements identified during codebase review, ordered by impact.
 - [ ] **Unit tests for auth form validation** -- auth remote functions have Valibot schemas but no dedicated unit tests for validation edge cases.
 
 - [ ] **Auto-refresh booking calendar** -- if a user leaves the tab open, slot availability can go stale. Consider periodic re-fetch or visibility-change refresh. Better yet, let's use SSE!
-
-- [ ] **Better logging** -- log actual apartment numbers and timeslot start hours and so on instead of IDs.
 
 ## Design
 

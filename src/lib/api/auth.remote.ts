@@ -48,7 +48,7 @@ export const login = form(
 
 export const signout = form(async () => {
 	const { request, locals } = getRequestEvent();
-	log.info(`[auth] signout userId=${locals.user?.id}`);
+	log.info(`[auth] signout username=${locals.user?.username}`);
 	await auth.api.signOut({ headers: request.headers });
 	redirect(303, '/konto/login');
 });
@@ -121,7 +121,7 @@ export const changePassword = form(
 			}
 			throw e;
 		}
-		log.info(`[auth] password changed userId=${user.id}`);
+		log.info(`[auth] password changed username=${user.username}`);
 	}
 );
 
@@ -143,7 +143,7 @@ export const changeName = form(
 			}
 			throw e;
 		}
-		log.info(`[auth] name changed userId=${user.id}`);
+		log.info(`[auth] name changed username=${user.username}`);
 	}
 );
 
@@ -165,6 +165,6 @@ export const changeEmail = form(
 			}
 			throw e;
 		}
-		log.info(`[auth] email change requested userId=${user.id}`);
+		log.info(`[auth] email change requested username=${user.username}`);
 	}
 );

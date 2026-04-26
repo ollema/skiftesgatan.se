@@ -4,7 +4,17 @@ import { db } from '$lib/server/db';
 import { log } from '$lib/server/log';
 import { notificationPreference, bookingNotification } from '$lib/server/db/notification.schema';
 import { booking, timeslot } from '$lib/server/db/booking.schema';
+import { user } from '$lib/server/db/auth.schema';
 import { TIMEZONE, type Resource } from '$lib/types/bookings';
+
+async function lookupUsername(userId: string): Promise<string | null> {
+	const [row] = await db
+		.select({ username: user.username })
+		.from(user)
+		.where(eq(user.id, userId))
+		.limit(1);
+	return row?.username ?? null;
+}
 
 export function computeNotifyAt(dateStr: string, startHour: number, offsetMinutes: number): Date {
 	const date = parseDate(dateStr);
@@ -44,8 +54,9 @@ export async function setNotificationPreference(
 			set: { enabled }
 		});
 
+	const username = await lookupUsername(userId);
 	log.info(
-		`[notification] preference set userId=${userId} resource=${resource} offset=${offsetMinutes} enabled=${enabled}`
+		`[notification] preference set username=${username} resource=${resource} offset=${offsetMinutes} enabled=${enabled}`
 	);
 
 	// Sync notifications for existing future bookings
@@ -95,7 +106,10 @@ export async function createBookingNotifications(
 	}
 
 	if (prefs.length > 0) {
-		log.info(`[notification] created ${prefs.length} notification(s) for bookingId=${bookingId}`);
+		const username = await lookupUsername(userId);
+		log.info(
+			`[notification] created ${prefs.length} reminder(s) username=${username} resource=${resource} date=${dateStr} startHour=${slot.startHour}`
+		);
 	}
 }
 

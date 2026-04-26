@@ -1,9 +1,17 @@
 import { type CalendarDate, today } from '@internationalized/date';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { log } from '$lib/server/log';
 import { booking, timeslot, user } from '$lib/server/db/schema';
 import { TIMEZONE, type Resource } from '$lib/types/bookings';
+
+export async function getTimeslotStartHour(timeslotId: number): Promise<number | null> {
+	const [row] = await db
+		.select({ startHour: timeslot.startHour })
+		.from(timeslot)
+		.where(eq(timeslot.id, timeslotId))
+		.limit(1);
+	return row?.startHour ?? null;
+}
 
 function maxBookingDate(from: CalendarDate = today(TIMEZONE)): CalendarDate {
 	return from.add({ months: 1 });
@@ -69,28 +77,32 @@ export async function createBooking(
 	resource: Resource,
 	date: CalendarDate
 ) {
-	const result = await db
+	return await db
 		.insert(booking)
 		.values({ userId, timeslotId, resource, date: date.toString() })
 		.returning();
-	log.info(
-		`[booking] created userId=${userId} resource=${resource} date=${date} timeslotId=${timeslotId}`
-	);
-	return result;
 }
 
 export async function cancelBooking(
 	bookingId: number,
 	userId: string
-): Promise<{ resource: Resource } | null> {
+): Promise<{ resource: Resource; date: string; startHour: number } | null> {
 	const todayStr = today(TIMEZONE).toString();
+	const [info] = await db
+		.select({
+			resource: booking.resource,
+			date: booking.date,
+			startHour: timeslot.startHour
+		})
+		.from(booking)
+		.innerJoin(timeslot, eq(booking.timeslotId, timeslot.id))
+		.where(and(eq(booking.id, bookingId), eq(booking.userId, userId), gte(booking.date, todayStr)))
+		.limit(1);
+	if (!info) return null;
 	const result = await db
 		.delete(booking)
 		.where(and(eq(booking.id, bookingId), eq(booking.userId, userId), gte(booking.date, todayStr)))
 		.returning();
-	if (result.length > 0) {
-		log.info(`[booking] cancelled bookingId=${bookingId} userId=${userId}`);
-		return result[0];
-	}
-	return null;
+	if (result.length === 0) return null;
+	return info;
 }

@@ -6,6 +6,7 @@ import { requireAuth, getAuthUser } from '$lib/server/auth';
 import { log } from '$lib/server/log';
 import {
 	getBookingCalendar,
+	getTimeslotStartHour,
 	hasExistingFutureBooking,
 	createBooking as createBookingDb,
 	cancelBooking as cancelBookingDb,
@@ -111,21 +112,18 @@ export const book = command(
 	async ({ timeslotId, resource, date, replaceBookingId }) => {
 		const user = requireAuth();
 
-		// TODO: temporary — until 2026-04-27 the old website is source of truth for earlier dates; remove this block after the freeze ends
-		if (date.compare(new CalendarDate(2026, 4, 27)) < 0) {
-			error(
-				503,
-				'Bokningar kan endast göras för datum från och med måndag 27 april. Använd den gamla hemsidan för tidigare datum.'
-			);
-		}
-
 		validateBookingDate(date);
+
+		const startHour = await getTimeslotStartHour(timeslotId);
 
 		if (replaceBookingId !== undefined) {
 			const cancelled = await cancelBookingDb(replaceBookingId, user.id);
 			if (!cancelled) {
 				error(404, 'Befintlig bokning hittades inte');
 			}
+			log.info(
+				`[booking] cancelled username=${user.username} resource=${cancelled.resource} date=${cancelled.date} startHour=${cancelled.startHour}`
+			);
 		} else {
 			const alreadyBooked = await hasExistingFutureBooking(user.id, resource);
 			if (alreadyBooked) {
@@ -135,17 +133,22 @@ export const book = command(
 
 		try {
 			const [result] = await createBookingDb(user.id, timeslotId, resource, date);
+			log.info(
+				`[booking] created username=${user.username} resource=${resource} date=${date} startHour=${startHour}`
+			);
 			try {
 				await createBookingNotifications(result.id, user.id, resource, date.toString(), timeslotId);
 			} catch (e) {
-				log.warn(`[notification] failed to create notifications bookingId=${result.id}: ${e}`);
+				log.warn(
+					`[notification] failed to create notifications username=${user.username} resource=${resource} date=${date} startHour=${startHour}: ${e}`
+				);
 			}
 			await getBookingData({ resource }).refresh();
 			return result;
 		} catch (e: unknown) {
 			if (e instanceof Error && 'code' in e && (e as { code: string }).code === '23505') {
 				log.warn(
-					`[booking] conflict userId=${user.id} resource=${resource} date=${date} timeslotId=${timeslotId}`
+					`[booking] conflict username=${user.username} resource=${resource} date=${date} startHour=${startHour}`
 				);
 				error(409, 'Tiden är redan bokad');
 			}
@@ -161,6 +164,9 @@ export const cancelBooking = command(v.object({ bookingId: v.number() }), async 
 	if (!result) {
 		error(404, 'Bokningen hittades inte');
 	}
+	log.info(
+		`[booking] cancelled username=${user.username} resource=${result.resource} date=${result.date} startHour=${result.startHour}`
+	);
 
 	await requested(getBookingData, 5).refreshAll();
 });

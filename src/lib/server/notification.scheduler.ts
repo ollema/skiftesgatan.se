@@ -17,6 +17,7 @@ export async function processNotifications(): Promise<number> {
 		.select({
 			id: bookingNotification.id,
 			email: user.email,
+			username: user.username,
 			resource: booking.resource,
 			date: booking.date,
 			startHour: timeslot.startHour,
@@ -50,14 +51,18 @@ export async function processNotifications(): Promise<number> {
 				.update(bookingNotification)
 				.set({ status: 'sent', sentAt: currentTime, resendId })
 				.where(eq(bookingNotification.id, notification.id));
-			log.info(`[scheduler] sent notification id=${notification.id} to=${notification.email}`);
+			log.info(
+				`[scheduler] sent reminder username=${notification.username} resource=${notification.resource} date=${notification.date} startHour=${notification.startHour} to=${notification.email}`
+			);
 		} catch (e) {
 			const failReason = e instanceof Error ? e.message : String(e);
 			await db
 				.update(bookingNotification)
 				.set({ status: 'failed', failReason })
 				.where(eq(bookingNotification.id, notification.id));
-			log.error(`[scheduler] failed notification id=${notification.id}: ${failReason}`);
+			log.error(
+				`[scheduler] failed reminder username=${notification.username} resource=${notification.resource} date=${notification.date} startHour=${notification.startHour}: ${failReason}`
+			);
 		}
 	}
 

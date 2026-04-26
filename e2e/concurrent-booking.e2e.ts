@@ -7,8 +7,7 @@ import { uniqueUser, login, selectCalendarDate } from './helpers';
 const testDate = today(TIMEZONE).add({ days: 3 }).toString();
 
 test.describe('concurrent booking', () => {
-	// TODO: temporary booking freeze until 2026-04-27 — un-skip after the freeze ends
-	test.skip('two users competing for the same slot', async ({ browser }) => {
+	test('two users competing for the same slot', async ({ browser }) => {
 		const context1 = await browser.newContext();
 		const context2 = await browser.newContext();
 		const page1 = await context1.newPage();

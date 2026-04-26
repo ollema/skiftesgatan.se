@@ -7,8 +7,7 @@ const now = today(TIMEZONE);
 const tomorrow = now.add({ days: 1 }).toString();
 
 test.describe('booking flow', () => {
-	// TODO: temporary booking freeze until 2026-04-27 — un-skip after the freeze ends
-	test.skip('shows calendar and login dialog when not authenticated', async ({ page }) => {
+	test('shows calendar and login dialog when not authenticated', async ({ page }) => {
 		await page.goto('/tvattstuga');
 		await expect(page).toHaveURL('/tvattstuga');
 		await expect(page.getByRole('heading', { name: 'Tvättstuga' })).toBeVisible();
@@ -23,8 +22,7 @@ test.describe('booking flow', () => {
 		await expect(loginDialog).not.toBeVisible();
 	});
 
-	// TODO: temporary booking freeze until 2026-04-27 — un-skip after the freeze ends
-	test.skip('login, view slots, book, fail double-book, cancel, rebook', async ({ page }) => {
+	test('login, view slots, book, fail double-book, cancel, rebook', async ({ page }) => {
 		const user = uniqueUser('B');
 		await login(page, user);
 
@@ -82,8 +80,7 @@ test.describe('booking flow', () => {
 		await expect(bookButtons).toHaveCount(4);
 	});
 
-	// TODO: temporary booking freeze until 2026-04-27 — un-skip after the freeze ends
-	test.skip('outdoor area booking flow', async ({ page }) => {
+	test('outdoor area booking flow', async ({ page }) => {
 		const user = uniqueUser('B');
 		await login(page, user);
 
