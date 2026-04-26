@@ -18,6 +18,12 @@ import { TIMEZONE, RESOURCES, type BookingTimeSlot } from '$lib/types/bookings';
 const resourceSchema = v.picklist(RESOURCES);
 const calendarDateSchema = v.instance(CalendarDate);
 
+const PG_UNIQUE_VIOLATION = '23505';
+
+function isUniqueViolation(e: unknown): boolean {
+	return e instanceof Error && 'code' in e && e.code === PG_UNIQUE_VIOLATION;
+}
+
 export const getBookingData = query(
 	v.object({
 		resource: resourceSchema
@@ -146,7 +152,7 @@ export const book = command(
 			await getBookingData({ resource }).refresh();
 			return result;
 		} catch (e: unknown) {
-			if (e instanceof Error && 'code' in e && (e as { code: string }).code === '23505') {
+			if (isUniqueViolation(e)) {
 				log.warn(
 					`[booking] conflict username=${user.username} resource=${resource} date=${date} startHour=${startHour}`
 				);

@@ -175,8 +175,6 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ### Medium
 
-- [ ] **Safer error type checking in booking conflict handler** -- `src/lib/api/booking.remote.ts` uses an unsafe cast `(e as { code: string }).code === '23505'` to detect unique constraint violations. Use a proper type guard.
-
 - [ ] **Add database indexes** -- to speed up common queries.
 
 ### Low
