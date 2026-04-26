@@ -58,6 +58,10 @@
 		};
 	});
 
+	async function refreshNow() {
+		await getBookingData({ resource }).refresh();
+	}
+
 	// derived text
 	let title = $derived(laundryRoom ? 'Tvättstuga' : 'Uteplats');
 	let greeting = $derived.by(() => {
@@ -100,9 +104,7 @@
 		Uppdaterades {data.fetchedAt.toString()}.
 		<button
 			class="cursor-pointer text-text-muted underline decoration-1 underline-offset-2"
-			onclick={async () => {
-				await getBookingData({ resource }).refresh();
-			}}>Uppdatera nu</button
+			onclick={refreshNow}>Uppdatera nu</button
 		>
 	</p>
 </div>

@@ -28,6 +28,57 @@
 		replaceDescription: string;
 	} | null>(null);
 	let showLoginDialog = $state(false);
+
+	async function handleSlotClick(slot: BookingTimeSlot) {
+		if (!user) {
+			showLoginDialog = true;
+			return;
+		}
+		error = '';
+		if (activeBooking) {
+			pendingBooking = {
+				timeslotId: slot.timeslotId,
+				replaceBookingId: activeBooking.bookingId!,
+				replaceDescription: `${formatDate(activeBooking.date)}, ${formatHourNumShort(activeBooking.start)}–${formatHourNumShort(activeBooking.end)}`
+			};
+			return;
+		}
+		try {
+			await book({ timeslotId: slot.timeslotId, resource, date });
+			toast.success('Bokning lyckades!');
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+		}
+	}
+
+	async function confirmCancel() {
+		if (cancelBookingId === null) return;
+		error = '';
+		try {
+			await cancelBooking({ bookingId: cancelBookingId }).updates(getBookingData({ resource }));
+			toast.success('Bokning avbokad!');
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+		}
+		cancelBookingId = null;
+	}
+
+	async function confirmReplace() {
+		if (pendingBooking === null) return;
+		error = '';
+		try {
+			await book({
+				timeslotId: pendingBooking.timeslotId,
+				resource,
+				date,
+				replaceBookingId: pendingBooking.replaceBookingId
+			});
+			toast.success('Bokat!');
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+		}
+		pendingBooking = null;
+	}
 </script>
 
 <div class="grid grid-cols-5 gap-2">
@@ -40,27 +91,7 @@
 					? `Ledig tid ${timeRange}, ersätt din bokning`
 					: `Ledig tid ${timeRange}, boka`}
 				class="cursor-pointer rounded-sm border border-border px-2 py-1.5 text-center text-xs whitespace-nowrap text-text-primary transition-colors duration-120 hover:bg-bg-alt sm:text-sm"
-				onclick={async () => {
-					if (!user) {
-						showLoginDialog = true;
-						return;
-					}
-					error = '';
-					if (activeBooking) {
-						pendingBooking = {
-							timeslotId: slot.timeslotId,
-							replaceBookingId: activeBooking.bookingId!,
-							replaceDescription: `${formatDate(activeBooking.date)}, ${formatHourNumShort(activeBooking.start)}–${formatHourNumShort(activeBooking.end)}`
-						};
-						return;
-					}
-					try {
-						await book({ timeslotId: slot.timeslotId, resource, date });
-						toast.success('Bokning lyckades!');
-					} catch (e) {
-						error = e instanceof Error ? e.message : String(e);
-					}
-				}}
+				onclick={() => handleSlotClick(slot)}
 			>
 				{formatHourNumShort(slot.start)}&ndash;{formatHourNumShort(slot.end)}
 			</button>
@@ -98,17 +129,7 @@
 		onClose={() => (cancelBookingId = null)}
 		title="Avboka?"
 		description="Din nuvarande bokning kommer att avbokas."
-		onConfirm={async () => {
-			if (cancelBookingId === null) return;
-			error = '';
-			try {
-				await cancelBooking({ bookingId: cancelBookingId }).updates(getBookingData({ resource }));
-				toast.success('Bokning avbokad!');
-			} catch (e) {
-				error = e instanceof Error ? e.message : String(e);
-			}
-			cancelBookingId = null;
-		}}
+		onConfirm={confirmCancel}
 	/>
 
 	<ConfirmDialog
@@ -118,22 +139,7 @@
 		description="Du har redan en bokning {pendingBooking?.replaceDescription}. Den avbokas och ersätts med den nya tiden."
 		confirmLabel="Ersätt"
 		confirmClass="bg-accent hover:bg-accent-hover"
-		onConfirm={async () => {
-			if (pendingBooking === null) return;
-			error = '';
-			try {
-				await book({
-					timeslotId: pendingBooking.timeslotId,
-					resource,
-					date,
-					replaceBookingId: pendingBooking.replaceBookingId
-				});
-				toast.success('Bokat!');
-			} catch (e) {
-				error = e instanceof Error ? e.message : String(e);
-			}
-			pendingBooking = null;
-		}}
+		onConfirm={confirmReplace}
 	/>
 {/if}
 

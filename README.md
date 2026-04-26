@@ -173,6 +173,8 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 - [ ] **Theming** -- favicons and PWA theme colors or whatever those attributes are called should mathc the new color scheme.
 
+- [ ] **Simplify db reset/seed to dev/test only** -- production is live; resetting or seeding it is no longer needed and is actively dangerous. Drop the ` argument from `pnpm db:reset` and `pnpm db:seed` (and remove the prod branch in `scripts/db/reset.ts` and `scripts/db/seed.ts`), update the README table accordingly, and keep `pnpm db:tunnel` + `pnpm db:studio prod` as the only prod-touching commands. Actually we want a pnpm db:push prod command to push schema changes without destructive reset, so maybe keep the prod argument but make it non-destructive and update the README to clarify.
+
 ### Medium
 
 - [ ] **Consolidate Drizzle relations** -- `relations()` for the `user` table is declared in three files (`auth.schema.ts`, `booking.schema.ts`, `notification.schema.ts`). Drizzle only supports one `relations()` per table -- the last one wins. This doesn't cause issues today (no code uses Drizzle relational queries), but should be merged into a single file before using `.query.user.findMany({ with: ... })`.
@@ -182,8 +184,6 @@ Code quality improvements identified during codebase review, ordered by impact.
 - [ ] **Add database indexes** -- to speed up common queries.
 
 ### Low
-
-- [ ] **Extract inline onclick handlers** -- booking pages have multi-line async functions inlined in `onclick`. Extract to named functions for readability.
 
 - [ ] **Unit tests for auth form validation** -- auth remote functions have Valibot schemas but no dedicated unit tests for validation edge cases.
 
