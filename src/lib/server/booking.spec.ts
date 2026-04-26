@@ -7,24 +7,22 @@ describe('validateBookingDate', () => {
 	const now = today(TIMEZONE);
 
 	it('accepts today', () => {
-		expect(() => validateBookingDate(now)).not.toThrow();
+		expect(validateBookingDate(now)).toBeNull();
 	});
 
 	it('accepts tomorrow', () => {
-		expect(() => validateBookingDate(now.add({ days: 1 }))).not.toThrow();
+		expect(validateBookingDate(now.add({ days: 1 }))).toBeNull();
 	});
 
 	it('accepts one month from now', () => {
-		expect(() => validateBookingDate(now.add({ months: 1 }))).not.toThrow();
+		expect(validateBookingDate(now.add({ months: 1 }))).toBeNull();
 	});
 
-	it('rejects yesterday', () => {
-		expect(() => validateBookingDate(now.subtract({ days: 1 }))).toThrow('Cannot book in the past');
+	it('returns "past" for yesterday', () => {
+		expect(validateBookingDate(now.subtract({ days: 1 }))).toBe('past');
 	});
 
-	it('rejects more than one month from now', () => {
-		expect(() => validateBookingDate(now.add({ months: 1, days: 1 }))).toThrow(
-			'Cannot book more than one month in advance'
-		);
+	it('returns "too_far" for more than one month from now', () => {
+		expect(validateBookingDate(now.add({ months: 1, days: 1 }))).toBe('too_far');
 	});
 });

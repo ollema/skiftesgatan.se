@@ -209,10 +209,20 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ### High
 
+- [ ] **`requestPasswordReset` swallows all errors** -- `src/lib/api/auth.remote.ts:77-79` has a bare `catch {}` to prevent enumeration, but it also hides Resend outages, DB failures, and Better Auth bugs. Add `log.error(...)` inside the catch so prod failures are visible.
+
+- [ ] **No rate limiting on auth endpoints** -- `hooks.server.ts` has no limiter and `auth.ts` doesn't pass `rateLimit` to `betterAuth(...)`. Login is unbounded and `requestPasswordReset` is a free email-spam relay through Resend. Enable Better Auth's built-in rate limiting on `/api/auth/*`.
+
 - [ ] **PWA readyness** -- add manifest.json, icons, and service worker for offline support and installability.
 
 - [ ] **Theming** -- favicons and PWA theme colors or whatever those attributes are called should match the new color scheme.
 
 ### Low
+
+- [ ] **Service worker references missing `/offline.html`** -- `src/service-worker.ts:76` falls back to `/offline.html` on navigation failure, but the file doesn't exist in `static/`. Either add it or remove the navigate handler.
+
+- [ ] **Apartment validation duplicated in three places** -- `APARTMENT_REGEX` is rebuilt into a Valibot schema in `src/lib/api/auth.remote.ts:18-22`, `auth.remote.ts:58-63`, and `admin.remote.ts:16-20`, each with a different error message. Export a single `apartmentSchema` from `auth.config.ts` (or a shared `lib/validation.ts`).
+
+- [ ] **`APARTMENTS` array lives in `auth.config.ts` but only seed scripts use it** -- `src/lib/server/auth.config.ts:3-10` is consumed only by `scripts/db/seed.ts`. Move it into `scripts/db/` so the prod bundle doesn't carry it and the auth config stays focused on the regex.
 
 - [ ] **Auto-refresh booking calendar** -- if a user leaves the tab open, slot availability can go stale. Consider periodic re-fetch or visibility-change refresh. Better yet, let's use SSE!

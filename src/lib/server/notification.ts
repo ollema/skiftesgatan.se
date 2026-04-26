@@ -42,29 +42,78 @@ export async function setNotificationPreference(
 	offsetMinutes: number,
 	enabled: boolean
 ) {
-	await db
-		.insert(notificationPreference)
-		.values({ userId, resource, enabled, offsetMinutes })
-		.onConflictDoUpdate({
-			target: [
-				notificationPreference.userId,
-				notificationPreference.resource,
-				notificationPreference.offsetMinutes
-			],
-			set: { enabled }
-		});
+	const todayStr = today(TIMEZONE).toString();
+
+	await db.transaction(async (tx) => {
+		await tx
+			.insert(notificationPreference)
+			.values({ userId, resource, enabled, offsetMinutes })
+			.onConflictDoUpdate({
+				target: [
+					notificationPreference.userId,
+					notificationPreference.resource,
+					notificationPreference.offsetMinutes
+				],
+				set: { enabled }
+			});
+
+		if (enabled) {
+			const futureBookings = await tx
+				.select({
+					bookingId: booking.id,
+					date: booking.date,
+					startHour: timeslot.startHour
+				})
+				.from(booking)
+				.innerJoin(timeslot, eq(booking.timeslotId, timeslot.id))
+				.where(
+					and(
+						eq(booking.userId, userId),
+						eq(booking.resource, resource),
+						gte(booking.date, todayStr)
+					)
+				);
+
+			for (const b of futureBookings) {
+				const notifyAt = computeNotifyAt(b.date, b.startHour, offsetMinutes);
+				await tx
+					.insert(bookingNotification)
+					.values({
+						bookingId: b.bookingId,
+						userId,
+						offsetMinutes,
+						notifyAt
+					})
+					.onConflictDoNothing();
+			}
+		} else {
+			const futureBookingIds = tx
+				.select({ id: booking.id })
+				.from(booking)
+				.where(
+					and(
+						eq(booking.userId, userId),
+						eq(booking.resource, resource),
+						gte(booking.date, todayStr)
+					)
+				);
+
+			await tx
+				.delete(bookingNotification)
+				.where(
+					and(
+						inArray(bookingNotification.bookingId, futureBookingIds),
+						eq(bookingNotification.offsetMinutes, offsetMinutes),
+						eq(bookingNotification.status, 'pending')
+					)
+				);
+		}
+	});
 
 	const username = await lookupUsername(userId);
 	log.info(
 		`[notification] preference set username=${username} resource=${resource} offset=${offsetMinutes} enabled=${enabled}`
 	);
-
-	// Sync notifications for existing future bookings
-	if (enabled) {
-		await createNotificationsForFutureBookings(userId, resource, offsetMinutes);
-	} else {
-		await deletePendingNotifications(userId, resource, offsetMinutes);
-	}
 }
 
 export async function createBookingNotifications(
@@ -111,62 +160,4 @@ export async function createBookingNotifications(
 			`[notification] created ${prefs.length} reminder(s) username=${username} resource=${resource} date=${dateStr} startHour=${slot.startHour}`
 		);
 	}
-}
-
-async function createNotificationsForFutureBookings(
-	userId: string,
-	resource: Resource,
-	offsetMinutes: number
-) {
-	const todayStr = today(TIMEZONE).toString();
-
-	const futureBookings = await db
-		.select({
-			bookingId: booking.id,
-			date: booking.date,
-			startHour: timeslot.startHour
-		})
-		.from(booking)
-		.innerJoin(timeslot, eq(booking.timeslotId, timeslot.id))
-		.where(
-			and(eq(booking.userId, userId), eq(booking.resource, resource), gte(booking.date, todayStr))
-		);
-
-	for (const b of futureBookings) {
-		const notifyAt = computeNotifyAt(b.date, b.startHour, offsetMinutes);
-		await db
-			.insert(bookingNotification)
-			.values({
-				bookingId: b.bookingId,
-				userId,
-				offsetMinutes,
-				notifyAt
-			})
-			.onConflictDoNothing();
-	}
-}
-
-async function deletePendingNotifications(
-	userId: string,
-	resource: Resource,
-	offsetMinutes: number
-) {
-	const todayStr = today(TIMEZONE).toString();
-
-	const futureBookingIds = db
-		.select({ id: booking.id })
-		.from(booking)
-		.where(
-			and(eq(booking.userId, userId), eq(booking.resource, resource), gte(booking.date, todayStr))
-		);
-
-	await db
-		.delete(bookingNotification)
-		.where(
-			and(
-				inArray(bookingNotification.bookingId, futureBookingIds),
-				eq(bookingNotification.offsetMinutes, offsetMinutes),
-				eq(bookingNotification.status, 'pending')
-			)
-		);
 }
