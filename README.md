@@ -175,8 +175,6 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ### Low
 
-- [ ] **Unit tests for auth form validation** -- auth remote functions have Valibot schemas but no dedicated unit tests for validation edge cases.
-
 - [ ] **Auto-refresh booking calendar** -- if a user leaves the tab open, slot availability can go stale. Consider periodic re-fetch or visibility-change refresh. Better yet, let's use SSE!
 
 ## Design
