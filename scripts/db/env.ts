@@ -6,7 +6,6 @@ export type DbEnv = 'test' | 'dev' | 'prod';
 
 const args = process.argv.slice(2);
 export const skipConfirm = args.includes('-y') || args.includes('--yes');
-export const dropFlag = args.includes('--drop');
 
 export function parseEnv(allowed: DbEnv[] = ['test', 'dev', 'prod']): DbEnv {
 	const env = args.find((a) => !a.startsWith('-')) as DbEnv;

@@ -4,7 +4,7 @@ Website for BRF Skiftesgatan 4, a housing association with 32 apartments in Goth
 
 Residents log in with their apartment number to book shared facilities, read association news, and access member information such as bylaws, finances, renovation plans, and board details.
 
-There is no self-registration. Accounts are pre-created by an admin using a CSV of apartment numbers and email addresses (`pnpm db:seed prod`). Emails are marked as verified at creation time. Each resident can then log in and reset their password via email.
+There is no self-registration. Accounts are pre-created by an admin via Drizzle Studio against the production database (`pnpm db:tunnel` + `pnpm db:studio prod`). Emails are marked as verified at creation time. Each resident can then log in and reset their password via email.
 
 ## Features
 
@@ -106,30 +106,30 @@ Production uses PostgreSQL on a CapRover VPS. The database is not publicly acces
 
 1. Copy `.env.prod.example` to `.env.prod` and fill in your VPS SSH details and database password
 2. Open the tunnel in one terminal: `pnpm db:tunnel`
-3. Run prod commands in another terminal: `pnpm db:reset prod`, `pnpm db:seed prod`
+3. In another terminal, run prod commands: `pnpm db:push prod` (apply schema changes) or `pnpm db:studio prod` (browse data).
 
-Destructive prod commands require you to type the database name to confirm.
+`pnpm db:push prod` requires you to type the database name to confirm, then runs `drizzle-kit push` interactively so you can review and approve any destructive diffs (dropped columns, etc.).
 
 ## Scripts
 
-| Script                 | Description                                                 |
-| ---------------------- | ----------------------------------------------------------- |
-| `pnpm dev`             | Start dev server                                            |
-| `pnpm build`           | Production build                                            |
-| `pnpm preview`         | Preview production build                                    |
-| `pnpm check`           | SvelteKit sync + svelte-check                               |
-| `pnpm lint`            | Prettier + ESLint                                           |
-| `pnpm format`          | Auto-format code                                            |
-| `pnpm knip`            | Detect unused files/dependencies                            |
-| `pnpm test`            | Run all tests (unit + E2E)                                  |
-| `pnpm test:unit`       | Vitest (unit + integration)                                 |
-| `pnpm test:e2e`        | Playwright E2E tests                                        |
-| `pnpm db:reset <env>`  | Clean slate + push schema (env: test, dev, prod)            |
-| `pnpm db:seed <env>`   | Seed timeslots + accounts + bookings (env: test, dev, prod) |
-| `pnpm db:studio <env>` | Open Drizzle Studio GUI (env: dev, prod)                    |
-| `pnpm db:tunnel`       | Open SSH tunnel to production database                      |
-| `pnpm db:generate`     | Generate Drizzle migration files                            |
-| `pnpm auth:schema`     | Generate Better Auth schema                                 |
+| Script                       | Description                                                  |
+| ---------------------------- | ------------------------------------------------------------ |
+| `pnpm dev`                   | Start dev server                                             |
+| `pnpm build`                 | Production build                                             |
+| `pnpm preview`               | Preview production build                                     |
+| `pnpm check`                 | SvelteKit sync + svelte-check                                |
+| `pnpm lint`                  | Prettier + ESLint                                            |
+| `pnpm format`                | Auto-format code                                             |
+| `pnpm knip`                  | Detect unused files/dependencies                             |
+| `pnpm test`                  | Run all tests (unit + E2E)                                   |
+| `pnpm test:unit`             | Vitest (unit + integration)                                  |
+| `pnpm test:e2e`              | Playwright E2E tests                                         |
+| `pnpm db:reset <test\|dev>`  | Clear local DB + push schema                                 |
+| `pnpm db:seed <test\|dev>`   | Seed timeslots; dev also seeds accounts + bookings           |
+| `pnpm db:push <dev\|prod>`   | Push schema non-destructively (prompts on destructive diffs) |
+| `pnpm db:studio <dev\|prod>` | Open Drizzle Studio GUI                                      |
+| `pnpm db:tunnel`             | Open SSH tunnel to production database                       |
+| `pnpm auth:schema`           | Generate Better Auth schema                                  |
 
 ## Environment Variables
 
@@ -172,8 +172,6 @@ Code quality improvements identified during codebase review, ordered by impact.
 - [ ] **PWA readyness** -- add manifest.json, icons, and service worker for offline support and installability.
 
 - [ ] **Theming** -- favicons and PWA theme colors or whatever those attributes are called should mathc the new color scheme.
-
-- [ ] **Simplify db reset/seed to dev/test only** -- production is live; resetting or seeding it is no longer needed and is actively dangerous. Drop the ` argument from `pnpm db:reset` and `pnpm db:seed` (and remove the prod branch in `scripts/db/reset.ts` and `scripts/db/seed.ts`), update the README table accordingly, and keep `pnpm db:tunnel` + `pnpm db:studio prod` as the only prod-touching commands. Actually we want a pnpm db:push prod command to push schema changes without destructive reset, so maybe keep the prod argument but make it non-destructive and update the README to clarify.
 
 ### Medium
 

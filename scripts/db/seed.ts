@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import crypto from 'node:crypto';
 import { log, outro, intro } from '@clack/prompts';
 import { today } from '@internationalized/date';
 import { eq } from 'drizzle-orm';
@@ -61,14 +59,14 @@ function randomFutureDate() {
 
 // --- Setup ---
 
-const env = parseEnv();
+const env = parseEnv(['test', 'dev']);
 setEnvVars(env);
 
 // Dynamic imports after env vars are set so db/index.ts connects to the right database
 const { db } = await import('../../src/lib/server/db/index.js');
 const { timeslot, booking } = await import('../../src/lib/server/db/booking.schema.js');
 const { user } = await import('../../src/lib/server/db/auth.schema.js');
-const { APARTMENTS, APARTMENT_REGEX, PASSWORD_CONFIG, usernamePlugin } =
+const { APARTMENTS, PASSWORD_CONFIG, usernamePlugin } =
 	await import('../../src/lib/server/auth.config.js');
 
 const { betterAuth } = await import('better-auth/minimal');
@@ -101,15 +99,9 @@ for (const ts of TIMESLOT_SEEDS) {
 }
 log.info('Seeded 6 timeslots (5 laundry + 1 outdoor)');
 
-// Accounts
-if (env === 'prod') {
-	await seedProdAccounts();
-} else {
-	await seedDevAccounts();
-}
-
-// Bookings (dev only)
+// Accounts + bookings (dev only)
 if (env === 'dev') {
+	await seedDevAccounts();
 	await seedBookings();
 }
 
@@ -142,52 +134,6 @@ async function seedDevAccounts() {
 	log.info(
 		`Seeded ${created} accounts (${APARTMENTS.length - created} already existed); B1001 is admin`
 	);
-}
-
-async function seedProdAccounts() {
-	const csvPath = process.argv[3] || 'accounts.csv';
-	let csv: string;
-	try {
-		csv = readFileSync(csvPath, 'utf-8');
-	} catch {
-		log.error(`Could not read ${csvPath}. Provide a CSV with columns: username,email,name`);
-		log.info('Usage: pnpm db:seed prod [path/to/accounts.csv]');
-		process.exit(1);
-	}
-
-	const lines = csv
-		.trim()
-		.split('\n')
-		.slice(1) // skip header
-		.map((line) => line.split(',').map((c) => c.trim()));
-
-	const credentials: { username: string; email: string; password: string }[] = [];
-
-	for (const [apt, email, name] of lines) {
-		if (!APARTMENT_REGEX.test(apt)) {
-			log.warn(`Invalid apartment "${apt}" — skipping`);
-			continue;
-		}
-		const password = crypto.randomBytes(16).toString('base64url');
-		const displayName = name?.trim() || apt;
-
-		try {
-			await seedAuth.api.signUpEmail({
-				body: { email, password, name: displayName, username: apt }
-			});
-			credentials.push({ username: apt, email, password });
-		} catch (e) {
-			log.error(`Failed to create ${apt}: ${e}`);
-		}
-	}
-
-	await db.update(user).set({ emailVerified: true }).where(eq(user.emailVerified, false));
-
-	log.info(`Created ${credentials.length} accounts.`);
-	console.log('\nusername,email,password');
-	for (const c of credentials) {
-		console.log(`${c.username},${c.email},${c.password}`);
-	}
 }
 
 async function seedBookings() {
