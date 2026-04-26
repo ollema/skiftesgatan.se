@@ -65,8 +65,10 @@ export const requestPasswordReset = form(
 					body: { email: found.email, redirectTo: '/konto/aterstall-losenord' }
 				});
 			}
-		} catch {
-			// Always redirect to prevent username enumeration
+		} catch (e) {
+			// Always redirect to prevent username enumeration, but surface the failure
+			// so Resend/DB/Better Auth outages aren't hidden behind the success page.
+			log.error(`[auth] password reset failed username=${username}`, e);
 		}
 		redirect(303, '/konto/glomt-losenord/skickat');
 	}

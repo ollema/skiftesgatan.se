@@ -209,8 +209,6 @@ Code quality improvements identified during codebase review, ordered by impact.
 
 ### High
 
-- [ ] **`requestPasswordReset` swallows all errors** -- `src/lib/api/auth.remote.ts:77-79` has a bare `catch {}` to prevent enumeration, but it also hides Resend outages, DB failures, and Better Auth bugs. Add `log.error(...)` inside the catch so prod failures are visible.
-
 - [ ] **No rate limiting on auth endpoints** -- `hooks.server.ts` has no limiter and `auth.ts` doesn't pass `rateLimit` to `betterAuth(...)`. Login is unbounded and `requestPasswordReset` is a free email-spam relay through Resend. Enable Better Auth's built-in rate limiting on `/api/auth/*`.
 
 - [ ] **PWA readyness** -- add manifest.json, icons, and service worker for offline support and installability.
