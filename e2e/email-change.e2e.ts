@@ -2,9 +2,7 @@ import { test, expect } from './fixtures';
 import { readVerificationUrl } from './helpers';
 
 test.describe('email change flow', () => {
-	test('change email, verify via link, confirm new email shown', async ({
-		asUser
-	}, workerInfo) => {
+	test('change email, verify via link, confirm new email shown', async ({ asUser }, workerInfo) => {
 		const { user, page } = await asUser('D');
 
 		// `.test-emails/` is shared across workers; key the new email by
