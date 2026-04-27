@@ -1,7 +1,7 @@
 import { generateRunId, cleanupAndCloneWorkers, replaceDb } from '../scripts/db/clone-template';
+import { E2E_WORKERS } from '../playwright.config';
 
 const TEMPLATE_DB = 'test_template';
-const WORKERS = 4;
 
 export default async function globalSetup() {
 	const adminUrl = process.env.DATABASE_URL_ADMIN;
@@ -15,7 +15,7 @@ export default async function globalSetup() {
 	const created = await cleanupAndCloneWorkers({
 		adminUrl,
 		templateDb: TEMPLATE_DB,
-		workers: WORKERS,
+		workers: E2E_WORKERS,
 		runId
 	});
 

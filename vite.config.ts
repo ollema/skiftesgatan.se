@@ -53,9 +53,6 @@ export default defineConfig({
 			}
 		}
 	},
-	optimizeDeps: {
-		exclude: ['@electric-sql/pglite']
-	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [

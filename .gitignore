@@ -28,9 +28,6 @@ vite.config.ts.timestamp-*
 # Playwright
 test-results
 
-# PGLite local database
-.pglite*
-
 # E2E parallel isolation
 .auth
 
