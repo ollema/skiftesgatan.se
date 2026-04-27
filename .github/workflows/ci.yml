@@ -118,6 +118,8 @@ jobs:
       - run: pnpm build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ci-dummy-secret-not-for-production
+          BETTER_AUTH_URL: http://localhost:4173
 
       - run: pnpm db:reset:test
         env:
