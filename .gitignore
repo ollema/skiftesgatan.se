@@ -33,3 +33,6 @@ test-results
 
 # Test email tokens
 .test-emails
+
+# Local-only docs / specs
+docs/
