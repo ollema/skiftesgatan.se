@@ -2,11 +2,15 @@ import { test, expect } from './fixtures';
 import { readVerificationUrl } from './helpers';
 
 test.describe('email change flow', () => {
-	test('change email, verify via link, confirm new email shown', async ({ asUser }) => {
+	test('change email, verify via link, confirm new email shown', async ({
+		asUser
+	}, workerInfo) => {
 		const { user, page } = await asUser('D');
 
-		// Request email change on account page
-		const newEmail = `delivered+changed-${user.username}@resend.dev`;
+		// `.test-emails/` is shared across workers; key the new email by
+		// `parallelIndex` so concurrent workers don't overwrite each other's
+		// verification email file.
+		const newEmail = `delivered+changed-w${workerInfo.parallelIndex}-${user.username}@resend.dev`;
 		await page.goto('/konto');
 
 		// Open the email edit dialog (second "Ändra" button)
@@ -17,8 +21,10 @@ test.describe('email change flow', () => {
 		await dialog.getByLabel('Ny e-post').fill(newEmail);
 		await dialog.getByRole('button', { name: 'Spara' }).click();
 
-		// Wait for the form to complete (no error shown)
-		await page.waitForLoadState('networkidle');
+		// Dialog closes only after the form action returns successfully —
+		// gates the email file read on the verification email actually
+		// being written.
+		await expect(dialog).not.toBeVisible();
 
 		// Read verification email sent to the new address and follow the link
 		const verifyUrl = readVerificationUrl(newEmail);
@@ -27,6 +33,6 @@ test.describe('email change flow', () => {
 		// Verification complete — navigate to account page to confirm
 		await page.goto('/konto');
 		await expect(page.locator('h1')).toContainText('Hej,');
-		await expect(page.getByText(newEmail)).toBeVisible();
+		await expect(page.getByText(newEmail)).toBeVisible({ timeout: 10_000 });
 	});
 });
