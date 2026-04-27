@@ -7,7 +7,11 @@ type WorkerServer = { url: string; port: number };
 type AsUser = (prefix: string) => Promise<{ user: TestUser; page: Page }>;
 type AsAdmin = () => Promise<{ user: TestUser; page: Page }>;
 
+type PatchedPage = Page & { __hydrationAware?: true };
+
 function patchHydrationAware(page: Page) {
+	if ((page as PatchedPage).__hydrationAware) return;
+	(page as PatchedPage).__hydrationAware = true;
 	const origGoto = page.goto.bind(page);
 	page.goto = (async (url, opts) => {
 		const res = await origGoto(url, opts);

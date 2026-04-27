@@ -10,7 +10,7 @@ export default async function globalSetup() {
 	if (!baseUrl) throw new Error('DATABASE_URL required for e2e tests');
 
 	const runId = generateRunId(process.env);
-	process.env.E2E_RUN_ID = runId;
+	console.log(`[e2e] runId=${runId}`);
 
 	const created = await cleanupAndCloneWorkers({
 		adminUrl,
