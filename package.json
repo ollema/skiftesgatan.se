@@ -16,6 +16,7 @@
 		"test:e2e": "playwright test",
 		"test": "vitest run && playwright test",
 		"db:reset": "pnpx tsx scripts/db/reset.ts",
+		"db:reset:test": "pnpx tsx scripts/db/reset-test.ts",
 		"db:seed": "pnpx tsx scripts/db/seed.ts",
 		"db:push": "pnpx tsx scripts/db/push.ts",
 		"db:studio": "pnpx tsx scripts/db/studio.ts",

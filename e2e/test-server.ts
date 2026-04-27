@@ -9,13 +9,13 @@ const SERVER_ENV = {
 	RATE_LIMIT_DISABLED: '1'
 } as const;
 
-export function spawnPreview(port: number, dbPath: string): SpawnedServer {
+export function spawnPreview(port: number, databaseUrl: string): SpawnedServer {
 	const url = `http://localhost:${port}`;
 	const proc = spawn('pnpm', ['preview', '--port', String(port)], {
 		env: {
 			...process.env,
 			...SERVER_ENV,
-			PGLITE_PATH: dbPath,
+			DATABASE_URL: databaseUrl,
 			ORIGIN: url
 		},
 		stdio: 'pipe'
