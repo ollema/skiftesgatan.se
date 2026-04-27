@@ -16,9 +16,10 @@ export function spawnPreview(port: number, databaseUrl: string): SpawnedServer {
 			...process.env,
 			...SERVER_ENV,
 			DATABASE_URL: databaseUrl,
-			ORIGIN: url
+			ORIGIN: url,
+			BETTER_AUTH_URL: url
 		},
-		stdio: 'pipe'
+		stdio: ['ignore', 'ignore', 'inherit']
 	});
 	proc.on('error', (e) => {
 		console.error(`[test-server] preview error on :${port}:`, e);

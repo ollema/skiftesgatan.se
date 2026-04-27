@@ -42,7 +42,7 @@ async function bakeStorageState(browser: Browser, serverUrl: string, username: s
 		await loginForm.getByLabel('Lägenhet').fill(username);
 		await loginForm.getByLabel('Lösenord').fill(`password-${username}`);
 		await loginForm.getByRole('button', { name: 'Logga in' }).click();
-		await page.waitForURL('/konto', { timeout: 30_000 });
+		await page.waitForURL('/konto', { timeout: 60_000 });
 		await ctx.storageState({ path: `${AUTH_DIR}/${username}.json` });
 	} finally {
 		await ctx.close();
