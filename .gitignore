@@ -28,9 +28,6 @@ vite.config.ts.timestamp-*
 # Playwright
 test-results
 
-# E2E parallel isolation
-.auth
-
 # Test email tokens
 .test-emails
 

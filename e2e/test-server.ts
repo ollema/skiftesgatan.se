@@ -2,11 +2,18 @@ import { spawn, type ChildProcess } from 'node:child_process';
 
 type SpawnedServer = { proc: ChildProcess; url: string };
 
+// Fixed across local bake-auth, local e2e, and CI e2e — the auth JSONs in
+// e2e/.auth/ are signed with this secret, so all preview spawns must use it
+// or the cookies won't validate. NOT a real secret; the test database is
+// dummy data on a public host.
+const TEST_AUTH_SECRET = 'ci-dummy-secret-not-for-production';
+
 const SERVER_ENV = {
 	RESEND_API_KEY: '',
 	LOG_LEVEL: 'error',
 	SKIP_ENV_VALIDATION: '1',
-	RATE_LIMIT_DISABLED: '1'
+	RATE_LIMIT_DISABLED: '1',
+	BETTER_AUTH_SECRET: TEST_AUTH_SECRET
 } as const;
 
 export function spawnPreview(port: number, databaseUrl: string): SpawnedServer {
@@ -16,10 +23,9 @@ export function spawnPreview(port: number, databaseUrl: string): SpawnedServer {
 			...process.env,
 			...SERVER_ENV,
 			DATABASE_URL: databaseUrl,
-			ORIGIN: url,
-			BETTER_AUTH_URL: url
+			ORIGIN: url
 		},
-		stdio: ['ignore', 'ignore', 'inherit']
+		stdio: 'pipe'
 	});
 	proc.on('error', (e) => {
 		console.error(`[test-server] preview error on :${port}:`, e);

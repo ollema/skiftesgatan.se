@@ -180,7 +180,9 @@ Copy `.env.example` to `.env` and fill in values.
 2. Each worker runs its own `pnpm preview` with its own `DATABASE_URL`.
 3. globalTeardown is empty — cleanup-on-start handles leaks naturally.
 
-**Workflow when changing `src/lib/server/db/schema.ts`:**
+`test_template` and `e2e/.auth/*.json` are provisioned **manually** and committed (the JSONs only contain session cookies for dummy users on the public test DB). CI never touches the template — it just clones from it. This keeps CI fast and keeps cookie/session-row coupling under your control.
+
+**Workflow when changing `src/lib/server/db/schema.ts` (or seed/auth config):**
 
 ```sh
 # 1. Migrate dev in place
@@ -189,20 +191,23 @@ pnpm db:push:dev
 # 2. Iterate against dev
 pnpm dev
 
-# 3. Rebuild test_template with the new schema (also re-bakes e2e/.auth/*.json)
+# 3. Rebuild test_template + re-bake e2e/.auth/*.json
 pnpm db:reset:test
 
 # 4. Run the suite
 pnpm test
 
-# 5. After merge, push to prod
+# 5. Commit the regenerated e2e/.auth/*.json so CI picks them up
+git add e2e/.auth && git commit -m "rebake e2e auth JSONs"
+
+# 6. After merge, push to prod
 pnpm db:tunnel        # in one terminal
 pnpm db:push:prod     # in another (with .env.prod loaded)
 ```
 
-`e2e/.auth/*.json` are gitignored. They're produced once per `db:reset:test` and reused across many `pnpm test:e2e` runs.
+The auth JSONs are signed with a fixed `BETTER_AUTH_SECRET` baked into `e2e/test-server.ts` — CI uses the same value, so the cookies validate everywhere.
 
-**CI** (GitHub Actions): lint + typecheck + knip, unit tests, e2e tests. The e2e job uses `DATABASE_URL` and `DATABASE_URL_ADMIN` from repository secrets.
+**CI** (GitHub Actions): lint + typecheck + knip, unit tests, e2e tests. The e2e job uses `DATABASE_URL` and `DATABASE_URL_ADMIN` from repository secrets — `DATABASE_URL_ADMIN` is only used to clone per-worker DBs, never to rebuild the template.
 
 ## Production Database
 

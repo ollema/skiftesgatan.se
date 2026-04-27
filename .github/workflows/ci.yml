@@ -121,13 +121,6 @@ jobs:
           BETTER_AUTH_SECRET: ci-dummy-secret-not-for-production
           BETTER_AUTH_URL: http://localhost:4173
 
-      - run: pnpm db:reset:test
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DATABASE_URL_ADMIN: ${{ secrets.DATABASE_URL_ADMIN }}
-          BETTER_AUTH_SECRET: ci-dummy-secret-not-for-production
-          BETTER_AUTH_URL: http://localhost:4172
-
       - run: pnpm test:e2e
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
