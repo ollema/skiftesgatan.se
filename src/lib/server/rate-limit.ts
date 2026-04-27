@@ -1,4 +1,5 @@
 import { getRequestEvent } from '$app/server';
+import { env } from '$env/dynamic/private';
 import { log } from '$lib/server/log';
 
 type Bucket = { count: number; resetAt: number };
@@ -17,6 +18,11 @@ const GC_THRESHOLD = 200;
  * (`invalid()` for forms, `error(429, ...)` for queries/commands).
  */
 export function checkRateLimit(name: string, max: number, windowSeconds: number): number | null {
+	// E2E tests run all requests from 127.0.0.1, which would exhaust per-IP
+	// buckets quickly and produce flaky failures. Bypassed via env in
+	// playwright.config.ts; never set in production.
+	if (env.RATE_LIMIT_DISABLED === '1') return null;
+
 	const event = getRequestEvent();
 	const ip = event.getClientAddress();
 	const key = `${name}:${ip}`;

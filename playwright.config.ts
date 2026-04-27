@@ -10,7 +10,8 @@ export default defineConfig({
 			RESEND_API_KEY: '',
 			ORIGIN: 'http://localhost:4173',
 			LOG_LEVEL: 'error',
-			SKIP_ENV_VALIDATION: '1'
+			SKIP_ENV_VALIDATION: '1',
+			RATE_LIMIT_DISABLED: '1'
 		}
 	},
 	testDir: 'e2e',
