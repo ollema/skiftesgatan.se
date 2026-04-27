@@ -12,7 +12,7 @@ if git diff --quiet && git diff --cached --quiet; then
 fi
 
 # Run quality gates sequentially, printing each step
-COMMANDS=("pnpm lint" "pnpm knip" "pnpm check" "pnpm test")
+COMMANDS=("pnpm format" "pnpm lint" "pnpm knip" "pnpm check")
 for CMD in "${COMMANDS[@]}"; do
   echo "▶ $CMD" >&2
   OUTPUT=$($CMD 2>&1)

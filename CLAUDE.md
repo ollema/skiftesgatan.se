@@ -1,3 +1,9 @@
+# Important
+
+There is an hook setup to call `pnpm format`, `pnpm lint`, `pnpm knip` and `pnpm check`.
+
+But you **MUST** call `pnpm test` manually before committing files!
+
 ## Commands
 
 | Command       | Description                      |
