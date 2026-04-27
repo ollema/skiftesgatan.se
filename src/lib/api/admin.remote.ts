@@ -42,7 +42,8 @@ export const listUsers = query(async () => {
 			name: userTable.name,
 			email: userTable.email,
 			emailVerified: userTable.emailVerified,
-			role: userTable.role
+			role: userTable.role,
+			lastActiveAt: userTable.lastActiveAt
 		})
 		.from(userTable)
 		.orderBy(userTable.username);

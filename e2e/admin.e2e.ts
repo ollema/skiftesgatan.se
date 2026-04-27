@@ -99,4 +99,23 @@ test.describe('admin', () => {
 		await expect(page.getByRole('button', { name: 'Ändra' })).toHaveCount(2);
 		await expect(page.getByText('Du kan inte ändra din egen roll.')).toBeVisible();
 	});
+
+	test('admin list shows Senast aktiv column with login timestamp', async ({ page }) => {
+		const admin = adminUser();
+		await login(page, admin);
+
+		await page.goto('/admin');
+
+		// Header is present.
+		await expect(page.getByRole('columnheader', { name: 'Senast aktiv' })).toBeVisible();
+
+		// The admin's own row should have a populated cell because login bumped the timestamp.
+		// Column order: Lägenhet, Namn, E-post, Senast aktiv, Status, action.
+		const adminRow = page.getByRole('row').filter({ hasText: admin.username });
+		const lastActiveCell = adminRow.locator('td').nth(3);
+		await expect(lastActiveCell).toBeVisible();
+		await expect(lastActiveCell).not.toHaveText('—');
+		// Sanity: looks like a sv-SE short-month date-time, e.g. "27 apr. 2026, 14:32".
+		await expect(lastActiveCell).toHaveText(/\d{1,2} \w{3,5}\.? \d{4},? \d{2}:\d{2}/);
+	});
 });

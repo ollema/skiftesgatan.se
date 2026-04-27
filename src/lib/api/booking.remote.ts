@@ -12,6 +12,7 @@ import {
 	validateBookingDate
 } from '$lib/server/booking';
 import { createBookingNotifications } from '$lib/server/notification';
+import { touchUserActivity } from '$lib/server/activity';
 import { TIMEZONE, RESOURCES, type BookingTimeSlot } from '$lib/types/bookings';
 
 const resourceSchema = v.picklist(RESOURCES);
@@ -161,6 +162,8 @@ export const book = command(
 			);
 		}
 
+		await touchUserActivity(user.id);
+
 		await getBookingData({ resource }).refresh();
 		return result.booking;
 	}
@@ -176,6 +179,8 @@ export const cancelBooking = command(v.object({ bookingId: v.number() }), async 
 	log.info(
 		`[booking] cancelled username=${user.username} resource=${result.resource} date=${result.date} startHour=${result.startHour}`
 	);
+
+	await touchUserActivity(user.id);
 
 	await requested(getBookingData, 5).refreshAll();
 });

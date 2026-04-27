@@ -10,6 +10,15 @@ const dateFormatter = new DateFormatter('sv-SE', {
 	timeZone: TIMEZONE
 });
 
+const dateTimeFormatter = new DateFormatter('sv-SE', {
+	year: 'numeric',
+	month: 'short',
+	day: 'numeric',
+	hour: '2-digit',
+	minute: '2-digit',
+	timeZone: TIMEZONE
+});
+
 export function formatMonth(d: DateValue) {
 	return monthFormatter.format(d.toDate(TIMEZONE));
 }
@@ -24,4 +33,8 @@ export function formatHourNum(hour: number) {
 
 export function formatHourNumShort(hour: number) {
 	return `${hour.toString().padStart(2, '0')}`;
+}
+
+export function formatDateTime(d: Date): string {
+	return dateTimeFormatter.format(d);
 }

@@ -9,6 +9,7 @@ import { db } from '$lib/server/db';
 import { sendEmail } from '$lib/server/email';
 import { EMAIL_TEMPLATES } from '$lib/server/email.templates';
 import { PASSWORD_CONFIG, usernamePlugin } from '$lib/server/auth.config';
+import { touchUserActivity } from '$lib/server/activity';
 
 export const auth = betterAuth({
 	baseURL: env.ORIGIN,
@@ -58,6 +59,31 @@ export const auth = betterAuth({
 	user: {
 		changeEmail: {
 			enabled: true
+		},
+		additionalFields: {
+			lastActiveAt: {
+				type: 'date',
+				required: false,
+				input: false
+			}
+		}
+	},
+	databaseHooks: {
+		session: {
+			create: {
+				after: async (session) => {
+					await touchUserActivity(session.userId);
+				}
+			}
+		},
+		user: {
+			update: {
+				after: async (updatedUser, ctx) => {
+					if (ctx?.context.session?.user.id === updatedUser.id) {
+						await touchUserActivity(updatedUser.id);
+					}
+				}
+			}
 		}
 	},
 	plugins: [

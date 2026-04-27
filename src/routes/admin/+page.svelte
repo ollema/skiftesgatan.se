@@ -3,6 +3,7 @@
 	import { MetaTags } from 'svelte-meta-tags';
 	import { metaDefaults } from '$lib/meta';
 	import { listUsers } from '$lib/api/admin.remote';
+	import { formatDateTime } from '$lib/utils/date';
 
 	let users = $derived(await listUsers());
 </script>
@@ -22,6 +23,7 @@
 			<th class="py-3 pr-4 font-normal">Lägenhet</th>
 			<th class="py-3 pr-4 font-normal">Namn</th>
 			<th class="py-3 pr-4 font-normal">E-post</th>
+			<th class="py-3 pr-4 font-normal">Senast aktiv</th>
 			<th class="py-3 pr-4 font-normal">Status</th>
 			<th class="py-3 pl-4 font-normal"></th>
 		</tr>
@@ -32,6 +34,9 @@
 				<td class="py-3 pr-4 font-mono">{user.username}</td>
 				<td class="py-3 pr-4">{user.name}</td>
 				<td class="py-3 pr-4 text-text-secondary">{user.email}</td>
+				<td class="py-3 pr-4 text-text-secondary">
+					{user.lastActiveAt ? formatDateTime(user.lastActiveAt) : '—'}
+				</td>
 				<td class="py-3 pr-4 text-xs">
 					{#if user.role === 'admin'}
 						<span class="text-accent">Admin</span>
