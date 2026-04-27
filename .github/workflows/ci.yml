@@ -115,6 +115,8 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm exec playwright install-deps chromium
 
+      - run: pnpm build
+
       - run: pnpm db:reset:test
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
