@@ -1,13 +1,11 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { uniqueUser, login } from './helpers';
 
 test.describe('navbar auth reactivity', () => {
-	test('logout clears apartment name from navbar and mobile menu', async ({ page }) => {
-		const user = uniqueUser('A');
-		await login(page, user);
+	test('logout clears apartment name from navbar and mobile menu', async ({ asUser }) => {
+		const { user, page } = await asUser('A');
 
-		// Full reload to force fresh SSR — isolates the logout bug from the login bug
-		await page.reload();
+		await page.goto('/konto');
 
 		const nav = page.locator('nav').first();
 		await expect(nav.getByRole('link', { name: user.username })).toBeVisible();

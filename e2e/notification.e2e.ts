@@ -1,10 +1,8 @@
-import { test, expect } from '@playwright/test';
-import { uniqueUser, login } from './helpers';
+import { test, expect } from './fixtures';
 
 test.describe('notification preferences', () => {
-	test('toggle switches update and persist across reload', async ({ page }) => {
-		const user = uniqueUser('D');
-		await login(page, user);
+	test('toggle switches update and persist across reload', async ({ asUser }) => {
+		const { page } = await asUser('D');
 
 		await page.goto('/konto');
 		await expect(page.locator('h1')).toContainText('Hej,');

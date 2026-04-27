@@ -1,17 +1,16 @@
-import { test, expect } from '@playwright/test';
-import { uniqueUser, login, adminUser, readResetPasswordUrl } from './helpers';
+import { test, expect } from './fixtures';
+import { uniqueUser, readResetPasswordUrl } from './helpers';
 
 test.describe('admin', () => {
-	test('non-admin visiting /admin is redirected to /konto', async ({ page }) => {
-		const user = uniqueUser('D');
-		await login(page, user);
+	test('non-admin visiting /admin is redirected to /konto', async ({ asUser }) => {
+		const { page } = await asUser('D');
 
 		await page.goto('/admin');
 		await expect(page).toHaveURL('/konto');
 	});
 
-	test('admin sees the user list', async ({ page }) => {
-		await login(page, adminUser());
+	test('admin sees the user list', async ({ asAdmin }) => {
+		const { page } = await asAdmin();
 
 		await page.goto('/admin');
 		await expect(page.locator('h1')).toContainText('Lägenheter');
@@ -21,9 +20,9 @@ test.describe('admin', () => {
 		await expect(page.getByRole('cell', { name: 'A1001', exact: true })).toBeVisible();
 	});
 
-	test('admin edits another user’s display name', async ({ page }) => {
+	test('admin edits another user’s display name', async ({ asAdmin }) => {
 		const target = uniqueUser('D');
-		await login(page, adminUser());
+		const { page } = await asAdmin();
 
 		await page.goto(`/admin/${target.username}`);
 		await expect(page.locator('h1')).toContainText(target.username);
@@ -44,9 +43,9 @@ test.describe('admin', () => {
 		await expect(page.getByRole('cell', { name: newName })).toBeVisible();
 	});
 
-	test('admin sends a password reset email', async ({ page }) => {
+	test('admin sends a password reset email', async ({ asAdmin }) => {
 		const target = uniqueUser('D');
-		await login(page, adminUser());
+		const { page } = await asAdmin();
 
 		await page.goto(`/admin/${target.username}`);
 		await page.getByRole('button', { name: 'Skicka återställningsmejl' }).click();
@@ -59,12 +58,12 @@ test.describe('admin', () => {
 		expect(resetUrl).toMatch(/\/api\/auth\/reset-password\//);
 	});
 
-	test('admin toggles notification preference for another user', async ({ page }) => {
-		const target = uniqueUser('D');
-		await login(page, adminUser());
+	test('admin toggles notification preference for another user', async ({ asAdmin, asUser }) => {
+		const { user: target, page: targetPage } = await asUser('D');
+		const { page: adminPage } = await asAdmin();
 
-		await page.goto(`/admin/${target.username}`);
-		const adminSwitch = page
+		await adminPage.goto(`/admin/${target.username}`);
+		const adminSwitch = adminPage
 			.locator('fieldset')
 			.filter({ hasText: 'Tvättstuga' })
 			.getByRole('switch')
@@ -74,13 +73,9 @@ test.describe('admin', () => {
 		await adminSwitch.click();
 		await expect(adminSwitch).toHaveAttribute('data-state', 'checked');
 
-		// Sign admin out, login as target, confirm the toggle is reflected.
-		await page.goto('/konto');
-		await page.getByRole('button', { name: 'Logga ut' }).click();
-		await login(page, target);
-
-		await page.goto('/konto');
-		const userSwitch = page
+		// Verify target's own view sees the toggle reflected.
+		await targetPage.goto('/konto');
+		const userSwitch = targetPage
 			.locator('fieldset')
 			.filter({ hasText: 'Tvättstuga' })
 			.getByRole('switch')
@@ -88,9 +83,8 @@ test.describe('admin', () => {
 		await expect(userSwitch).toHaveAttribute('data-state', 'checked');
 	});
 
-	test('admin cannot change their own role', async ({ page }) => {
-		const admin = adminUser();
-		await login(page, admin);
+	test('admin cannot change their own role', async ({ asAdmin }) => {
+		const { user: admin, page } = await asAdmin();
 
 		await page.goto(`/admin/${admin.username}`);
 		await expect(page.locator('h1')).toContainText(admin.username);
@@ -100,9 +94,8 @@ test.describe('admin', () => {
 		await expect(page.getByText('Du kan inte ändra din egen roll.')).toBeVisible();
 	});
 
-	test('admin list shows Senast aktiv column with login timestamp', async ({ page }) => {
-		const admin = adminUser();
-		await login(page, admin);
+	test('admin list shows Senast aktiv column with login timestamp', async ({ asAdmin }) => {
+		const { user: admin, page } = await asAdmin();
 
 		await page.goto('/admin');
 

@@ -1,10 +1,9 @@
-import { test, expect } from '@playwright/test';
-import { uniqueUser, login, readVerificationUrl } from './helpers';
+import { test, expect } from './fixtures';
+import { readVerificationUrl } from './helpers';
 
 test.describe('email change flow', () => {
-	test('change email, verify via link, confirm new email shown', async ({ page }) => {
-		const user = uniqueUser('D');
-		await login(page, user);
+	test('change email, verify via link, confirm new email shown', async ({ asUser }) => {
+		const { user, page } = await asUser('D');
 
 		// Request email change on account page
 		const newEmail = `delivered+changed-${user.username}@resend.dev`;

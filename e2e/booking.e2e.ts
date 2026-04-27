@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { today } from '@internationalized/date';
 import { TIMEZONE } from '$lib/types/bookings';
-import { uniqueUser, login, selectCalendarDate, confirmCancelDialog } from './helpers';
+import { selectCalendarDate, confirmCancelDialog } from './helpers';
 
 const now = today(TIMEZONE);
 const tomorrow = now.add({ days: 1 }).toString();
@@ -22,9 +22,8 @@ test.describe('booking flow', () => {
 		await expect(loginDialog).not.toBeVisible();
 	});
 
-	test('login, view slots, book, fail double-book, cancel, rebook', async ({ page }) => {
-		const user = uniqueUser('B');
-		await login(page, user);
+	test('login, view slots, book, fail double-book, cancel, rebook', async ({ asUser }) => {
+		const { page } = await asUser('B');
 
 		await page.goto('/tvattstuga');
 		await selectCalendarDate(page, tomorrow);
@@ -80,9 +79,8 @@ test.describe('booking flow', () => {
 		await expect(bookButtons).toHaveCount(4);
 	});
 
-	test('outdoor area booking flow', async ({ page }) => {
-		const user = uniqueUser('B');
-		await login(page, user);
+	test('outdoor area booking flow', async ({ asUser }) => {
+		const { page } = await asUser('B');
 
 		await page.goto('/uteplats');
 		await selectCalendarDate(page, tomorrow);
@@ -108,9 +106,8 @@ test.describe('booking flow', () => {
 		await expect(myButtons).toHaveCount(1);
 	});
 
-	test('rejects booking beyond one-month window', async ({ page }) => {
-		const user = uniqueUser('B');
-		await login(page, user);
+	test('rejects booking beyond one-month window', async ({ asUser }) => {
+		const { page } = await asUser('B');
 
 		await page.goto('/tvattstuga');
 

@@ -1,23 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { today } from '@internationalized/date';
 import { TIMEZONE } from '$lib/types/bookings';
-import { uniqueUser, login, selectCalendarDate } from './helpers';
+import { selectCalendarDate } from './helpers';
 
 // Use 3 days out to avoid collisions with other test files that book on "tomorrow"
 const testDate = today(TIMEZONE).add({ days: 3 }).toString();
 
 test.describe('concurrent booking', () => {
-	test('two users competing for the same slot', async ({ browser }) => {
-		const context1 = await browser.newContext();
-		const context2 = await browser.newContext();
-		const page1 = await context1.newPage();
-		const page2 = await context2.newPage();
-
-		// Login both users with pre-seeded accounts
-		const user1 = uniqueUser('C');
-		const user2 = uniqueUser('C');
-		await login(page1, user1);
-		await login(page2, user2);
+	test('two users competing for the same slot', async ({ asUser }) => {
+		const { page: page1 } = await asUser('C');
+		const { page: page2 } = await asUser('C');
 
 		// Both navigate to laundry and set date
 		await page1.goto('/tvattstuga');
@@ -41,8 +33,5 @@ test.describe('concurrent booking', () => {
 		// User2 can still book a different slot without conflict
 		await page2.locator('button[data-slot-status="free"]').first().click();
 		await expect(page2.locator('button[data-slot-status="mine"]')).toHaveCount(1);
-
-		await context1.close();
-		await context2.close();
 	});
 });

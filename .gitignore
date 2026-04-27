@@ -31,6 +31,9 @@ test-results
 # PGLite local database
 .pglite*
 
+# E2E parallel isolation
+.auth
+
 # Test email tokens
 .test-emails
 

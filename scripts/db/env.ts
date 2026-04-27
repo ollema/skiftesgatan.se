@@ -20,7 +20,7 @@ export function setEnvVars(env: DbEnv) {
 	switch (env) {
 		case 'test':
 			delete process.env.DATABASE_URL;
-			process.env.PGLITE_PATH = '.pglite-test';
+			process.env.PGLITE_PATH = process.env.PGLITE_PATH ?? '.pglite-test';
 			break;
 		case 'dev':
 			delete process.env.DATABASE_URL;
