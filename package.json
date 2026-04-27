@@ -31,7 +31,6 @@
 		"@content-collections/core": "^0.15.0",
 		"@content-collections/markdown": "^0.1.4",
 		"@content-collections/vite": "^0.3.0",
-		"@electric-sql/pglite": "^0.4.4",
 		"@eslint/compat": "^2.0.5",
 		"@eslint/js": "^10.0.1",
 		"@internationalized/date": "^3.12.1",

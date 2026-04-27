@@ -39,17 +39,3 @@ export async function waitForReady(url: string, timeoutMs = 30_000): Promise<voi
 	}
 	throw new Error(`Server at ${url} did not become ready within ${timeoutMs}ms`);
 }
-
-export function runScript(cmd: string, args: string[], env: Record<string, string>): Promise<void> {
-	return new Promise((resolve, reject) => {
-		const proc = spawn(cmd, args, {
-			env: { ...process.env, ...env },
-			stdio: 'inherit'
-		});
-		proc.on('exit', (code) => {
-			if (code === 0) resolve();
-			else reject(new Error(`${cmd} ${args.join(' ')} exited with code ${code}`));
-		});
-		proc.on('error', reject);
-	});
-}

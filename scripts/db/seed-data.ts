@@ -1,7 +1,13 @@
 import { today } from '@internationalized/date';
+import { betterAuth } from 'better-auth/minimal';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { PASSWORD_CONFIG, usernamePlugin } from '../../src/lib/server/auth.config.js';
+import { user } from '../../src/lib/server/db/auth.schema.js';
+import { booking, timeslot } from '../../src/lib/server/db/booking.schema.js';
+import * as schema from '../../src/lib/server/db/schema.js';
 
 export const APARTMENTS: string[] = [];
 for (const block of ['A', 'B', 'C', 'D']) {
@@ -69,13 +75,6 @@ function randomFutureDate() {
 export async function seedDatabase(databaseUrl: string, opts: { withBookings: boolean }) {
 	const client = postgres(databaseUrl);
 	try {
-		const { timeslot, booking } = await import('../../src/lib/server/db/booking.schema.js');
-		const { user } = await import('../../src/lib/server/db/auth.schema.js');
-		const { PASSWORD_CONFIG, usernamePlugin } = await import('../../src/lib/server/auth.config.js');
-		const { betterAuth } = await import('better-auth/minimal');
-		const { drizzleAdapter } = await import('better-auth/adapters/drizzle');
-		const schema = await import('../../src/lib/server/db/schema.js');
-
 		const db = drizzle(client, { schema });
 
 		const seedAuth = betterAuth({

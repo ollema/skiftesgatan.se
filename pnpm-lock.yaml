@@ -20,9 +20,6 @@ importers:
       '@content-collections/vite':
         specifier: ^0.3.0
         version: 0.3.0(@content-collections/core@0.15.0(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
-      '@electric-sql/pglite':
-        specifier: ^0.4.4
-        version: 0.4.4
       '@eslint/compat':
         specifier: ^2.0.5
         version: 2.0.5(eslint@10.2.1(jiti@2.6.1))
@@ -3746,7 +3743,8 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@electric-sql/pglite@0.4.4': {}
+  '@electric-sql/pglite@0.4.4':
+    optional: true
 
   '@emnapi/core@1.10.0':
     dependencies:

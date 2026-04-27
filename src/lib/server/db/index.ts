@@ -1,16 +1,11 @@
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import * as schema from './schema';
 
-const createDb = async () => {
-	if (!process.env.DATABASE_URL) {
-		const { PGlite } = await import('@electric-sql/pglite');
-		const { drizzle } = await import('drizzle-orm/pglite');
-		const client = new PGlite(process.env.PGLITE_PATH || '.pglite');
-		return drizzle({ client, schema });
-	}
-	const postgres = (await import('postgres')).default;
-	const { drizzle } = await import('drizzle-orm/postgres-js');
-	const client = postgres(process.env.DATABASE_URL);
-	return drizzle(client, { schema });
-};
+const url = process.env.DATABASE_URL;
+if (!url) {
+	throw new Error('DATABASE_URL is required');
+}
 
-export const db = await createDb();
+const client = postgres(url);
+export const db = drizzle(client, { schema });
