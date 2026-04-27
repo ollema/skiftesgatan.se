@@ -116,6 +116,8 @@ jobs:
         run: pnpm exec playwright install-deps chromium
 
       - run: pnpm build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - run: pnpm db:reset:test
         env:
