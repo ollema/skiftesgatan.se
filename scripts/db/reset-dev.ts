@@ -1,32 +1,181 @@
 import 'dotenv/config';
+import { execSync } from 'child_process';
+import { confirm, log, intro, outro, isCancel } from '@clack/prompts';
 import postgres from 'postgres';
-import { confirmDestructiveDev, exec } from './env';
+import { today } from '@internationalized/date';
+import { betterAuth } from 'better-auth/minimal';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { eq } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import { PASSWORD_CONFIG, usernamePlugin } from '../../src/lib/server/auth.config.js';
+import { user } from '../../src/lib/server/db/auth.schema.js';
+import { booking, timeslot } from '../../src/lib/server/db/booking.schema.js';
+import * as schema from '../../src/lib/server/db/schema.js';
 
-const adminUrl = process.env.DATABASE_URL_ADMIN;
-const baseUrl = process.env.DATABASE_URL;
-if (!adminUrl) {
-	console.error('DATABASE_URL_ADMIN is required for db:reset:dev');
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+	console.error('DATABASE_URL is not set. Add it to .env or override inline.');
 	process.exit(1);
 }
-if (!baseUrl) {
-	console.error('DATABASE_URL is required for db:reset:dev');
-	process.exit(1);
+
+const skipConfirm = process.argv.slice(2).some((a) => a === '-y' || a === '--yes');
+
+if (!skipConfirm) {
+	intro('db:reset');
+	log.warn(`DATABASE_URL: ${databaseUrl}`);
+	const ok = await confirm({
+		message: 'Reset this database? (drops all data, re-seeds dev fixtures)'
+	});
+	if (isCancel(ok) || !ok) {
+		outro('Aborted.');
+		process.exit(0);
+	}
 }
 
-await confirmDestructiveDev('reset dev');
+{
+	const sql = postgres(databaseUrl, { max: 1 });
+	try {
+		await sql.unsafe('DROP SCHEMA public CASCADE');
+		await sql.unsafe('CREATE SCHEMA public');
+	} finally {
+		await sql.end();
+	}
+}
 
-const sql = postgres(adminUrl, { max: 1 });
+execSync('pnpm exec drizzle-kit push --force', { stdio: 'inherit', env: process.env });
+
+const APARTMENTS: string[] = [];
+for (const block of ['A', 'B', 'C', 'D']) {
+	for (const floor of [0, 1, 2, 3]) {
+		for (const door of [1, 2]) {
+			APARTMENTS.push(`${block}1${floor}0${door}`);
+		}
+	}
+}
+
+const DEV_NAMES = [
+	'Anna Lindqvist',
+	'Erik Johansson',
+	'Maria Svensson',
+	'Lars Andersson',
+	'Karin Nilsson',
+	'Johan Pettersson',
+	'Eva Karlsson',
+	'Anders Gustafsson',
+	'Ingrid Olsson',
+	'Nils Persson',
+	'Birgitta Eriksson',
+	'Sven Larsson',
+	'Astrid Bergström',
+	'Karl Lundgren',
+	'Helena Fredriksson',
+	'Per Sandberg',
+	'Sofia Holm',
+	'Magnus Lindberg',
+	'Lena Forsberg',
+	'Ola Nyström',
+	'Margareta Engström',
+	'Gunnar Sjöberg',
+	'Kristina Wallin',
+	'Bengt Ekström',
+	'Annika Danielsson',
+	'Håkan Magnusson',
+	'Cecilia Björk',
+	'Torbjörn Lund',
+	'Malin Berglund',
+	'Stefan Norberg',
+	'Elin Hellström',
+	'Mikael Fransson'
+];
+
+const TIMESLOT_SEEDS = [
+	{ startHour: 7, endHour: 10, resource: 'laundry_room' as const },
+	{ startHour: 10, endHour: 13, resource: 'laundry_room' as const },
+	{ startHour: 13, endHour: 16, resource: 'laundry_room' as const },
+	{ startHour: 16, endHour: 19, resource: 'laundry_room' as const },
+	{ startHour: 19, endHour: 22, resource: 'laundry_room' as const },
+	{ startHour: 7, endHour: 22, resource: 'outdoor_area' as const }
+];
+
+function randomInt(min: number, max: number) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomFutureDate() {
+	return today('Europe/Stockholm')
+		.add({ days: randomInt(1, 30) })
+		.toString();
+}
+
+const client = postgres(databaseUrl);
 try {
-	await sql.unsafe(`
-		SELECT pg_terminate_backend(pid) FROM pg_stat_activity
-		WHERE datname = 'dev' AND pid <> pg_backend_pid()
-	`);
-	await sql.unsafe('DROP DATABASE IF EXISTS "dev" WITH (FORCE)');
-	await sql.unsafe('CREATE DATABASE "dev"');
+	const db = drizzle(client, { schema });
+
+	const seedAuth = betterAuth({
+		baseURL: 'http://localhost',
+		secret: 'xK9mP2vQ7nR4sT8wF3jL6hG1dA5cB0eY',
+		logger: { disabled: true },
+		database: drizzleAdapter(db, { provider: 'pg' }),
+		emailAndPassword: { enabled: true, requireEmailVerification: false, ...PASSWORD_CONFIG },
+		emailVerification: { sendVerificationEmail: async () => {}, sendOnSignUp: false },
+		plugins: [usernamePlugin()]
+	});
+
+	for (const ts of TIMESLOT_SEEDS) {
+		await db.insert(timeslot).values(ts).onConflictDoNothing();
+	}
+
+	for (let i = 0; i < APARTMENTS.length; i++) {
+		const apt = APARTMENTS[i];
+		try {
+			await seedAuth.api.signUpEmail({
+				body: {
+					email: `delivered+${apt}@resend.dev`,
+					password: `password-${apt}`,
+					name: DEV_NAMES[i],
+					username: apt
+				}
+			});
+		} catch {
+			// already exists
+		}
+	}
+	await db.update(user).set({ emailVerified: true }).where(eq(user.emailVerified, false));
+	await db.update(user).set({ role: 'admin' }).where(eq(user.username, 'B1001'));
+
+	const users = await db.select({ id: user.id, username: user.username }).from(user);
+	const userMap = new Map(users.map((u) => [u.username, u.id]));
+	const timeslots = await db.select().from(timeslot);
+	const laundrySlots = timeslots.filter((ts) => ts.resource === 'laundry_room');
+	const outdoorSlot = timeslots.find((ts) => ts.resource === 'outdoor_area');
+
+	for (const apt of APARTMENTS.slice(0, 16)) {
+		const userId = userMap.get(apt);
+		if (!userId) continue;
+		const slot = laundrySlots[randomInt(0, laundrySlots.length - 1)];
+		await db
+			.insert(booking)
+			.values({
+				userId,
+				timeslotId: slot.id,
+				resource: 'laundry_room',
+				date: randomFutureDate()
+			})
+			.onConflictDoNothing();
+		if (outdoorSlot && Math.random() < 0.4) {
+			await db
+				.insert(booking)
+				.values({
+					userId,
+					timeslotId: outdoorSlot.id,
+					resource: 'outdoor_area',
+					date: randomFutureDate()
+				})
+				.onConflictDoNothing();
+		}
+	}
 } finally {
-	await sql.end();
+	await client.end();
 }
 
-exec('pnpm exec drizzle-kit push --force');
-exec('pnpm db:seed:dev');
-console.log('✓ dev reset complete');
+console.log('✓ reset complete');
