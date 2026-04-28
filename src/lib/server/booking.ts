@@ -2,7 +2,7 @@ import { type CalendarDate, today } from '@internationalized/date';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { booking, timeBlock, user } from '$lib/server/db/schema';
-import { TIMEZONE, type Resource } from '$lib/types/bookings';
+import { TIMEZONE, type Resource, type Slot } from '$lib/types/bookings';
 
 const PG_UNIQUE_VIOLATION = '23505';
 
@@ -32,7 +32,17 @@ export function validateBookingDate(date: CalendarDate): ValidateBookingDateErro
 	return null;
 }
 
-export async function getBookingCalendar(resource: Resource) {
+export type BookingCalendarRow = {
+	timeBlockId: number;
+	startHour: number;
+	endHour: number;
+	date: string | null;
+	bookingId: number | null;
+	userId: string | null;
+	username: string | null;
+};
+
+export async function getBookingCalendar(resource: Resource): Promise<BookingCalendarRow[]> {
 	const startDate = today(TIMEZONE).toString();
 	const endDate = maxBookingDate().toString();
 
@@ -59,6 +69,80 @@ export async function getBookingCalendar(resource: Resource) {
 		.leftJoin(user, eq(booking.userId, user.id))
 		.where(eq(timeBlock.resource, resource))
 		.orderBy(timeBlock.startHour);
+}
+
+export function buildBookingPayload(
+	rawRows: BookingCalendarRow[],
+	user: { id: string } | null
+): { bookingCalendar: Record<string, Slot[]>; activeBooking: Slot | undefined } {
+	const timeBlockSet = new Map<number, { startHour: number; endHour: number }>();
+	for (const row of rawRows) {
+		if (!timeBlockSet.has(row.timeBlockId)) {
+			timeBlockSet.set(row.timeBlockId, {
+				startHour: row.startHour,
+				endHour: row.endHour
+			});
+		}
+	}
+	const timeBlocks = [...timeBlockSet.entries()];
+
+	const bookingMap = new Map<
+		string,
+		{ bookingId: number; userId: string; username: string | null }
+	>();
+	for (const row of rawRows) {
+		if (row.date !== null && row.bookingId !== null) {
+			bookingMap.set(`${row.date}:${row.timeBlockId}`, {
+				bookingId: row.bookingId,
+				userId: row.userId!,
+				username: row.username
+			});
+		}
+	}
+
+	const start = today(TIMEZONE);
+	const end = start.add({ months: 1 });
+
+	const bookingCalendar: Record<string, Slot[]> = {};
+	let activeBooking: Slot | undefined = undefined;
+
+	let current = start;
+	while (current.compare(end) <= 0) {
+		const dateStr = current.toString();
+		const slots: Slot[] = [];
+
+		for (const [tid, tb] of timeBlocks) {
+			const b = bookingMap.get(`${dateStr}:${tid}`);
+			const status = b === undefined ? 'free' : b.userId === user?.id ? 'mine' : 'other';
+
+			slots.push({
+				timeBlockId: tid,
+				date: current,
+				start: tb.startHour,
+				end: tb.endHour,
+				status,
+				bookingId: b?.bookingId ?? null,
+				username: user ? (b?.username ?? null) : null
+			});
+
+			if (activeBooking === undefined && b !== undefined && b.userId === user?.id) {
+				activeBooking = {
+					timeBlockId: tid,
+					date: current,
+					start: tb.startHour,
+					end: tb.endHour,
+					status,
+					bookingId: b.bookingId,
+					username: b.username
+				};
+			}
+		}
+
+		bookingCalendar[dateStr] = slots;
+		current = current.add({ days: 1 });
+	}
+
+	return { bookingCalendar, activeBooking };
 }
 
 type BookSlotResult =
