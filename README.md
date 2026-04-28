@@ -122,28 +122,28 @@ e2e/                           # Playwright E2E tests
 
 ## Scripts
 
-| Script                | Description                                                           |
-| --------------------- | --------------------------------------------------------------------- |
-| `pnpm dev`            | Start dev server                                                      |
-| `pnpm build`          | Production build                                                      |
-| `pnpm preview`        | Preview production build                                              |
-| `pnpm check`          | SvelteKit sync + svelte-check                                         |
-| `pnpm lint`           | Prettier + ESLint                                                     |
-| `pnpm format`         | Auto-format code                                                      |
-| `pnpm knip`           | Detect unused files/dependencies                                      |
-| `pnpm test`           | Run all tests (unit + E2E)                                            |
-| `pnpm test:unit`      | Vitest                                                                |
-| `pnpm test:e2e`       | Playwright E2E tests                                                  |
-| `pnpm db:push:dev`    | Push schema to dev (force)                                            |
-| `pnpm db:push:prod`   | Push schema to prod via tunnel (interactive on destructive)           |
-| `pnpm db:reset:dev`   | DROP + CREATE dev, push schema, seed                                  |
-| `pnpm db:seed:dev`    | Re-seed dev (idempotent)                                              |
-| `pnpm db:studio:dev`  | Drizzle Studio against dev                                            |
-| `pnpm db:studio:prod` | Drizzle Studio against prod via tunnel                                |
-| `pnpm db:tunnel`      | Open SSH tunnel to production database                                |
-| `pnpm auth:schema`    | Generate Better Auth schema                                           |
-| `pnpm icons`          | Generate favicons and PWA icons                                       |
-| `pnpm email:sync`     | Sync email templates to Resend                                        |
+| Script                | Description                                                 |
+| --------------------- | ----------------------------------------------------------- |
+| `pnpm dev`            | Start dev server                                            |
+| `pnpm build`          | Production build                                            |
+| `pnpm preview`        | Preview production build                                    |
+| `pnpm check`          | SvelteKit sync + svelte-check                               |
+| `pnpm lint`           | Prettier + ESLint                                           |
+| `pnpm format`         | Auto-format code                                            |
+| `pnpm knip`           | Detect unused files/dependencies                            |
+| `pnpm test`           | Run all tests (unit + E2E)                                  |
+| `pnpm test:unit`      | Vitest                                                      |
+| `pnpm test:e2e`       | Playwright E2E tests                                        |
+| `pnpm db:push:dev`    | Push schema to dev (force)                                  |
+| `pnpm db:push:prod`   | Push schema to prod via tunnel (interactive on destructive) |
+| `pnpm db:reset:dev`   | DROP + CREATE dev, push schema, seed                        |
+| `pnpm db:seed:dev`    | Re-seed dev (idempotent)                                    |
+| `pnpm db:studio:dev`  | Drizzle Studio against dev                                  |
+| `pnpm db:studio:prod` | Drizzle Studio against prod via tunnel                      |
+| `pnpm db:tunnel`      | Open SSH tunnel to production database                      |
+| `pnpm auth:schema`    | Generate Better Auth schema                                 |
+| `pnpm icons`          | Generate favicons and PWA icons                             |
+| `pnpm email:sync`     | Sync email templates to Resend                              |
 
 ## Environment Variables
 
@@ -151,15 +151,15 @@ Copy `.env.example` to `.env` and fill in values.
 
 **`.env`** -- local development:
 
-| Variable             | Required | Description                                                          |
-| -------------------- | -------- | -------------------------------------------------------------------- |
-| `DATABASE_URL`       | Yes      | Postgres connection string for the `dev` database                    |
-| `DATABASE_URL_ADMIN` | Yes      | Admin connection (to `postgres` DB) for db:reset:dev                 |
-| `ORIGIN`             | Yes      | Application origin URL (e.g. `http://localhost:5173`)                |
-| `BETTER_AUTH_SECRET` | Yes      | 32-character high-entropy secret for session signing                 |
-| `RESEND_API_KEY`     | Prod     | Resend API key for email delivery (file mock in dev)                 |
-| `EMAIL_FROM`         | Yes      | Sender email address                                                 |
-| `CONTACT_MANAGER_*`  | Prod     | Property manager name, phone, and email                              |
+| Variable             | Required | Description                                           |
+| -------------------- | -------- | ----------------------------------------------------- |
+| `DATABASE_URL`       | Yes      | Postgres connection string for the `dev` database     |
+| `DATABASE_URL_ADMIN` | Yes      | Admin connection (to `postgres` DB) for db:reset:dev  |
+| `ORIGIN`             | Yes      | Application origin URL (e.g. `http://localhost:5173`) |
+| `BETTER_AUTH_SECRET` | Yes      | 32-character high-entropy secret for session signing  |
+| `RESEND_API_KEY`     | Prod     | Resend API key for email delivery (file mock in dev)  |
+| `EMAIL_FROM`         | Yes      | Sender email address                                  |
+| `CONTACT_MANAGER_*`  | Prod     | Property manager name, phone, and email               |
 
 **`.env.prod`** -- production database commands (copy from `.env.prod.example`):
 
