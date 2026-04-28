@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import postgres from 'postgres';
 import { confirmDestructiveDev, exec } from './env';
-import { seedDatabase } from './seed-data';
 
 const adminUrl = process.env.DATABASE_URL_ADMIN;
 const baseUrl = process.env.DATABASE_URL;
@@ -29,5 +28,5 @@ try {
 }
 
 exec('pnpm exec drizzle-kit push --force');
-await seedDatabase(baseUrl, { withBookings: true });
+exec('pnpm db:seed:dev');
 console.log('✓ dev reset complete');
