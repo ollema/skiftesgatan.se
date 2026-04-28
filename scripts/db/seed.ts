@@ -12,7 +12,7 @@ import * as schema from '../../src/lib/server/db/schema.js';
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
-	console.error('DATABASE_URL is required for db:seed:dev');
+	console.error('DATABASE_URL is required for db:seed');
 	process.exit(1);
 }
 
@@ -150,4 +150,4 @@ try {
 	await client.end();
 }
 
-console.log('✓ dev seeded');
+console.log('✓ seeded');

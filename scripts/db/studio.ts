@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { exec } from './env';
 
 if (!process.env.DATABASE_URL) {
-	console.error('DATABASE_URL is not set. Add it to .env.');
+	console.error('DATABASE_URL is not set. Add it to .env or override inline.');
 	process.exit(1);
 }
 
