@@ -5,6 +5,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { confirm, log, intro, outro, isCancel } from '@clack/prompts';
 import { PASSWORD_CONFIG, usernamePlugin } from '../../src/lib/server/auth.config.js';
 import { user } from '../../src/lib/server/db/auth.schema.js';
 import { booking, timeslot } from '../../src/lib/server/db/booking.schema.js';
@@ -12,8 +13,20 @@ import * as schema from '../../src/lib/server/db/schema.js';
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
-	console.error('DATABASE_URL is required for db:seed');
+	console.error('DATABASE_URL is required for db:seed-dev');
 	process.exit(1);
+}
+
+const skipConfirm = process.argv.slice(2).some((a) => a === '-y' || a === '--yes');
+
+if (!skipConfirm) {
+	intro('db:seed-dev');
+	log.warn(`DATABASE_URL: ${databaseUrl}`);
+	const ok = await confirm({ message: 'Seed dev data into this database?' });
+	if (isCancel(ok) || !ok) {
+		outro('Aborted.');
+		process.exit(0);
+	}
 }
 
 const APARTMENTS: string[] = [];
