@@ -54,3 +54,17 @@ Documentation server for the Resend email API. Use when working on email deliver
 #### 1. search_resend
 
 Search Resend documentation for topics like sending emails, templates, domains, and API usage.
+
+## Agent skills
+
+### Backlog
+
+Issues live as GitHub issues in `ollema/skiftesgatan.se`. See `docs/agents/backlog.md`.
+
+### Triage labels
+
+Five canonical roles using default label strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
