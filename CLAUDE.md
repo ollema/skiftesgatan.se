@@ -54,15 +54,3 @@ Documentation server for the Resend email API. Use when working on email deliver
 #### 1. search_resend
 
 Search Resend documentation for topics like sending emails, templates, domains, and API usage.
-
-### Knip
-
-Runs Knip to detect unused files, dependencies, and exports. Use when cleaning up code or checking for dead code.
-
-#### 1. knip-run
-
-Run Knip analysis on the project. Returns unused files, dependencies, and exports.
-
-#### 2. knip-docs
-
-Search Knip documentation for configuration and usage guidance.

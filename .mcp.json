@@ -7,10 +7,6 @@
 		"resend": {
 			"type": "http",
 			"url": "https://resend.com/docs/mcp"
-		},
-		"knip": {
-			"command": "npx",
-			"args": ["-y", "@knip/mcp"]
 		}
 	}
 }
