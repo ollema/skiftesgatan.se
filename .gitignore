@@ -28,6 +28,12 @@ vite.config.ts.timestamp-*
 # Playwright
 test-results
 
+# PGLite local database
+.pglite*
+
+# E2E parallel isolation
+e2e/.auth
+
 # Test email tokens
 .test-emails
 
