@@ -47,11 +47,12 @@ There is no self-registration. Accounts are pre-created by an admin. Each reside
 ```sh
 pnpm install
 cp .env.example .env
-pnpm db:reset
+pnpm db:push       # apply schema (interactive; confirms DATABASE_URL first)
+pnpm db:seed-dev   # idempotent
 pnpm dev
 ```
 
-`db:reset` accepts `-y` to skip confirmation: `pnpm db:reset -- -y`. To re-seed without dropping, use `pnpm db:seed`.
+Every `db:*` command prints the target `DATABASE_URL` and asks for confirmation before doing anything. Pass `-- -y` to skip the gate (e.g. `pnpm db:seed-dev -- -y`).
 
 Dev accounts use apartment numbers A1001 through D1302. Password for each is `password-{username}`, e.g. `password-A1001`. Each dev account has a fictional display name that can be changed on the /konto page. `B1001` is admin.
 
@@ -115,7 +116,7 @@ content/
   news/                        # Markdown news articles
   information/                 # Markdown info pages (stadgar, ekonomi, styrelsen, etc.)
 scripts/
-  db/                          # db:push, db:reset, db:seed, db:studio, db:tunnel
+  db/                          # db:push, db:seed-dev, db:studio, db:tunnel
   generate-icons.ts            # Generates favicons / PWA icons
   sync-email-templates.ts      # Syncs email templates to Resend
 e2e/                           # Playwright E2E tests
@@ -136,8 +137,7 @@ e2e/                           # Playwright E2E tests
 | `pnpm test:unit`   | Vitest (unit + integration)                                 |
 | `pnpm test:e2e`    | Playwright E2E tests                                        |
 | `pnpm db:push`     | Apply schema changes interactively (against `DATABASE_URL`) |
-| `pnpm db:reset`    | Drop schema, push, seed (against `DATABASE_URL`)            |
-| `pnpm db:seed`     | Re-seed (idempotent, against `DATABASE_URL`)                |
+| `pnpm db:seed-dev` | Seed dev accounts + bookings (idempotent)                   |
 | `pnpm db:studio`   | Open Drizzle Studio (against `DATABASE_URL`)                |
 | `pnpm db:tunnel`   | Open SSH tunnel to the production database host             |
 | `pnpm auth:schema` | Generate Better Auth schema                                 |
@@ -180,7 +180,7 @@ DATABASE_URL=postgres://postgres:<password>@localhost:5432/postgres pnpm db:stud
 DATABASE_URL=postgres://postgres:<password>@localhost:5432/postgres pnpm db:push
 ```
 
-`db:push` is interactive in every environment -- you review and approve each diff before drizzle-kit applies it. `db:reset` and `db:seed` will happily run against whatever `DATABASE_URL` you give them; never point them at prod.
+Every `db:*` command prints the target `DATABASE_URL` and asks for confirmation before running. `db:push` is also interactive on destructive diffs (drizzle-kit's own prompt). Dev mirrors prod operationally: both are persistent databases, mutated only via `db:push`. There is no reset command -- if you need to wipe a database, that's a one-off SQL operation.
 
 **Starting from scratch:** redeploy the Postgres one-click app, point `DATABASE_URL` at the new instance, and run `pnpm db:push`. That's the whole sequence.
 
