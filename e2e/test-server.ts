@@ -2,10 +2,9 @@ import { spawn, type ChildProcess } from 'node:child_process';
 
 type SpawnedServer = { proc: ChildProcess; url: string };
 
-// Fixed across local bake-auth, local e2e, and CI e2e — the auth JSONs in
-// e2e/.auth/ are signed with this secret, so all preview spawns must use it
-// or the cookies won't validate. NOT a real secret; the test database is
-// dummy data on a public host.
+// Fixed across globalSetup bake-auth, per-worker preview spawns, and CI —
+// session cookies in e2e/.auth/ are signed with this secret. NOT a real
+// secret; the test database is dummy data.
 const TEST_AUTH_SECRET = 'ci-dummy-secret-not-for-production';
 
 const SERVER_ENV = {
@@ -16,13 +15,13 @@ const SERVER_ENV = {
 	BETTER_AUTH_SECRET: TEST_AUTH_SECRET
 } as const;
 
-export function spawnPreview(port: number, databaseUrl: string): SpawnedServer {
+export function spawnPreview(port: number, pglitePath: string): SpawnedServer {
 	const url = `http://localhost:${port}`;
 	const proc = spawn('pnpm', ['preview', '--port', String(port)], {
 		env: {
 			...process.env,
 			...SERVER_ENV,
-			DATABASE_URL: databaseUrl,
+			PGLITE_PATH: pglitePath,
 			ORIGIN: url
 		},
 		stdio: 'pipe'
@@ -45,4 +44,18 @@ export async function waitForReady(url: string, timeoutMs = 30_000): Promise<voi
 		await new Promise((r) => setTimeout(r, 200));
 	}
 	throw new Error(`Server at ${url} did not become ready within ${timeoutMs}ms`);
+}
+
+export function runScript(cmd: string, args: string[], env: Record<string, string>): Promise<void> {
+	return new Promise((resolve, reject) => {
+		const proc = spawn(cmd, args, {
+			env: { ...process.env, ...env },
+			stdio: 'inherit'
+		});
+		proc.on('exit', (code) => {
+			if (code === 0) resolve();
+			else reject(new Error(`${cmd} ${args.join(' ')} exited with code ${code}`));
+		});
+		proc.on('error', reject);
+	});
 }
