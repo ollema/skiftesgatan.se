@@ -1,7 +1,29 @@
-import { log, outro, intro } from '@clack/prompts';
+import 'dotenv/config';
 import { today } from '@internationalized/date';
+import { betterAuth } from 'better-auth/minimal';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { eq } from 'drizzle-orm';
-import { parseEnv, setEnvVars } from './env.js';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import { PASSWORD_CONFIG, usernamePlugin } from '../../src/lib/server/auth.config.js';
+import { user } from '../../src/lib/server/db/auth.schema.js';
+import { booking, timeslot } from '../../src/lib/server/db/booking.schema.js';
+import * as schema from '../../src/lib/server/db/schema.js';
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+	console.error('DATABASE_URL is required for db:seed:dev');
+	process.exit(1);
+}
+
+const APARTMENTS: string[] = [];
+for (const block of ['A', 'B', 'C', 'D']) {
+	for (const floor of [0, 1, 2, 3]) {
+		for (const door of [1, 2]) {
+			APARTMENTS.push(`${block}1${floor}0${door}`);
+		}
+	}
+}
 
 const DEV_NAMES = [
 	'Anna Lindqvist',
@@ -38,15 +60,6 @@ const DEV_NAMES = [
 	'Mikael Fransson'
 ];
 
-const APARTMENTS: string[] = [];
-for (const block of ['A', 'B', 'C', 'D']) {
-	for (const floor of [0, 1, 2, 3]) {
-		for (const door of [1, 2]) {
-			APARTMENTS.push(`${block}1${floor}0${door}`);
-		}
-	}
-}
-
 const TIMESLOT_SEEDS = [
 	{ startHour: 7, endHour: 10, resource: 'laundry_room' as const },
 	{ startHour: 10, endHour: 13, resource: 'laundry_room' as const },
@@ -66,60 +79,24 @@ function randomFutureDate() {
 		.toString();
 }
 
-// --- Setup ---
+const client = postgres(databaseUrl);
+try {
+	const db = drizzle(client, { schema });
 
-const env = parseEnv(['test', 'dev']);
-setEnvVars(env);
+	const seedAuth = betterAuth({
+		baseURL: 'http://localhost',
+		secret: 'xK9mP2vQ7nR4sT8wF3jL6hG1dA5cB0eY',
+		logger: { disabled: true },
+		database: drizzleAdapter(db, { provider: 'pg' }),
+		emailAndPassword: { enabled: true, requireEmailVerification: false, ...PASSWORD_CONFIG },
+		emailVerification: { sendVerificationEmail: async () => {}, sendOnSignUp: false },
+		plugins: [usernamePlugin()]
+	});
 
-// Dynamic imports after env vars are set so db/index.ts connects to the right database
-const { db } = await import('../../src/lib/server/db/index.js');
-const { timeslot, booking } = await import('../../src/lib/server/db/booking.schema.js');
-const { user } = await import('../../src/lib/server/db/auth.schema.js');
-const { PASSWORD_CONFIG, usernamePlugin } = await import('../../src/lib/server/auth.config.js');
+	for (const ts of TIMESLOT_SEEDS) {
+		await db.insert(timeslot).values(ts).onConflictDoNothing();
+	}
 
-const { betterAuth } = await import('better-auth/minimal');
-const { drizzleAdapter } = await import('better-auth/adapters/drizzle');
-
-const seedAuth = betterAuth({
-	baseURL: 'http://localhost',
-	secret: 'xK9mP2vQ7nR4sT8wF3jL6hG1dA5cB0eY',
-	logger: { disabled: true },
-	database: drizzleAdapter(db, { provider: 'pg' }),
-	emailAndPassword: {
-		enabled: true,
-		requireEmailVerification: false,
-		...PASSWORD_CONFIG
-	},
-	emailVerification: {
-		sendVerificationEmail: async () => {},
-		sendOnSignUp: false
-	},
-	plugins: [usernamePlugin()]
-});
-
-// --- Main ---
-
-if (env !== 'test') intro(`db:seed ${env}`);
-
-// Timeslots (all envs)
-for (const ts of TIMESLOT_SEEDS) {
-	await db.insert(timeslot).values(ts).onConflictDoNothing();
-}
-log.info('Seeded 6 timeslots (5 laundry + 1 outdoor)');
-
-// Accounts (dev + test); bookings (dev only)
-await seedDevAccounts();
-if (env === 'dev') {
-	await seedBookings();
-}
-
-if (env !== 'test') outro('Seeding complete.');
-process.exit(0);
-
-// --- Seed functions ---
-
-async function seedDevAccounts() {
-	let created = 0;
 	for (let i = 0; i < APARTMENTS.length; i++) {
 		const apt = APARTMENTS[i];
 		try {
@@ -131,41 +108,32 @@ async function seedDevAccounts() {
 					username: apt
 				}
 			});
-			created++;
 		} catch {
-			// Already exists — skip
+			// already exists
 		}
 	}
-
 	await db.update(user).set({ emailVerified: true }).where(eq(user.emailVerified, false));
 	await db.update(user).set({ role: 'admin' }).where(eq(user.username, 'B1001'));
-	log.info(
-		`Seeded ${created} accounts (${APARTMENTS.length - created} already existed); B1001 is admin`
-	);
-}
 
-async function seedBookings() {
 	const users = await db.select({ id: user.id, username: user.username }).from(user);
 	const userMap = new Map(users.map((u) => [u.username, u.id]));
-
 	const timeslots = await db.select().from(timeslot);
 	const laundrySlots = timeslots.filter((ts) => ts.resource === 'laundry_room');
 	const outdoorSlot = timeslots.find((ts) => ts.resource === 'outdoor_area');
 
-	let laundryCount = 0;
-	let outdoorCount = 0;
-
 	for (const apt of APARTMENTS.slice(0, 16)) {
 		const userId = userMap.get(apt);
 		if (!userId) continue;
-
 		const slot = laundrySlots[randomInt(0, laundrySlots.length - 1)];
 		await db
 			.insert(booking)
-			.values({ userId, timeslotId: slot.id, resource: 'laundry_room', date: randomFutureDate() })
+			.values({
+				userId,
+				timeslotId: slot.id,
+				resource: 'laundry_room',
+				date: randomFutureDate()
+			})
 			.onConflictDoNothing();
-		laundryCount++;
-
 		if (outdoorSlot && Math.random() < 0.4) {
 			await db
 				.insert(booking)
@@ -176,9 +144,10 @@ async function seedBookings() {
 					date: randomFutureDate()
 				})
 				.onConflictDoNothing();
-			outdoorCount++;
 		}
 	}
-
-	log.info(`Seeded ${laundryCount} laundry + ${outdoorCount} outdoor bookings`);
+} finally {
+	await client.end();
 }
+
+console.log('✓ dev seeded');

@@ -4,7 +4,7 @@ Website for BRF Skiftesgatan 4, a housing association with 32 apartments in Goth
 
 Residents log in with their apartment number to book shared facilities, read association news, and access member information such as bylaws, finances, renovation plans, and board details.
 
-There is no self-registration. Accounts are pre-created by an admin via Drizzle Studio against the production database (`pnpm db:tunnel` + `pnpm db:studio prod`). Emails are marked as verified at creation time. Each resident can then log in and reset their password via email.
+There is no self-registration. Accounts are pre-created by an admin via Drizzle Studio against the production database (`pnpm db:tunnel` + `pnpm db:studio:prod`). Emails are marked as verified at creation time. Each resident can then log in and reset their password via email.
 
 ## Contents
 
@@ -32,7 +32,7 @@ There is no self-registration. Accounts are pre-created by an admin via Drizzle 
 ## Tech Stack
 
 - **Svelte 5 + SvelteKit 2** -- runes, async, remote functions, node adapter
-- **Drizzle ORM** -- PGLite in-process for local dev, PostgreSQL in production
+- **Drizzle ORM** -- PostgreSQL for dev and prod; PGlite in-process for E2E tests
 - **Better Auth** -- email/password with custom username plugin for apartment-based login, sign-up disabled
 - **Tailwind CSS 4** -- with Bits UI for headless components (dialogs, menus)
 - **Content Collections** -- markdown to HTML at build time for news and information pages
@@ -42,23 +42,19 @@ There is no self-registration. Accounts are pre-created by an admin via Drizzle 
 
 ## Getting Started
 
-**Prerequisites:** Node.js 22, pnpm
+**Prerequisites:** Node.js 22, pnpm, access to the public dev/test Postgres host.
 
 ```sh
 pnpm install
+cp .env.example .env
+# Fill in DATABASE_URL and DATABASE_URL_ADMIN with values from the team password manager
+pnpm db:reset:dev             # DROP + CREATE dev, push schema, seed accounts + bookings
 pnpm dev
 ```
 
-PGLite runs in-process locally -- no external database needed.
+`db:reset:dev` accepts `-y` to skip confirmation: `pnpm db:reset:dev -- -y`. To re-seed without dropping, use `pnpm db:seed:dev`.
 
-```sh
-pnpm db:reset dev             # delete, push schema
-pnpm db:seed dev              # seed timeslots, accounts, bookings
-```
-
-Both commands accept `-y` to skip confirmation: `pnpm db:reset dev -- -y`.
-
-Dev accounts use apartment numbers A1001 through D1302. Password for each is `password-{username}`, e.g. `password-A1001`. Each dev account has a fictional display name that can be changed on the /konto page.
+Dev accounts use apartment numbers A1001 through D1302. Password for each is `password-{username}`, e.g. `password-A1001`. Each dev account has a fictional display name that can be changed on the /konto page. `B1001` is admin.
 
 ## Project Structure
 
@@ -72,7 +68,7 @@ src/
         calendar.schema.ts     # iCal subscription tokens
         notification.schema.ts # Notification preferences and scheduled reminders
         schema.ts              # Re-exports all schemas for Drizzle
-        index.ts               # Database client (auto-detects PGLite vs PostgreSQL)
+        index.ts               # Database client (postgres.js for dev/prod, PGlite for E2E)
       auth.ts                  # Better Auth server config
       auth.config.ts           # Username plugin, apartment validation
       booking.ts               # Booking queries and business logic
@@ -120,7 +116,7 @@ content/
   news/                        # Markdown news articles
   information/                 # Markdown info pages (stadgar, ekonomi, styrelsen, etc.)
 scripts/
-  db/                          # db:reset, db:seed, db:push, db:studio, db:tunnel
+  db/                          # db:push:*, db:reset:dev, db:seed:dev, db:studio:*, db:tunnel
   generate-icons.ts            # Generates favicons / PWA icons
   sync-email-templates.ts      # Syncs email templates to Resend
 e2e/                           # Playwright E2E tests
@@ -128,26 +124,28 @@ e2e/                           # Playwright E2E tests
 
 ## Scripts
 
-| Script                       | Description                                                  |
-| ---------------------------- | ------------------------------------------------------------ |
-| `pnpm dev`                   | Start dev server                                             |
-| `pnpm build`                 | Production build                                             |
-| `pnpm preview`               | Preview production build                                     |
-| `pnpm check`                 | SvelteKit sync + svelte-check                                |
-| `pnpm lint`                  | Prettier + ESLint                                            |
-| `pnpm format`                | Auto-format code                                             |
-| `pnpm knip`                  | Detect unused files/dependencies                             |
-| `pnpm test`                  | Run all tests (unit + E2E)                                   |
-| `pnpm test:unit`             | Vitest (unit + integration)                                  |
-| `pnpm test:e2e`              | Playwright E2E tests                                         |
-| `pnpm db:reset <test\|dev>`  | Clear local DB + push schema                                 |
-| `pnpm db:seed <test\|dev>`   | Seed timeslots; dev also seeds accounts + bookings           |
-| `pnpm db:push <dev\|prod>`   | Push schema non-destructively (prompts on destructive diffs) |
-| `pnpm db:studio <dev\|prod>` | Open Drizzle Studio GUI                                      |
-| `pnpm db:tunnel`             | Open SSH tunnel to production database                       |
-| `pnpm auth:schema`           | Generate Better Auth schema                                  |
-| `pnpm icons`                 | Generate favicons and PWA icons                              |
-| `pnpm email:sync`            | Sync email templates to Resend                               |
+| Script                | Description                                                 |
+| --------------------- | ----------------------------------------------------------- |
+| `pnpm dev`            | Start dev server                                            |
+| `pnpm build`          | Production build                                            |
+| `pnpm preview`        | Preview production build                                    |
+| `pnpm check`          | SvelteKit sync + svelte-check                               |
+| `pnpm lint`           | Prettier + ESLint                                           |
+| `pnpm format`         | Auto-format code                                            |
+| `pnpm knip`           | Detect unused files/dependencies                            |
+| `pnpm test`           | Run all tests (unit + E2E)                                  |
+| `pnpm test:unit`      | Vitest (unit + integration)                                 |
+| `pnpm test:e2e`       | Playwright E2E tests                                        |
+| `pnpm db:push:dev`    | Push schema to dev (force)                                  |
+| `pnpm db:push:prod`   | Push schema to prod via tunnel (interactive on destructive) |
+| `pnpm db:reset:dev`   | DROP + CREATE dev, push schema, seed                        |
+| `pnpm db:seed:dev`    | Re-seed dev (idempotent)                                    |
+| `pnpm db:studio:dev`  | Open Drizzle Studio against dev                             |
+| `pnpm db:studio:prod` | Open Drizzle Studio against prod via tunnel                 |
+| `pnpm db:tunnel`      | Open SSH tunnel to production database                      |
+| `pnpm auth:schema`    | Generate Better Auth schema                                 |
+| `pnpm icons`          | Generate favicons and PWA icons                             |
+| `pnpm email:sync`     | Sync email templates to Resend                              |
 
 ## Environment Variables
 
@@ -157,6 +155,8 @@ Copy `.env.example` to `.env` and fill in values.
 
 | Variable             | Required | Description                                           |
 | -------------------- | -------- | ----------------------------------------------------- |
+| `DATABASE_URL`       | Yes      | Postgres connection string for the `dev` database     |
+| `DATABASE_URL_ADMIN` | Yes      | Admin connection (to `postgres` DB) for db:reset:dev  |
 | `ORIGIN`             | Yes      | Application origin URL (e.g. `http://localhost:5173`) |
 | `BETTER_AUTH_SECRET` | Yes      | 32-character high-entropy secret for session signing  |
 | `RESEND_API_KEY`     | Prod     | Resend API key for email delivery (file mock in dev)  |
@@ -175,9 +175,7 @@ Copy `.env.example` to `.env` and fill in values.
 
 **Unit & integration tests** (Vitest): booking validation logic, database operations with in-memory PGLite.
 
-**E2E tests** (Playwright): auth flows, booking flows, concurrent booking race conditions, content rendering, email change, password reset, navigation.
-
-E2E tests use a separate PGLite database (`.pglite-test`) via `pnpm db:reset test && pnpm db:seed test`, empty `RESEND_API_KEY` to capture emails as files, and run sequentially (1 worker).
+**E2E tests** (Playwright, 4 workers): each worker gets its own PGlite database file cloned from a freshly-built `.pglite-test-template`. Every `pnpm test:e2e` run rebuilds the template from scratch — no separate reset ritual, no committed fixtures. globalSetup pushes the schema, seeds 32 apartments, then bakes per-user storage state into `.auth/` for the suite to reuse. `RESEND_API_KEY` is empty so emails are captured as files in `.test-emails/`.
 
 **CI pipeline** (GitHub Actions): lint + typecheck + knip, unit tests, E2E tests with artifact upload on failure.
 
@@ -195,9 +193,9 @@ Production uses PostgreSQL on a CapRover VPS. The database is not publicly acces
 
 1. Copy `.env.prod.example` to `.env.prod` and fill in your VPS SSH details and database password
 2. Open the tunnel in one terminal: `pnpm db:tunnel`
-3. In another terminal, run prod commands: `pnpm db:push prod` (apply schema changes) or `pnpm db:studio prod` (browse data).
+3. In another terminal, run prod commands: `pnpm db:push:prod` (apply schema changes) or `pnpm db:studio:prod` (browse data).
 
-`pnpm db:push prod` requires you to type the database name to confirm, then runs `drizzle-kit push` interactively so you can review and approve any destructive diffs (dropped columns, etc.).
+`pnpm db:push:prod` requires you to type the database name to confirm, then runs `drizzle-kit push` interactively so you can review and approve any destructive diffs (dropped columns, etc.).
 
 ## Design
 

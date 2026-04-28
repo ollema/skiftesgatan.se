@@ -21,8 +21,14 @@ export default async function globalSetup() {
 	rmSync('.test-emails', { recursive: true, force: true });
 	mkdirSync(AUTH_DIR);
 
-	await runScript('pnpm', ['db:reset', 'test'], { PGLITE_PATH: TEMPLATE_PATH });
-	await runScript('pnpm', ['db:seed', 'test'], { PGLITE_PATH: TEMPLATE_PATH });
+	// drizzle.config.ts switches drivers on `!DATABASE_URL`. Local `.env` may
+	// have DATABASE_URL set for dev — scrub it so drizzle-kit pushes into the
+	// PGlite template, not into the dev Postgres.
+	await runScript('pnpm', ['exec', 'drizzle-kit', 'push', '--force'], {
+		PGLITE_PATH: TEMPLATE_PATH,
+		DATABASE_URL: ''
+	});
+	await runScript('pnpx', ['tsx', 'scripts/db/seed-test.ts'], { PGLITE_PATH: TEMPLATE_PATH });
 	await runScript('pnpm', ['build'], {});
 
 	const server = spawnPreview(SETUP_PORT, TEMPLATE_PATH);

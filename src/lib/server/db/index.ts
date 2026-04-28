@@ -1,16 +1,28 @@
+import { drizzle as drizzlePg } from 'drizzle-orm/postgres-js';
+import { drizzle as drizzlePglite } from 'drizzle-orm/pglite';
+import postgres from 'postgres';
+import { PGlite } from '@electric-sql/pglite';
+import { env } from '$env/dynamic/private';
 import * as schema from './schema';
 
-const createDb = async () => {
-	if (!process.env.DATABASE_URL) {
-		const { PGlite } = await import('@electric-sql/pglite');
-		const { drizzle } = await import('drizzle-orm/pglite');
-		const client = new PGlite(process.env.PGLITE_PATH || '.pglite');
-		return drizzle({ client, schema });
-	}
-	const postgres = (await import('postgres')).default;
-	const { drizzle } = await import('drizzle-orm/postgres-js');
-	const client = postgres(process.env.DATABASE_URL);
-	return drizzle(client, { schema });
-};
+type Db =
+	| ReturnType<typeof drizzlePg<typeof schema>>
+	| ReturnType<typeof drizzlePglite<typeof schema>>;
 
-export const db = await createDb();
+function makeDb(): Db {
+	if (env.PGLITE_PATH) {
+		return drizzlePglite(new PGlite(env.PGLITE_PATH), { schema });
+	}
+	if (env.DATABASE_URL) {
+		return drizzlePg(postgres(env.DATABASE_URL), { schema });
+	}
+	throw new Error('DATABASE_URL or PGLITE_PATH required');
+}
+
+let _db: Db | undefined;
+export const db = new Proxy({} as Db, {
+	get(_, prop, receiver) {
+		if (!_db) _db = makeDb();
+		return Reflect.get(_db, prop, receiver);
+	}
+});

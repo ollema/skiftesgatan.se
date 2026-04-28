@@ -2,6 +2,7 @@ import { dev, building } from '$app/environment';
 import { env } from '$env/dynamic/private';
 
 const REQUIRED_IN_PRODUCTION = [
+	'DATABASE_URL',
 	'ORIGIN',
 	'BETTER_AUTH_SECRET',
 	'EMAIL_FROM',
