@@ -14,6 +14,15 @@ But you **MUST** call `pnpm test` manually before committing files!
 | `pnpm check`  | SvelteKit sync + svelte-check    |
 | `pnpm test`   | Run all tests (unit + E2E)       |
 
+## Conventions
+
+- Use `pnpx`, not `npx`, for package binaries.
+- Run Playwright via `pnpm test:e2e`, never `pnpx playwright` (version mismatch).
+- Use `@internationalized/date` (`CalendarDate`, `CalendarDateTime`, `toZoned`) for all date/time work — never the native `Date` API.
+- Avoid `+page.ts` / `+layout.ts` load functions; use remote functions or inline data.
+- In `.svelte` files, consume remote queries with `let x = $derived(await someQuery())` — top-level `const/let x = await ...` is not reactive to refreshes.
+- Read `DESIGN.md` before any UI/design change.
+
 ## Available MCP Tools:
 
 ### Svelte
