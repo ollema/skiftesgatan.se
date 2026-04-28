@@ -1,11 +1,10 @@
-import { cpSync, mkdirSync, rmSync } from 'node:fs';
+import { mkdirSync, rmSync } from 'node:fs';
 import { chromium, type Browser } from '@playwright/test';
-import { spawnPreview, waitForReady, runScript } from './test-server';
-import { E2E_WORKERS } from '../playwright.config';
+import { runScript, spawnPreview, waitForReady } from './test-server';
 
 const TEMPLATE_PATH = '.pglite-test-template';
 const SETUP_PORT = 4172;
-const AUTH_DIR = 'e2e/.auth';
+const AUTH_DIR = '.auth';
 
 const APARTMENTS: string[] = [];
 for (const block of ['A', 'B', 'C', 'D']) {
@@ -17,41 +16,30 @@ for (const block of ['A', 'B', 'C', 'D']) {
 }
 
 export default async function globalSetup() {
-	// 1. Wipe template, all worker dirs, baked auth, and test email queue.
 	rmSync(TEMPLATE_PATH, { recursive: true, force: true });
-	for (let w = 0; w < E2E_WORKERS; w++) {
-		rmSync(`.pglite-test-w${w}`, { recursive: true, force: true });
-	}
 	rmSync(AUTH_DIR, { recursive: true, force: true });
 	rmSync('.test-emails', { recursive: true, force: true });
-	mkdirSync(AUTH_DIR, { recursive: true });
+	mkdirSync(AUTH_DIR);
 
-	// 2. Build app — `pnpm preview` requires build/.
-	console.log('[e2e] building app...');
+	// drizzle.config.ts switches drivers on `!DATABASE_URL`. Local `.env` may
+	// have DATABASE_URL set for dev — scrub it so drizzle-kit pushes into the
+	// PGlite template, not into the dev Postgres.
+	await runScript('pnpm', ['exec', 'drizzle-kit', 'push', '--force'], {
+		PGLITE_PATH: TEMPLATE_PATH,
+		DATABASE_URL: ''
+	});
+	await runScript('pnpx', ['tsx', 'scripts/db/seed-test.ts'], { PGLITE_PATH: TEMPLATE_PATH });
 	await runScript('pnpm', ['build'], {});
 
-	// 3. Push schema into the template PGlite.
-	console.log('[e2e] pushing schema into template...');
-	await runScript('pnpm', ['exec', 'drizzle-kit', 'push', '--force'], {
-		PGLITE_PATH: TEMPLATE_PATH
-	});
-
-	// 4. Seed apartments + users into the template.
-	console.log('[e2e] seeding template...');
-	await runScript('pnpx', ['tsx', 'scripts/db/seed-test.ts'], {
-		PGLITE_PATH: TEMPLATE_PATH
-	});
-
-	// 5. Bake auth: spawn one preview against the template, log in each
-	//    apartment in batches of 4 (PGlite is single-writer; wider batches
-	//    just saturate the Playwright per-page 30s queue), write storageState
-	//    JSONs to e2e/.auth/.
-	console.log('[e2e] baking auth state...');
 	const server = spawnPreview(SETUP_PORT, TEMPLATE_PATH);
 	try {
 		await waitForReady(server.url);
+
 		const browser = await chromium.launch();
 		try {
+			// Batch the bakes: full parallelism chokes free CI runners on PGlite's
+			// single-writer queue. 4 keeps the temp server responsive while still
+			// being meaningfully faster than serial.
 			const BATCH = 4;
 			for (let i = 0; i < APARTMENTS.length; i += BATCH) {
 				const batch = APARTMENTS.slice(i, i + BATCH);
@@ -63,18 +51,6 @@ export default async function globalSetup() {
 	} finally {
 		server.proc.kill('SIGTERM');
 	}
-
-	// 6. Clone template to per-worker dirs.
-	const workerPaths: string[] = [];
-	for (let w = 0; w < E2E_WORKERS; w++) {
-		const dest = `.pglite-test-w${w}`;
-		cpSync(TEMPLATE_PATH, dest, { recursive: true });
-		workerPaths.push(dest);
-	}
-
-	// 7. Hand worker paths to fixtures via env (Playwright spawns workers as
-	//    separate processes — no shared module state).
-	process.env.E2E_WORKER_URLS = JSON.stringify(workerPaths);
 }
 
 async function bakeStorageState(browser: Browser, serverUrl: string, username: string) {
@@ -86,7 +62,8 @@ async function bakeStorageState(browser: Browser, serverUrl: string, username: s
 		await loginForm.getByLabel('Lägenhet').fill(username);
 		await loginForm.getByLabel('Lösenord').fill(`password-${username}`);
 		await loginForm.getByRole('button', { name: 'Logga in' }).click();
-		await page.waitForURL('/konto', { timeout: 30_000 });
+		// Slow CI runners can take >30s under contention to drain the PGlite write queue.
+		await page.waitForURL('/konto', { timeout: 60_000 });
 		await ctx.storageState({ path: `${AUTH_DIR}/${username}.json` });
 	} finally {
 		await ctx.close();

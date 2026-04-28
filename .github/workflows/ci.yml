@@ -115,11 +115,6 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm exec playwright install-deps chromium
 
-      - run: pnpm build
-        env:
-          BETTER_AUTH_SECRET: ci-dummy-secret-not-for-production
-          BETTER_AUTH_URL: http://localhost:4173
-
       - run: pnpm test:e2e
         env:
           BETTER_AUTH_SECRET: ci-dummy-secret-not-for-production

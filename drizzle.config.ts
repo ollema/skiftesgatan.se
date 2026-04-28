@@ -1,17 +1,22 @@
 import { defineConfig } from 'drizzle-kit';
 
-const pglitePath = process.env.PGLITE_PATH;
-const dbUrl = process.env.DATABASE_URL;
+const isPglite = !process.env.DATABASE_URL;
 
-if (!pglitePath && !dbUrl) {
-	throw new Error('PGLITE_PATH or DATABASE_URL is required for drizzle-kit');
-}
-
-export default defineConfig({
-	schema: './src/lib/server/db/schema.ts',
-	dialect: 'postgresql',
-	driver: pglitePath ? 'pglite' : undefined,
-	dbCredentials: pglitePath ? { url: pglitePath } : { url: dbUrl! },
-	verbose: true,
-	strict: true
-});
+export default defineConfig(
+	isPglite
+		? {
+				schema: './src/lib/server/db/schema.ts',
+				dialect: 'postgresql',
+				driver: 'pglite',
+				dbCredentials: { url: process.env.PGLITE_PATH || '.pglite' },
+				verbose: true,
+				strict: true
+			}
+		: {
+				schema: './src/lib/server/db/schema.ts',
+				dialect: 'postgresql',
+				dbCredentials: { url: process.env.DATABASE_URL! },
+				verbose: true,
+				strict: true
+			}
+);

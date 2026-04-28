@@ -2,26 +2,20 @@ import { spawn, type ChildProcess } from 'node:child_process';
 
 type SpawnedServer = { proc: ChildProcess; url: string };
 
-// Fixed across globalSetup bake-auth, per-worker preview spawns, and CI —
-// session cookies in e2e/.auth/ are signed with this secret. NOT a real
-// secret; the test database is dummy data.
-const TEST_AUTH_SECRET = 'ci-dummy-secret-not-for-production';
-
 const SERVER_ENV = {
 	RESEND_API_KEY: '',
 	LOG_LEVEL: 'error',
 	SKIP_ENV_VALIDATION: '1',
-	RATE_LIMIT_DISABLED: '1',
-	BETTER_AUTH_SECRET: TEST_AUTH_SECRET
+	RATE_LIMIT_DISABLED: '1'
 } as const;
 
-export function spawnPreview(port: number, pglitePath: string): SpawnedServer {
+export function spawnPreview(port: number, dbPath: string): SpawnedServer {
 	const url = `http://localhost:${port}`;
 	const proc = spawn('pnpm', ['preview', '--port', String(port)], {
 		env: {
 			...process.env,
 			...SERVER_ENV,
-			PGLITE_PATH: pglitePath,
+			PGLITE_PATH: dbPath,
 			ORIGIN: url
 		},
 		stdio: 'pipe'

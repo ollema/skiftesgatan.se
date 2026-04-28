@@ -32,7 +32,7 @@ test-results
 .pglite*
 
 # E2E parallel isolation
-e2e/.auth
+.auth
 
 # Test email tokens
 .test-emails
