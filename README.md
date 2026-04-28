@@ -47,12 +47,11 @@ There is no self-registration. Accounts are pre-created by an admin. Each reside
 ```sh
 pnpm install
 cp .env.example .env
-pnpm db:push       # apply schema (interactive; confirms DATABASE_URL first)
-pnpm db:seed-dev   # idempotent
+pnpm db:reset       # drop schema, push, seed dev fixtures
 pnpm dev
 ```
 
-Every `db:*` command prints the target `DATABASE_URL` and asks for confirmation before doing anything. Pass `-- -y` to skip the gate (e.g. `pnpm db:seed-dev -- -y`).
+Every `db:*` command prints the target `DATABASE_URL` and asks for confirmation before doing anything. Pass `-- -y` to skip the gate (e.g. `pnpm db:reset -- -y`). Re-run `db:reset` whenever you want fresh dev bookings -- the fixtures use `today + N days` so they stale out as time passes.
 
 Dev accounts use apartment numbers A1001 through D1302. Password for each is `password-{username}`, e.g. `password-A1001`. Each dev account has a fictional display name that can be changed on the /konto page. `B1001` is admin.
 
@@ -116,7 +115,7 @@ content/
   news/                        # Markdown news articles
   information/                 # Markdown info pages (stadgar, ekonomi, styrelsen, etc.)
 scripts/
-  db/                          # db:push, db:seed-dev, db:studio, db:tunnel
+  db/                          # db:push, db:reset (dev only), db:studio, db:tunnel
   generate-icons.ts            # Generates favicons / PWA icons
   sync-email-templates.ts      # Syncs email templates to Resend
 e2e/                           # Playwright E2E tests
@@ -124,25 +123,25 @@ e2e/                           # Playwright E2E tests
 
 ## Scripts
 
-| Script             | Description                                                 |
-| ------------------ | ----------------------------------------------------------- |
-| `pnpm dev`         | Start dev server                                            |
-| `pnpm build`       | Production build                                            |
-| `pnpm preview`     | Preview production build                                    |
-| `pnpm check`       | SvelteKit sync + svelte-check                               |
-| `pnpm lint`        | Prettier + ESLint                                           |
-| `pnpm format`      | Auto-format code                                            |
-| `pnpm knip`        | Detect unused files/dependencies                            |
-| `pnpm test`        | Run all tests (unit + E2E)                                  |
-| `pnpm test:unit`   | Vitest (unit + integration)                                 |
-| `pnpm test:e2e`    | Playwright E2E tests                                        |
-| `pnpm db:push`     | Apply schema changes interactively (against `DATABASE_URL`) |
-| `pnpm db:seed-dev` | Seed dev accounts + bookings (idempotent)                   |
-| `pnpm db:studio`   | Open Drizzle Studio (against `DATABASE_URL`)                |
-| `pnpm db:tunnel`   | Open SSH tunnel to the production database host             |
-| `pnpm auth:schema` | Generate Better Auth schema                                 |
-| `pnpm icons`       | Generate favicons and PWA icons                             |
-| `pnpm email:sync`  | Sync email templates to Resend                              |
+| Script             | Description                                                       |
+| ------------------ | ----------------------------------------------------------------- |
+| `pnpm dev`         | Start dev server                                                  |
+| `pnpm build`       | Production build                                                  |
+| `pnpm preview`     | Preview production build                                          |
+| `pnpm check`       | SvelteKit sync + svelte-check                                     |
+| `pnpm lint`        | Prettier + ESLint                                                 |
+| `pnpm format`      | Auto-format code                                                  |
+| `pnpm knip`        | Detect unused files/dependencies                                  |
+| `pnpm test`        | Run all tests (unit + E2E)                                        |
+| `pnpm test:unit`   | Vitest (unit + integration)                                       |
+| `pnpm test:e2e`    | Playwright E2E tests                                              |
+| `pnpm db:push`     | Apply schema changes interactively (against `DATABASE_URL`)       |
+| `pnpm db:reset`    | Drop schema, push, and seed dev fixtures (dev only; reset-dev.ts) |
+| `pnpm db:studio`   | Open Drizzle Studio (against `DATABASE_URL`)                      |
+| `pnpm db:tunnel`   | Open SSH tunnel to the production database host                   |
+| `pnpm auth:schema` | Generate Better Auth schema                                       |
+| `pnpm icons`       | Generate favicons and PWA icons                                   |
+| `pnpm email:sync`  | Sync email templates to Resend                                    |
 
 ## Environment Variables
 
@@ -180,7 +179,7 @@ DATABASE_URL=postgres://postgres:<password>@localhost:5432/postgres pnpm db:stud
 DATABASE_URL=postgres://postgres:<password>@localhost:5432/postgres pnpm db:push
 ```
 
-Every `db:*` command prints the target `DATABASE_URL` and asks for confirmation before running. `db:push` is also interactive on destructive diffs (drizzle-kit's own prompt). Dev mirrors prod operationally: both are persistent databases, mutated only via `db:push`. There is no reset command -- if you need to wipe a database, that's a one-off SQL operation.
+Every `db:*` command prints the target `DATABASE_URL` and asks for confirmation before running. `db:push` is also interactive on destructive diffs (drizzle-kit's own prompt). `db:reset` is dev-only -- the file `scripts/db/reset-dev.ts` makes that explicit -- and never appropriate against prod.
 
 **Starting from scratch:** redeploy the Postgres one-click app, point `DATABASE_URL` at the new instance, and run `pnpm db:push`. That's the whole sequence.
 

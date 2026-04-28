@@ -1,11 +1,12 @@
 import 'dotenv/config';
+import { execSync } from 'child_process';
+import { confirm, log, intro, outro, isCancel } from '@clack/prompts';
+import postgres from 'postgres';
 import { today } from '@internationalized/date';
 import { betterAuth } from 'better-auth/minimal';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import { confirm, log, intro, outro, isCancel } from '@clack/prompts';
 import { PASSWORD_CONFIG, usernamePlugin } from '../../src/lib/server/auth.config.js';
 import { user } from '../../src/lib/server/db/auth.schema.js';
 import { booking, timeslot } from '../../src/lib/server/db/booking.schema.js';
@@ -13,21 +14,35 @@ import * as schema from '../../src/lib/server/db/schema.js';
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
-	console.error('DATABASE_URL is required for db:seed-dev');
+	console.error('DATABASE_URL is not set. Add it to .env or override inline.');
 	process.exit(1);
 }
 
 const skipConfirm = process.argv.slice(2).some((a) => a === '-y' || a === '--yes');
 
 if (!skipConfirm) {
-	intro('db:seed-dev');
+	intro('db:reset');
 	log.warn(`DATABASE_URL: ${databaseUrl}`);
-	const ok = await confirm({ message: 'Seed dev data into this database?' });
+	const ok = await confirm({
+		message: 'Reset this database? (drops all data, re-seeds dev fixtures)'
+	});
 	if (isCancel(ok) || !ok) {
 		outro('Aborted.');
 		process.exit(0);
 	}
 }
+
+{
+	const sql = postgres(databaseUrl, { max: 1 });
+	try {
+		await sql.unsafe('DROP SCHEMA public CASCADE');
+		await sql.unsafe('CREATE SCHEMA public');
+	} finally {
+		await sql.end();
+	}
+}
+
+execSync('pnpm exec drizzle-kit push --force', { stdio: 'inherit', env: process.env });
 
 const APARTMENTS: string[] = [];
 for (const block of ['A', 'B', 'C', 'D']) {
@@ -163,4 +178,4 @@ try {
 	await client.end();
 }
 
-console.log('✓ seeded');
+console.log('✓ reset complete');
