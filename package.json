@@ -18,7 +18,6 @@
 		"db:push:dev": "pnpx tsx scripts/db/push-dev.ts",
 		"db:push:prod": "pnpx tsx scripts/db/push-prod.ts",
 		"db:reset:dev": "pnpx tsx scripts/db/reset-dev.ts",
-		"db:reset:test": "pnpx tsx scripts/db/reset-test.ts",
 		"db:seed:dev": "pnpx tsx scripts/db/seed-dev.ts",
 		"db:studio:dev": "pnpx tsx scripts/db/studio-dev.ts",
 		"db:studio:prod": "pnpx tsx scripts/db/studio-prod.ts",
