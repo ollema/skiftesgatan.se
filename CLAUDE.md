@@ -57,9 +57,9 @@ Search Resend documentation for topics like sending emails, templates, domains, 
 
 ## Agent skills
 
-### Backlog
+### Issue tracker
 
-Issues live as GitHub issues in `ollema/skiftesgatan.se`. See `docs/agents/backlog.md`.
+Issues live as GitHub issues in `ollema/skiftesgatan.se`. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
