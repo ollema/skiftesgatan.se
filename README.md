@@ -22,7 +22,7 @@ There is no self-registration. Accounts are pre-created by an admin. Each reside
 ## Features
 
 - **Closed user system** -- no self-registration; accounts are provisioned by admin for each of the 32 apartments. Username is the apartment number (e.g. A1001). Supports password reset via email, email address changes with re-verification, and customizable display names.
-- **Laundry room booking** -- calendar with 5 daily timeslots (3-hour blocks, 07-22), one active booking per user
+- **Laundry room booking** -- calendar with 5 daily 3-hour blocks (07-22), one active booking per user
 - **Outdoor area booking** -- calendar with 1 all-day slot (07-22), one active booking per user
 - **Booking constraints** -- 30-day advance window, concurrent booking protection via database unique constraint, replace-or-cancel flow
 - **Calendar subscription** -- per-user iCal feed URL (`/kalender/{token}.ics`) that syncs bookings to iPhone Calendar or any app supporting webcal subscriptions; manage from account page
@@ -63,7 +63,7 @@ src/
     server/
       db/
         auth.schema.ts         # Better Auth tables (user, session, account, verification)
-        booking.schema.ts      # Booking domain (timeslot, booking)
+        booking.schema.ts      # Booking domain (time_block, booking)
         calendar.schema.ts     # iCal subscription tokens
         notification.schema.ts # Notification preferences and scheduled reminders
         schema.ts              # Re-exports all schemas for Drizzle
@@ -96,7 +96,7 @@ src/
       Navbar.svelte            # Desktop navigation with dropdowns
       MobileMenu.svelte        # Slide-out mobile navigation
       BookingPage.svelte       # Shared layout for laundry/outdoor booking pages
-      TimeSlots.svelte         # Time-slot grid with book/cancel/replace flow
+      Slots.svelte             # Slot grid with book/cancel/replace flow
       SetupHints.svelte        # Dismissible onboarding hints
   routes/
     +layout.svelte             # Global layout (navbar, toaster, user state)

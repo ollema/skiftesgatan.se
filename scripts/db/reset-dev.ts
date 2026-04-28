@@ -9,7 +9,7 @@ import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { PASSWORD_CONFIG, usernamePlugin } from '../../src/lib/server/auth.config.js';
 import { user } from '../../src/lib/server/db/auth.schema.js';
-import { booking, timeslot } from '../../src/lib/server/db/booking.schema.js';
+import { booking, timeBlock } from '../../src/lib/server/db/booking.schema.js';
 import * as schema from '../../src/lib/server/db/schema.js';
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -88,7 +88,7 @@ const DEV_NAMES = [
 	'Mikael Fransson'
 ];
 
-const TIMESLOT_SEEDS = [
+const TIME_BLOCK_SEEDS = [
 	{ startHour: 7, endHour: 10, resource: 'laundry_room' as const },
 	{ startHour: 10, endHour: 13, resource: 'laundry_room' as const },
 	{ startHour: 13, endHour: 16, resource: 'laundry_room' as const },
@@ -121,8 +121,8 @@ try {
 		plugins: [usernamePlugin()]
 	});
 
-	for (const ts of TIMESLOT_SEEDS) {
-		await db.insert(timeslot).values(ts).onConflictDoNothing();
+	for (const tb of TIME_BLOCK_SEEDS) {
+		await db.insert(timeBlock).values(tb).onConflictDoNothing();
 	}
 
 	for (let i = 0; i < APARTMENTS.length; i++) {
@@ -145,29 +145,29 @@ try {
 
 	const users = await db.select({ id: user.id, username: user.username }).from(user);
 	const userMap = new Map(users.map((u) => [u.username, u.id]));
-	const timeslots = await db.select().from(timeslot);
-	const laundrySlots = timeslots.filter((ts) => ts.resource === 'laundry_room');
-	const outdoorSlot = timeslots.find((ts) => ts.resource === 'outdoor_area');
+	const timeBlocks = await db.select().from(timeBlock);
+	const laundryBlocks = timeBlocks.filter((tb) => tb.resource === 'laundry_room');
+	const outdoorBlock = timeBlocks.find((tb) => tb.resource === 'outdoor_area');
 
 	for (const apt of APARTMENTS.slice(0, 16)) {
 		const userId = userMap.get(apt);
 		if (!userId) continue;
-		const slot = laundrySlots[randomInt(0, laundrySlots.length - 1)];
+		const block = laundryBlocks[randomInt(0, laundryBlocks.length - 1)];
 		await db
 			.insert(booking)
 			.values({
 				userId,
-				timeslotId: slot.id,
+				timeBlockId: block.id,
 				resource: 'laundry_room',
 				date: randomFutureDate()
 			})
 			.onConflictDoNothing();
-		if (outdoorSlot && Math.random() < 0.4) {
+		if (outdoorBlock && Math.random() < 0.4) {
 			await db
 				.insert(booking)
 				.values({
 					userId,
-					timeslotId: outdoorSlot.id,
+					timeBlockId: outdoorBlock.id,
 					resource: 'outdoor_area',
 					date: randomFutureDate()
 				})

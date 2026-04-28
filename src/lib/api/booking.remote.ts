@@ -6,14 +6,14 @@ import { requireAuth, getAuthUser } from '$lib/server/auth';
 import { log } from '$lib/server/log';
 import {
 	getBookingCalendar,
-	getTimeslotStartHour,
+	getTimeBlockStartHour,
 	bookSlot,
 	cancelBooking as cancelBookingDb,
 	validateBookingDate
 } from '$lib/server/booking';
 import { createBookingNotifications } from '$lib/server/notification';
 import { touchUserActivity } from '$lib/server/activity';
-import { TIMEZONE, RESOURCES, type BookingTimeSlot } from '$lib/types/bookings';
+import { TIMEZONE, RESOURCES, type Slot } from '$lib/types/bookings';
 
 const resourceSchema = v.picklist(RESOURCES);
 const calendarDateSchema = v.instance(CalendarDate);
@@ -33,26 +33,26 @@ export const getBookingData = query(
 		const zdt = now(TIMEZONE);
 		const fetchedAt = new Time(zdt.hour, zdt.minute, zdt.second);
 
-		// Extract unique timeslots (ordered by startHour from the query)
-		const timeslotSet = new Map<number, { startHour: number; endHour: number }>();
+		// Extract unique time blocks (ordered by startHour from the query)
+		const timeBlockSet = new Map<number, { startHour: number; endHour: number }>();
 		for (const row of rawRows) {
-			if (!timeslotSet.has(row.timeslotId)) {
-				timeslotSet.set(row.timeslotId, {
+			if (!timeBlockSet.has(row.timeBlockId)) {
+				timeBlockSet.set(row.timeBlockId, {
 					startHour: row.startHour,
 					endHour: row.endHour
 				});
 			}
 		}
-		const timeslots = [...timeslotSet.entries()];
+		const timeBlocks = [...timeBlockSet.entries()];
 
-		// Build a map of (date:timeslotId) -> booking info
+		// Build a map of (date:timeBlockId) -> booking info
 		const bookingMap = new Map<
 			string,
 			{ bookingId: number; userId: string; username: string | null }
 		>();
 		for (const row of rawRows) {
 			if (row.date !== null && row.bookingId !== null) {
-				bookingMap.set(`${row.date}:${row.timeslotId}`, {
+				bookingMap.set(`${row.date}:${row.timeBlockId}`, {
 					bookingId: row.bookingId,
 					userId: row.userId!,
 					username: row.username
@@ -64,23 +64,23 @@ export const getBookingData = query(
 		const start = today(TIMEZONE);
 		const end = start.add({ months: 1 });
 
-		const bookingCalendar: Record<string, BookingTimeSlot[]> = {};
-		let activeBooking: BookingTimeSlot | undefined = undefined;
+		const bookingCalendar: Record<string, Slot[]> = {};
+		let activeBooking: Slot | undefined = undefined;
 
 		let current = start;
 		while (current.compare(end) <= 0) {
 			const dateStr = current.toString();
-			const bookingsTimeSlots: BookingTimeSlot[] = [];
+			const slots: Slot[] = [];
 
-			for (const [tid, ts] of timeslots) {
+			for (const [tid, tb] of timeBlocks) {
 				const b = bookingMap.get(`${dateStr}:${tid}`);
 				const status = b === undefined ? 'free' : b.userId === user?.id ? 'mine' : 'other';
 
-				bookingsTimeSlots.push({
-					timeslotId: tid,
+				slots.push({
+					timeBlockId: tid,
 					date: current,
-					start: ts.startHour,
-					end: ts.endHour,
+					start: tb.startHour,
+					end: tb.endHour,
 					status,
 					bookingId: b?.bookingId ?? null,
 					username: user ? (b?.username ?? null) : null
@@ -88,10 +88,10 @@ export const getBookingData = query(
 
 				if (activeBooking === undefined && b !== undefined && b?.userId === user?.id) {
 					activeBooking = {
-						timeslotId: tid,
+						timeBlockId: tid,
 						date: current,
-						start: ts.startHour,
-						end: ts.endHour,
+						start: tb.startHour,
+						end: tb.endHour,
 						status,
 						bookingId: b.bookingId,
 						username: b.username
@@ -99,7 +99,7 @@ export const getBookingData = query(
 				}
 			}
 
-			bookingCalendar[dateStr] = bookingsTimeSlots;
+			bookingCalendar[dateStr] = slots;
 			current = current.add({ days: 1 });
 		}
 
@@ -109,22 +109,22 @@ export const getBookingData = query(
 
 export const book = command(
 	v.object({
-		timeslotId: v.number(),
+		timeBlockId: v.number(),
 		resource: resourceSchema,
 		date: calendarDateSchema,
 		replaceBookingId: v.optional(v.number())
 	}),
-	async ({ timeslotId, resource, date, replaceBookingId }) => {
+	async ({ timeBlockId, resource, date, replaceBookingId }) => {
 		const user = requireAuth();
 
 		const dateError = validateBookingDate(date);
 		if (dateError) error(400, VALIDATE_DATE_MESSAGES[dateError]);
 
-		const startHour = await getTimeslotStartHour(timeslotId);
+		const startHour = await getTimeBlockStartHour(timeBlockId);
 
 		const result = await bookSlot({
 			userId: user.id,
-			timeslotId,
+			timeBlockId,
 			resource,
 			date,
 			replaceBookingId
@@ -154,7 +154,7 @@ export const book = command(
 				user.id,
 				resource,
 				date.toString(),
-				timeslotId
+				timeBlockId
 			);
 		} catch (e) {
 			log.warn(
