@@ -4,7 +4,7 @@ Website for BRF Skiftesgatan 4, a housing association with 32 apartments in Goth
 
 Residents log in with their apartment number to book shared facilities, read association news, and access member information such as bylaws, finances, renovation plans, and board details.
 
-There is no self-registration. Accounts are pre-created by an admin via Drizzle Studio against the production database (`pnpm db:tunnel` + `pnpm db:studio:prod`). Emails are marked as verified at creation time. Each resident can then log in and reset their password via email.
+There is no self-registration. Accounts are pre-created by an admin via Drizzle Studio against the production database (`pnpm db:tunnel`, then `DATABASE_URL=<prod-url> pnpm db:studio` in another terminal). Emails are marked as verified at creation time. Each resident can then log in and reset their password via email.
 
 ## Contents
 
@@ -47,12 +47,12 @@ There is no self-registration. Accounts are pre-created by an admin via Drizzle 
 ```sh
 pnpm install
 cp .env.example .env
-# Fill in DATABASE_URL and DATABASE_URL_ADMIN with values from the team password manager
-pnpm db:reset:dev             # DROP + CREATE dev, push schema, seed accounts + bookings
+# Fill in DATABASE_URL with the dev value from the team password manager
+pnpm db:reset                 # drop schema, push, seed accounts + bookings
 pnpm dev
 ```
 
-`db:reset:dev` accepts `-y` to skip confirmation: `pnpm db:reset:dev -- -y`. To re-seed without dropping, use `pnpm db:seed:dev`.
+`db:reset` accepts `-y` to skip confirmation: `pnpm db:reset -- -y`. To re-seed without dropping, use `pnpm db:seed`.
 
 Dev accounts use apartment numbers A1001 through D1302. Password for each is `password-{username}`, e.g. `password-A1001`. Each dev account has a fictional display name that can be changed on the /konto page. `B1001` is admin.
 
@@ -116,7 +116,7 @@ content/
   news/                        # Markdown news articles
   information/                 # Markdown info pages (stadgar, ekonomi, styrelsen, etc.)
 scripts/
-  db/                          # db:push:*, db:reset:dev, db:seed:dev, db:studio:*, db:tunnel
+  db/                          # db:push, db:reset, db:seed, db:studio, db:tunnel
   generate-icons.ts            # Generates favicons / PWA icons
   sync-email-templates.ts      # Syncs email templates to Resend
 e2e/                           # Playwright E2E tests
@@ -124,52 +124,39 @@ e2e/                           # Playwright E2E tests
 
 ## Scripts
 
-| Script                | Description                                                 |
-| --------------------- | ----------------------------------------------------------- |
-| `pnpm dev`            | Start dev server                                            |
-| `pnpm build`          | Production build                                            |
-| `pnpm preview`        | Preview production build                                    |
-| `pnpm check`          | SvelteKit sync + svelte-check                               |
-| `pnpm lint`           | Prettier + ESLint                                           |
-| `pnpm format`         | Auto-format code                                            |
-| `pnpm knip`           | Detect unused files/dependencies                            |
-| `pnpm test`           | Run all tests (unit + E2E)                                  |
-| `pnpm test:unit`      | Vitest (unit + integration)                                 |
-| `pnpm test:e2e`       | Playwright E2E tests                                        |
-| `pnpm db:push:dev`    | Push schema to dev (force)                                  |
-| `pnpm db:push:prod`   | Push schema to prod via tunnel (interactive on destructive) |
-| `pnpm db:reset:dev`   | DROP + CREATE dev, push schema, seed                        |
-| `pnpm db:seed:dev`    | Re-seed dev (idempotent)                                    |
-| `pnpm db:studio:dev`  | Open Drizzle Studio against dev                             |
-| `pnpm db:studio:prod` | Open Drizzle Studio against prod via tunnel                 |
-| `pnpm db:tunnel`      | Open SSH tunnel to production database                      |
-| `pnpm auth:schema`    | Generate Better Auth schema                                 |
-| `pnpm icons`          | Generate favicons and PWA icons                             |
-| `pnpm email:sync`     | Sync email templates to Resend                              |
+| Script             | Description                                                 |
+| ------------------ | ----------------------------------------------------------- |
+| `pnpm dev`         | Start dev server                                            |
+| `pnpm build`       | Production build                                            |
+| `pnpm preview`     | Preview production build                                    |
+| `pnpm check`       | SvelteKit sync + svelte-check                               |
+| `pnpm lint`        | Prettier + ESLint                                           |
+| `pnpm format`      | Auto-format code                                            |
+| `pnpm knip`        | Detect unused files/dependencies                            |
+| `pnpm test`        | Run all tests (unit + E2E)                                  |
+| `pnpm test:unit`   | Vitest (unit + integration)                                 |
+| `pnpm test:e2e`    | Playwright E2E tests                                        |
+| `pnpm db:push`     | Apply schema changes interactively (against `DATABASE_URL`) |
+| `pnpm db:reset`    | Drop schema, push, seed (against `DATABASE_URL`)            |
+| `pnpm db:seed`     | Re-seed (idempotent, against `DATABASE_URL`)                |
+| `pnpm db:studio`   | Open Drizzle Studio (against `DATABASE_URL`)                |
+| `pnpm db:tunnel`   | Open SSH tunnel to the production database host             |
+| `pnpm auth:schema` | Generate Better Auth schema                                 |
+| `pnpm icons`       | Generate favicons and PWA icons                             |
+| `pnpm email:sync`  | Sync email templates to Resend                              |
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill in values.
-
-**`.env`** -- local development (copy from `.env.example`):
+Copy `.env.example` to `.env` and fill in values. The same shape applies whether you point at dev or prod -- to run a command against prod, open `pnpm db:tunnel` and override `DATABASE_URL` inline.
 
 | Variable             | Required | Description                                           |
 | -------------------- | -------- | ----------------------------------------------------- |
-| `DATABASE_URL`       | Yes      | Postgres connection string for the `dev` database     |
-| `DATABASE_URL_ADMIN` | Yes      | Admin connection (to `postgres` DB) for db:reset:dev  |
+| `DATABASE_URL`       | Yes      | Postgres connection string                            |
 | `ORIGIN`             | Yes      | Application origin URL (e.g. `http://localhost:5173`) |
 | `BETTER_AUTH_SECRET` | Yes      | 32-character high-entropy secret for session signing  |
 | `RESEND_API_KEY`     | Prod     | Resend API key for email delivery (file mock in dev)  |
 | `EMAIL_FROM`         | Yes      | Sender email address                                  |
 | `CONTACT_MANAGER_*`  | Prod     | Property manager name, phone, and email               |
-
-**`.env.prod`** -- production database commands (copy from `.env.prod.example`):
-
-| Variable           | Description                                     |
-| ------------------ | ----------------------------------------------- |
-| `DATABASE_URL`     | PostgreSQL connection string (via tunnel)       |
-| `PROD_VPS_SSH`     | SSH target for tunnel (e.g. `root@your-vps-ip`) |
-| `PROD_VPS_DB_PORT` | PostgreSQL port on VPS host (e.g. `54321`)      |
 
 ## Testing
 
@@ -181,21 +168,22 @@ Copy `.env.example` to `.env` and fill in values.
 
 ## Production Database
 
-Production uses PostgreSQL on a CapRover VPS. The database is not publicly accessible -- you connect via SSH tunnel.
+Production runs the [CapRover Postgres one-click app](https://raw.githubusercontent.com/caprover/one-click-apps/refs/heads/master/public/v4/apps/postgres.yml), which provisions `user=postgres` / `db=postgres` with a password set at deploy time. The instance is not publicly reachable; you connect via SSH tunnel.
 
-**One-time CapRover setup:**
+**Day-to-day:**
 
-1. Open CapRover UI > Apps > `skiftesgatan-prod-db` > App Config
-2. Add port mapping: Server Port `54321` → Container Port `5432`
-3. Save & Update
+```sh
+# Terminal 1
+pnpm db:tunnel
 
-**Local setup:**
+# Terminal 2 -- anything against prod is just DATABASE_URL override
+DATABASE_URL=postgres://postgres:<password>@localhost:5432/postgres pnpm db:studio
+DATABASE_URL=postgres://postgres:<password>@localhost:5432/postgres pnpm db:push
+```
 
-1. Copy `.env.prod.example` to `.env.prod` and fill in your VPS SSH details and database password
-2. Open the tunnel in one terminal: `pnpm db:tunnel`
-3. In another terminal, run prod commands: `pnpm db:push:prod` (apply schema changes) or `pnpm db:studio:prod` (browse data).
+`db:push` is interactive in every environment -- you review and approve each diff before drizzle-kit applies it. `db:reset` and `db:seed` will happily run against whatever `DATABASE_URL` you give them; never point them at prod.
 
-`pnpm db:push:prod` requires you to type the database name to confirm, then runs `drizzle-kit push` interactively so you can review and approve any destructive diffs (dropped columns, etc.).
+**Starting from scratch:** redeploy the Postgres one-click app, point `DATABASE_URL` at the new instance, and run `pnpm db:push`. That's the whole sequence.
 
 ## Design
 
