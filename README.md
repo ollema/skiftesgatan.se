@@ -4,7 +4,7 @@ Website for BRF Skiftesgatan 4, a housing association with 32 apartments in Goth
 
 Residents log in with their apartment number to book shared facilities, read association news, and access member information such as bylaws, finances, renovation plans, and board details.
 
-There is no self-registration. Accounts are pre-created by an admin via Drizzle Studio against the production database (`pnpm db:tunnel`, then `DATABASE_URL=<prod-url> pnpm db:studio` in another terminal). Emails are marked as verified at creation time. Each resident can then log in and reset their password via email.
+There is no self-registration. Accounts are pre-created by an admin. Each resident can then log in and reset their password via email.
 
 ## Contents
 
@@ -47,8 +47,7 @@ There is no self-registration. Accounts are pre-created by an admin via Drizzle 
 ```sh
 pnpm install
 cp .env.example .env
-# Fill in DATABASE_URL with the dev value from the team password manager
-pnpm db:reset                 # drop schema, push, seed accounts + bookings
+pnpm db:reset
 pnpm dev
 ```
 
