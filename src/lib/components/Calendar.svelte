@@ -1,20 +1,20 @@
 <script lang="ts">
 	import { Calendar } from 'bits-ui';
 	import { type CalendarDate, type DateValue } from '@internationalized/date';
-	import { type BookingTimeSlot, type BookingTimeSlotStatus } from '$lib/types/bookings';
+	import { type Slot, type SlotStatus } from '$lib/types/bookings';
 	import { formatMonth } from '$lib/utils/date';
 
 	interface Props {
 		date: CalendarDate;
 		minValue: CalendarDate;
 		maxValue: CalendarDate;
-		bookingCalendar: Record<string, BookingTimeSlot[]>;
+		bookingCalendar: Record<string, Slot[]>;
 		slotCount: number;
 	}
 
 	let { date = $bindable(), minValue, maxValue, bookingCalendar }: Props = $props();
 
-	const statusColorMap: Record<BookingTimeSlotStatus, string> = {
+	const statusColorMap: Record<SlotStatus, string> = {
 		free: 'border border-border',
 		mine: 'bg-slot-mine',
 		other: 'bg-slot-occupied'
@@ -84,9 +84,8 @@
 										>
 											{day.day}
 											<div class="mt-0.5 flex gap-0.5">
-												{#each bookingCalendar[day.toString()] as timeslot (timeslot.start)}
-													<span class="box-border size-1.5 {statusColorMap[timeslot.status]}"
-													></span>
+												{#each bookingCalendar[day.toString()] as slot (slot.start)}
+													<span class="box-border size-1.5 {statusColorMap[slot.status]}"></span>
 												{/each}
 											</div>
 										</Calendar.Day>

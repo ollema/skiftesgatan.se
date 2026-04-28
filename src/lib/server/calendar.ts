@@ -3,7 +3,7 @@ import { eq, and, gte } from 'drizzle-orm';
 import { today } from '@internationalized/date';
 import ical, { ICalCalendarMethod } from 'ical-generator';
 import { db } from '$lib/server/db';
-import { booking, timeslot, calendarToken } from '$lib/server/db/schema';
+import { booking, timeBlock, calendarToken } from '$lib/server/db/schema';
 import { TIMEZONE } from '$lib/types/bookings';
 
 const RESOURCE_LABELS = {
@@ -63,11 +63,11 @@ export async function generateCalendarFeed(userId: string): Promise<string> {
 			bookingId: booking.id,
 			resource: booking.resource,
 			date: booking.date,
-			startHour: timeslot.startHour,
-			endHour: timeslot.endHour
+			startHour: timeBlock.startHour,
+			endHour: timeBlock.endHour
 		})
 		.from(booking)
-		.innerJoin(timeslot, eq(booking.timeslotId, timeslot.id))
+		.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
 		.where(and(eq(booking.userId, userId), gte(booking.date, todayStr)));
 
 	const cal = ical({

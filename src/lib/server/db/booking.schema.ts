@@ -21,8 +21,8 @@ type _AssertResourceMatch = (typeof resourceEnum.enumValues)[number] extends Res
 		: never
 	: never;
 
-export const timeslot = pgTable(
-	'timeslot',
+export const timeBlock = pgTable(
+	'time_block',
 	{
 		id: serial('id').primaryKey(),
 		startHour: integer('start_hour').notNull(),
@@ -30,7 +30,7 @@ export const timeslot = pgTable(
 		resource: resourceEnum().notNull()
 	},
 	(table) => [
-		unique('timeslot_hours_resource_unique').on(table.startHour, table.endHour, table.resource)
+		unique('time_block_hours_resource_unique').on(table.startHour, table.endHour, table.resource)
 	]
 );
 
@@ -41,14 +41,18 @@ export const booking = pgTable(
 		userId: text('user_id')
 			.notNull()
 			.references(() => user.id, { onDelete: 'cascade' }),
-		timeslotId: integer('timeslot_id')
+		timeBlockId: integer('time_block_id')
 			.notNull()
-			.references(() => timeslot.id),
+			.references(() => timeBlock.id),
 		resource: resourceEnum().notNull(),
 		date: date('date').notNull(),
 		createdAt: timestamp('created_at').defaultNow().notNull()
 	},
 	(table) => [
-		unique('booking_resource_timeslot_date_unique').on(table.resource, table.timeslotId, table.date)
+		unique('booking_resource_time_block_date_unique').on(
+			table.resource,
+			table.timeBlockId,
+			table.date
+		)
 	]
 );

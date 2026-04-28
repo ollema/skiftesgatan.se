@@ -3,7 +3,7 @@ import { eq, and, gte, inArray } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { log } from '$lib/server/log';
 import { notificationPreference, bookingNotification } from '$lib/server/db/notification.schema';
-import { booking, timeslot } from '$lib/server/db/booking.schema';
+import { booking, timeBlock } from '$lib/server/db/booking.schema';
 import { user } from '$lib/server/db/auth.schema';
 import { TIMEZONE, type Resource } from '$lib/types/bookings';
 
@@ -62,10 +62,10 @@ export async function setNotificationPreference(
 				.select({
 					bookingId: booking.id,
 					date: booking.date,
-					startHour: timeslot.startHour
+					startHour: timeBlock.startHour
 				})
 				.from(booking)
-				.innerJoin(timeslot, eq(booking.timeslotId, timeslot.id))
+				.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
 				.where(
 					and(
 						eq(booking.userId, userId),
@@ -121,14 +121,14 @@ export async function createBookingNotifications(
 	userId: string,
 	resource: Resource,
 	dateStr: string,
-	timeslotId: number
+	timeBlockId: number
 ) {
-	const [slot] = await db
-		.select({ startHour: timeslot.startHour })
-		.from(timeslot)
-		.where(eq(timeslot.id, timeslotId));
+	const [block] = await db
+		.select({ startHour: timeBlock.startHour })
+		.from(timeBlock)
+		.where(eq(timeBlock.id, timeBlockId));
 
-	if (!slot) return;
+	if (!block) return;
 
 	const prefs = await db
 		.select({ offsetMinutes: notificationPreference.offsetMinutes })
@@ -142,7 +142,7 @@ export async function createBookingNotifications(
 		);
 
 	for (const pref of prefs) {
-		const notifyAt = computeNotifyAt(dateStr, slot.startHour, pref.offsetMinutes);
+		const notifyAt = computeNotifyAt(dateStr, block.startHour, pref.offsetMinutes);
 		await db
 			.insert(bookingNotification)
 			.values({
@@ -157,7 +157,7 @@ export async function createBookingNotifications(
 	if (prefs.length > 0) {
 		const username = await lookupUsername(userId);
 		log.info(
-			`[notification] created ${prefs.length} reminder(s) username=${username} resource=${resource} date=${dateStr} startHour=${slot.startHour}`
+			`[notification] created ${prefs.length} reminder(s) username=${username} resource=${resource} date=${dateStr} startHour=${block.startHour}`
 		);
 	}
 }

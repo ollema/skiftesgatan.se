@@ -1,7 +1,7 @@
 <script lang="ts">
 	import SetupHints from '$lib/components/SetupHints.svelte';
 	import Calendar from '$lib/components/Calendar.svelte';
-	import TimeSlots from '$lib/components/TimeSlots.svelte';
+	import Slots from '$lib/components/Slots.svelte';
 	import { getOptionalUser } from '$lib/api/auth.remote';
 	import { getSetupHints } from '$lib/api/hints.remote';
 	import { getBookingData } from '$lib/api/booking.remote';
@@ -31,7 +31,7 @@
 	let slotCount = $derived(laundryRoom ? 5 : 1);
 	let bookingCalendar = $derived(data.bookingCalendar);
 	let activeBooking = $derived(data.activeBooking);
-	let timeslots = $derived(bookingCalendar[date.toString()] ?? []);
+	let slots = $derived(bookingCalendar[date.toString()] ?? []);
 
 	// TODO: replace polling with SSE once $derived(await ...) + .refresh() is stable
 	// poll for booking changes and refresh when the page becomes visible after being hidden
@@ -110,4 +110,4 @@
 </div>
 
 <!-- time slots -->
-<TimeSlots {resource} {date} {timeslots} {activeBooking} />
+<Slots {resource} {date} {slots} {activeBooking} />

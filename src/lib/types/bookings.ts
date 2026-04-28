@@ -4,14 +4,14 @@ export const TIMEZONE = 'Europe/Stockholm';
 export const RESOURCES = ['laundry_room', 'outdoor_area'] as const;
 export type Resource = (typeof RESOURCES)[number];
 
-export type BookingTimeSlotStatus = 'free' | 'mine' | 'other';
+export type SlotStatus = 'free' | 'mine' | 'other';
 
-export type BookingTimeSlot = {
-	timeslotId: number;
+export type Slot = {
+	timeBlockId: number;
 	date: CalendarDate;
 	start: number;
 	end: number;
-	status: BookingTimeSlotStatus;
+	status: SlotStatus;
 	bookingId: number | null;
 	username: string | null;
 };

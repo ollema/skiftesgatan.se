@@ -1,7 +1,7 @@
 import { type CalendarDate, today } from '@internationalized/date';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { booking, timeslot, user } from '$lib/server/db/schema';
+import { booking, timeBlock, user } from '$lib/server/db/schema';
 import { TIMEZONE, type Resource } from '$lib/types/bookings';
 
 const PG_UNIQUE_VIOLATION = '23505';
@@ -10,11 +10,11 @@ function isUniqueViolation(e: unknown): boolean {
 	return e instanceof Error && 'code' in e && e.code === PG_UNIQUE_VIOLATION;
 }
 
-export async function getTimeslotStartHour(timeslotId: number): Promise<number | null> {
+export async function getTimeBlockStartHour(timeBlockId: number): Promise<number | null> {
 	const [row] = await db
-		.select({ startHour: timeslot.startHour })
-		.from(timeslot)
-		.where(eq(timeslot.id, timeslotId))
+		.select({ startHour: timeBlock.startHour })
+		.from(timeBlock)
+		.where(eq(timeBlock.id, timeBlockId))
 		.limit(1);
 	return row?.startHour ?? null;
 }
@@ -38,27 +38,27 @@ export async function getBookingCalendar(resource: Resource) {
 
 	return await db
 		.select({
-			timeslotId: timeslot.id,
-			startHour: timeslot.startHour,
-			endHour: timeslot.endHour,
+			timeBlockId: timeBlock.id,
+			startHour: timeBlock.startHour,
+			endHour: timeBlock.endHour,
 			date: booking.date,
 			bookingId: booking.id,
 			userId: booking.userId,
 			username: user.username
 		})
-		.from(timeslot)
+		.from(timeBlock)
 		.leftJoin(
 			booking,
 			and(
-				eq(booking.timeslotId, timeslot.id),
+				eq(booking.timeBlockId, timeBlock.id),
 				eq(booking.resource, resource),
 				gte(booking.date, startDate),
 				lte(booking.date, endDate)
 			)
 		)
 		.leftJoin(user, eq(booking.userId, user.id))
-		.where(eq(timeslot.resource, resource))
-		.orderBy(timeslot.startHour);
+		.where(eq(timeBlock.resource, resource))
+		.orderBy(timeBlock.startHour);
 }
 
 type BookSlotResult =
@@ -79,7 +79,7 @@ class BookSlotConflict extends Error {
 
 export async function bookSlot(params: {
 	userId: string;
-	timeslotId: number;
+	timeBlockId: number;
 	resource: Resource;
 	date: CalendarDate;
 	replaceBookingId?: number;
@@ -99,10 +99,10 @@ export async function bookSlot(params: {
 					.select({
 						resource: booking.resource,
 						date: booking.date,
-						startHour: timeslot.startHour
+						startHour: timeBlock.startHour
 					})
 					.from(booking)
-					.innerJoin(timeslot, eq(booking.timeslotId, timeslot.id))
+					.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
 					.where(
 						and(
 							eq(booking.id, params.replaceBookingId),
@@ -148,7 +148,7 @@ export async function bookSlot(params: {
 					.insert(booking)
 					.values({
 						userId: params.userId,
-						timeslotId: params.timeslotId,
+						timeBlockId: params.timeBlockId,
 						resource: params.resource,
 						date: params.date.toString()
 					})
@@ -175,10 +175,10 @@ export async function cancelBooking(
 		.select({
 			resource: booking.resource,
 			date: booking.date,
-			startHour: timeslot.startHour
+			startHour: timeBlock.startHour
 		})
 		.from(booking)
-		.innerJoin(timeslot, eq(booking.timeslotId, timeslot.id))
+		.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
 		.where(and(eq(booking.id, bookingId), eq(booking.userId, userId), gte(booking.date, todayStr)))
 		.limit(1);
 	if (!info) return null;

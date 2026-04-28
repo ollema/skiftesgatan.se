@@ -24,11 +24,10 @@ The shared outdoor Facility. Bookable as a single all-day block.
 
 **Time Block**:
 A fixed time-of-day template attached to a Facility. The Laundry Room has 5 Time Blocks (07–10, 10–13, 13–16, 16–19, 19–22); the Outdoor Area has 1 (07–22). The set is closed — changing or adding a Time Block is a real domain change. A Time Block is _not_ a date.
-_Avoid_: Timeslot (current DB name; planned rename), time window, schedule entry.
+_Avoid_: time window, schedule entry.
 
 **Slot**:
 A Time Block on a specific date — the bookable cell in the calendar UI. A Slot is either free, booked by another Apartment, or "mine". The 10–13 Time Block, taken on 2026-05-04, is one Slot.
-_Avoid_: Timeslot (ambiguous between Time Block and Slot — never use this word in domain prose).
 
 **Booking**:
 The act and record of an Apartment claiming a Slot. One Apartment may hold at most one Active Booking per Facility at a time.
@@ -103,7 +102,6 @@ _Avoid_: Username (the apartment number is the username), display username, name
 ## Flagged ambiguities
 
 - "User", "resident", and "member" were used interchangeably in early docs. Resolved: the actor is the **Apartment**. "Resident" remains acceptable in human-facing prose ("residents log in to book…") but is not a domain term in code or specs.
-- "Timeslot" was used for both the template and the calendar cell. Resolved: **Time Block** = template, **Slot** = template-on-a-date. The DB table `timeslot` is to be renamed to `time_block`; the type `BookingTimeSlot` to `Slot`. Tracked as planned work.
 - "Active" Booking was previously defined date-grain (`date >= today`), which blocked rebooking until midnight even after a Slot ended. Resolved: Active = `date + endHour > now`. The current code (`booking.ts`, `notification.ts`, `calendar.ts`) still uses the date-grain check; switching to slot-end-grain is planned work.
 - "Notification" was used for both the reminder concept and the DB tables. Resolved: domain term is **Reminder** / **Reminder Preference**. The DB tables `notification_preference` and `booking_notification`, files `notification*.ts`, and remote functions are to be renamed accordingly. Tracked as planned work.
 - "Calendar" was used for three different things: the iCal feed, the booking-page month-view UI, and (loosely) the Booking Window. Resolved: the iCal feed is the **Calendar Subscription**; the month-view is "the booking calendar UI" (not a domain term); the Booking Window is its own term. Avoid bare "Calendar" as a domain noun.

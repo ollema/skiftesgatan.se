@@ -6,7 +6,7 @@ import { log } from '$lib/server/log';
 import { sendEmail } from '$lib/server/email';
 import { EMAIL_TEMPLATES } from '$lib/server/email.templates';
 import { bookingNotification } from '$lib/server/db/notification.schema';
-import { booking, timeslot } from '$lib/server/db/booking.schema';
+import { booking, timeBlock } from '$lib/server/db/booking.schema';
 import { user } from '$lib/server/db/auth.schema';
 import { buildBookingReminderVariables } from '$lib/server/notification.email';
 
@@ -20,13 +20,13 @@ export async function processNotifications(): Promise<number> {
 			username: user.username,
 			resource: booking.resource,
 			date: booking.date,
-			startHour: timeslot.startHour,
-			endHour: timeslot.endHour
+			startHour: timeBlock.startHour,
+			endHour: timeBlock.endHour
 		})
 		.from(bookingNotification)
 		.innerJoin(user, eq(bookingNotification.userId, user.id))
 		.innerJoin(booking, eq(bookingNotification.bookingId, booking.id))
-		.innerJoin(timeslot, eq(booking.timeslotId, timeslot.id))
+		.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
 		.where(
 			and(eq(bookingNotification.status, 'pending'), lte(bookingNotification.notifyAt, currentTime))
 		)

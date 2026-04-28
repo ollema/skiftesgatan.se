@@ -4,17 +4,17 @@
 	import { getBookingData, book, cancelBooking } from '$lib/api/booking.remote';
 	import { getOptionalUser } from '$lib/api/auth.remote';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import { type BookingTimeSlot, type Resource } from '$lib/types/bookings';
+	import { type Slot, type Resource } from '$lib/types/bookings';
 	import { formatDate, formatHourNumShort } from '$lib/utils/date';
 
 	interface Props {
 		resource: Resource;
 		date: CalendarDate;
-		timeslots: BookingTimeSlot[];
-		activeBooking: BookingTimeSlot | undefined;
+		slots: Slot[];
+		activeBooking: Slot | undefined;
 	}
 
-	let { resource, date, timeslots, activeBooking }: Props = $props();
+	let { resource, date, slots, activeBooking }: Props = $props();
 
 	// load data
 	let user = $derived(await getOptionalUser());
@@ -23,13 +23,13 @@
 	let error = $state('');
 	let cancelBookingId = $state<number | null>(null);
 	let pendingBooking = $state<{
-		timeslotId: number;
+		timeBlockId: number;
 		replaceBookingId: number;
 		replaceDescription: string;
 	} | null>(null);
 	let showLoginDialog = $state(false);
 
-	async function handleSlotClick(slot: BookingTimeSlot) {
+	async function handleSlotClick(slot: Slot) {
 		if (!user) {
 			showLoginDialog = true;
 			return;
@@ -37,14 +37,14 @@
 		error = '';
 		if (activeBooking) {
 			pendingBooking = {
-				timeslotId: slot.timeslotId,
+				timeBlockId: slot.timeBlockId,
 				replaceBookingId: activeBooking.bookingId!,
 				replaceDescription: `${formatDate(activeBooking.date)}, ${formatHourNumShort(activeBooking.start)}–${formatHourNumShort(activeBooking.end)}`
 			};
 			return;
 		}
 		try {
-			await book({ timeslotId: slot.timeslotId, resource, date });
+			await book({ timeBlockId: slot.timeBlockId, resource, date });
 			toast.success('Bokning lyckades!');
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
@@ -68,7 +68,7 @@
 		error = '';
 		try {
 			await book({
-				timeslotId: pendingBooking.timeslotId,
+				timeBlockId: pendingBooking.timeBlockId,
 				resource,
 				date,
 				replaceBookingId: pendingBooking.replaceBookingId
@@ -82,7 +82,7 @@
 </script>
 
 <div class="grid grid-cols-5 gap-2">
-	{#each timeslots as slot (slot.timeslotId)}
+	{#each slots as slot (slot.timeBlockId)}
 		{@const timeRange = `${formatHourNumShort(slot.start)}–${formatHourNumShort(slot.end)}`}
 		{#if slot.status === 'free'}
 			<button
