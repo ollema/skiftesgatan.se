@@ -124,28 +124,28 @@ e2e/                           # Playwright E2E tests
 
 ## Scripts
 
-| Script                       | Description                                                  |
-| ---------------------------- | ------------------------------------------------------------ |
-| `pnpm dev`                   | Start dev server                                             |
-| `pnpm build`                 | Production build                                             |
-| `pnpm preview`               | Preview production build                                     |
-| `pnpm check`                 | SvelteKit sync + svelte-check                                |
-| `pnpm lint`                  | Prettier + ESLint                                            |
-| `pnpm format`                | Auto-format code                                             |
-| `pnpm knip`                  | Detect unused files/dependencies                             |
-| `pnpm test`                  | Run all tests (unit + E2E)                                   |
-| `pnpm test:unit`             | Vitest (unit + integration)                                  |
-| `pnpm test:e2e`              | Playwright E2E tests                                         |
-| `pnpm db:push:dev`           | Push schema to dev (force)                                   |
-| `pnpm db:push:prod`          | Push schema to prod via tunnel (interactive on destructive)  |
-| `pnpm db:reset:dev`          | DROP + CREATE dev, push schema, seed                         |
-| `pnpm db:seed:dev`           | Re-seed dev (idempotent)                                     |
-| `pnpm db:studio:dev`         | Open Drizzle Studio against dev                              |
-| `pnpm db:studio:prod`        | Open Drizzle Studio against prod via tunnel                  |
-| `pnpm db:tunnel`             | Open SSH tunnel to production database                       |
-| `pnpm auth:schema`           | Generate Better Auth schema                                  |
-| `pnpm icons`                 | Generate favicons and PWA icons                              |
-| `pnpm email:sync`            | Sync email templates to Resend                               |
+| Script                | Description                                                 |
+| --------------------- | ----------------------------------------------------------- |
+| `pnpm dev`            | Start dev server                                            |
+| `pnpm build`          | Production build                                            |
+| `pnpm preview`        | Preview production build                                    |
+| `pnpm check`          | SvelteKit sync + svelte-check                               |
+| `pnpm lint`           | Prettier + ESLint                                           |
+| `pnpm format`         | Auto-format code                                            |
+| `pnpm knip`           | Detect unused files/dependencies                            |
+| `pnpm test`           | Run all tests (unit + E2E)                                  |
+| `pnpm test:unit`      | Vitest (unit + integration)                                 |
+| `pnpm test:e2e`       | Playwright E2E tests                                        |
+| `pnpm db:push:dev`    | Push schema to dev (force)                                  |
+| `pnpm db:push:prod`   | Push schema to prod via tunnel (interactive on destructive) |
+| `pnpm db:reset:dev`   | DROP + CREATE dev, push schema, seed                        |
+| `pnpm db:seed:dev`    | Re-seed dev (idempotent)                                    |
+| `pnpm db:studio:dev`  | Open Drizzle Studio against dev                             |
+| `pnpm db:studio:prod` | Open Drizzle Studio against prod via tunnel                 |
+| `pnpm db:tunnel`      | Open SSH tunnel to production database                      |
+| `pnpm auth:schema`    | Generate Better Auth schema                                 |
+| `pnpm icons`          | Generate favicons and PWA icons                             |
+| `pnpm email:sync`     | Sync email templates to Resend                              |
 
 ## Environment Variables
 
