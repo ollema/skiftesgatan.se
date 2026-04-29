@@ -4,7 +4,7 @@ import { error } from '@sveltejs/kit';
 import { query, command, requested } from '$app/server';
 import { requireAuth, getAuthUser } from '$lib/server/auth';
 import { log } from '$lib/server/log';
-import { slotPhrase } from '$lib/server/log.prose';
+import { slotPhrase, slotTimeRange } from '$lib/server/log.prose';
 import {
 	getBookingCalendar,
 	getTimeBlockStartHour,
@@ -75,8 +75,14 @@ export const book = command(
 
 		const newSlot = slotPhrase(resource, date.toString(), startHour!);
 		if (result.cancelled) {
+			const fromRange = slotTimeRange(
+				result.cancelled.resource,
+				result.cancelled.date,
+				result.cancelled.startHour
+			);
+			const toRange = slotTimeRange(resource, date.toString(), startHour!);
 			log.info(
-				`[booking] apartment ${user.username} moved their ${resource} booking from ${slotPhrase(result.cancelled.resource, result.cancelled.date, result.cancelled.startHour)} to ${newSlot}`
+				`[booking] apartment ${user.username} moved their ${resource} booking from ${fromRange} to ${toRange}`
 			);
 		} else {
 			log.info(`[booking] apartment ${user.username} booked ${newSlot}`);
