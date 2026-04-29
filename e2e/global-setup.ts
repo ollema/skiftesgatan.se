@@ -37,10 +37,10 @@ export default async function globalSetup() {
 
 		const browser = await chromium.launch();
 		try {
-			// Batch the bakes: full parallelism chokes free CI runners on PGlite's
-			// single-writer queue. 4 keeps the temp server responsive while still
-			// being meaningfully faster than serial.
-			const BATCH = 4;
+			// Bake serially: even 4-way parallelism queues on PGlite's single
+			// writer hard enough to blow the 60s waitForURL on 2-vCPU GitHub
+			// runners. Issue #22 tracks skipping HTTP login entirely.
+			const BATCH = 1;
 			for (let i = 0; i < APARTMENTS.length; i += BATCH) {
 				const batch = APARTMENTS.slice(i, i + BATCH);
 				await Promise.all(batch.map((u) => bakeStorageState(browser, server.url, u)));
