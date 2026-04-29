@@ -1,20 +1,9 @@
 import { CalendarDateTime, parseDate, toZoned, today } from '@internationalized/date';
 import { eq, and, gte, inArray } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { log } from '$lib/server/log';
 import { reminderPreference, bookingReminder } from '$lib/server/db/reminder.schema';
 import { booking, timeBlock } from '$lib/server/db/booking.schema';
-import { user } from '$lib/server/db/auth.schema';
 import { TIMEZONE, type Resource } from '$lib/types/bookings';
-
-async function lookupUsername(userId: string): Promise<string | null> {
-	const [row] = await db
-		.select({ username: user.username })
-		.from(user)
-		.where(eq(user.id, userId))
-		.limit(1);
-	return row?.username ?? null;
-}
 
 export function computeNotifyAt(dateStr: string, startHour: number, offsetMinutes: number): Date {
 	const date = parseDate(dateStr);
@@ -109,11 +98,6 @@ export async function setReminderPreference(
 				);
 		}
 	});
-
-	const username = await lookupUsername(userId);
-	log.info(
-		`[reminder] preference set username=${username} resource=${resource} offset=${offsetMinutes} enabled=${enabled}`
-	);
 }
 
 export async function createBookingReminders(
@@ -122,13 +106,13 @@ export async function createBookingReminders(
 	resource: Resource,
 	dateStr: string,
 	timeBlockId: number
-) {
+): Promise<number> {
 	const [block] = await db
 		.select({ startHour: timeBlock.startHour })
 		.from(timeBlock)
 		.where(eq(timeBlock.id, timeBlockId));
 
-	if (!block) return;
+	if (!block) return 0;
 
 	const prefs = await db
 		.select({ offsetMinutes: reminderPreference.offsetMinutes })
@@ -154,10 +138,5 @@ export async function createBookingReminders(
 			.onConflictDoNothing();
 	}
 
-	if (prefs.length > 0) {
-		const username = await lookupUsername(userId);
-		log.info(
-			`[reminder] created ${prefs.length} reminder(s) username=${username} resource=${resource} date=${dateStr} startHour=${block.startHour}`
-		);
-	}
+	return prefs.length;
 }

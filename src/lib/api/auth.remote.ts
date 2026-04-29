@@ -37,8 +37,8 @@ export const login = form(
 			});
 		} catch (e) {
 			if (e instanceof APIError) {
-				const reason = e.status === 403 ? 'email_not_verified' : 'invalid_credentials';
-				log.warn(`[auth] login failed username=${username} reason=${reason}`);
+				const reason = e.status === 403 ? 'email not verified' : 'invalid credentials';
+				log.warn(`[auth] login failed for ${username} (${reason})`);
 				if (e.status === 403) {
 					invalid('Verifiera din e-postadress innan du loggar in');
 				} else {
@@ -47,14 +47,15 @@ export const login = form(
 			}
 			throw e;
 		}
-		log.info(`[auth] login username=${username}`);
+		log.info(`[auth] apartment ${username} logged in`);
 		redirect(303, '/konto');
 	}
 );
 
 export const signout = form(async () => {
 	const { request, locals } = getRequestEvent();
-	log.info(`[auth] signout username=${locals.user?.username}`);
+	const username = locals.user?.username ?? '<unknown>';
+	log.info(`[auth] apartment ${username} logged out`);
 	await auth.api.signOut({ headers: request.headers });
 	redirect(303, '/konto/logga-in');
 });
@@ -83,7 +84,7 @@ export const requestPasswordReset = form(
 		} catch (e) {
 			// Always redirect to prevent username enumeration, but surface the failure
 			// so Resend/DB/Better Auth outages aren't hidden behind the success page.
-			log.error(`[auth] password reset failed username=${username}`, e);
+			log.error(`[auth] password reset failed for ${username}`, e);
 		}
 		redirect(303, '/konto/glomt-losenord/skickat');
 	}
@@ -110,7 +111,7 @@ export const resetPassword = form(
 			}
 			throw e;
 		}
-		log.info('[auth] password reset completed');
+		log.info('[auth] completed password reset');
 		redirect(303, '/konto/logga-in');
 	}
 );
@@ -134,7 +135,7 @@ export const changePassword = form(
 			}
 			throw e;
 		}
-		log.info(`[auth] password changed username=${user.username}`);
+		log.info(`[auth] apartment ${user.username} changed their password`);
 	}
 );
 
@@ -156,7 +157,7 @@ export const changeName = form(
 			}
 			throw e;
 		}
-		log.info(`[auth] name changed username=${user.username}`);
+		log.info(`[auth] apartment ${user.username} changed their display name`);
 	}
 );
 
@@ -178,6 +179,6 @@ export const changeEmail = form(
 			}
 			throw e;
 		}
-		log.info(`[auth] email change requested username=${user.username}`);
+		log.info(`[auth] apartment ${user.username} requested an email change`);
 	}
 );

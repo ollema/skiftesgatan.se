@@ -4,6 +4,7 @@ import { error } from '@sveltejs/kit';
 import { query, command, requested } from '$app/server';
 import { requireAuth, getAuthUser } from '$lib/server/auth';
 import { log } from '$lib/server/log';
+import { slotPhrase, slotTimeRange } from '$lib/server/log.prose';
 import {
 	getBookingCalendar,
 	getTimeBlockStartHour,
@@ -67,31 +68,42 @@ export const book = command(
 		if (result.kind === 'already_booked') error(409, 'Du har redan en kommande bokning');
 		if (result.kind === 'slot_taken') {
 			log.warn(
-				`[booking] conflict username=${user.username} resource=${resource} date=${date} startHour=${startHour}`
+				`[booking] apartment ${user.username} tried to book ${slotPhrase(resource, date.toString(), startHour!)} but the slot was already taken`
 			);
 			error(409, 'Tiden är redan bokad');
 		}
 
+		const newSlot = slotPhrase(resource, date.toString(), startHour!);
 		if (result.cancelled) {
-			log.info(
-				`[booking] cancelled username=${user.username} resource=${result.cancelled.resource} date=${result.cancelled.date} startHour=${result.cancelled.startHour}`
+			const fromRange = slotTimeRange(
+				result.cancelled.resource,
+				result.cancelled.date,
+				result.cancelled.startHour
 			);
+			const toRange = slotTimeRange(resource, date.toString(), startHour!);
+			log.info(
+				`[booking] apartment ${user.username} moved their ${resource} booking from ${fromRange} to ${toRange}`
+			);
+		} else {
+			log.info(`[booking] apartment ${user.username} booked ${newSlot}`);
 		}
-		log.info(
-			`[booking] created username=${user.username} resource=${resource} date=${date} startHour=${startHour}`
-		);
 
 		try {
-			await createBookingReminders(
+			const count = await createBookingReminders(
 				result.booking.id,
 				user.id,
 				resource,
 				date.toString(),
 				timeBlockId
 			);
+			if (count > 0) {
+				log.info(
+					`[reminder] scheduled ${count} reminder(s) for apartment ${user.username} ahead of ${newSlot}`
+				);
+			}
 		} catch (e) {
 			log.warn(
-				`[reminder] failed to create reminders username=${user.username} resource=${resource} date=${date} startHour=${startHour}: ${e}`
+				`[reminder] failed to schedule reminders for apartment ${user.username} ahead of ${newSlot}: ${e}`
 			);
 		}
 
@@ -108,7 +120,7 @@ export const cancelBooking = command(v.object({ bookingId: v.number() }), async 
 		error(404, 'Bokningen hittades inte');
 	}
 	log.info(
-		`[booking] cancelled username=${user.username} resource=${result.resource} date=${result.date} startHour=${result.startHour}`
+		`[booking] apartment ${user.username} cancelled their booking of ${slotPhrase(result.resource, result.date, result.startHour)}`
 	);
 
 	await requested(getBookingData, 5).refreshAll();

@@ -75,7 +75,7 @@ export const updateUserName = form(
 		name: v.pipe(v.string(), v.minLength(1), v.maxLength(100))
 	}),
 	async ({ username, name }) => {
-		requireAdmin();
+		const self = requireAdmin();
 		const target = await findByUsername(username);
 		if (!target) error(404, 'Hittade inte lägenheten');
 
@@ -89,7 +89,7 @@ export const updateUserName = form(
 			if (e instanceof APIError) invalid('Kunde inte byta namn');
 			throw e;
 		}
-		log.info(`[admin] name changed username=${username}`);
+		log.info(`[admin] apartment ${self.username} changed display name for apartment ${username}`);
 	}
 );
 
@@ -99,7 +99,7 @@ export const updateUserEmail = form(
 		email: v.pipe(v.string(), v.email('Ogiltig e-postadress'))
 	}),
 	async ({ username, email }) => {
-		requireAdmin();
+		const self = requireAdmin();
 		const target = await findByUsername(username);
 		if (!target) error(404, 'Hittade inte lägenheten');
 
@@ -113,21 +113,23 @@ export const updateUserEmail = form(
 			if (e instanceof APIError) invalid('Kunde inte byta e-post');
 			throw e;
 		}
-		log.info(`[admin] email changed username=${username}`);
+		log.info(`[admin] apartment ${self.username} changed email for apartment ${username}`);
 	}
 );
 
 export const sendPasswordResetForUser = command(
 	v.object({ username: apartmentSchema }),
 	async ({ username }) => {
-		requireAdmin();
+		const self = requireAdmin();
 		const target = await findByUsername(username);
 		if (!target) error(404, 'Hittade inte lägenheten');
 
 		await auth.api.requestPasswordReset({
 			body: { email: target.email, redirectTo: '/konto/aterstall-losenord' }
 		});
-		log.info(`[admin] password reset email sent username=${username}`);
+		log.info(
+			`[admin] apartment ${self.username} sent a password reset email to apartment ${username}`
+		);
 		return { email: target.email };
 	}
 );
@@ -148,7 +150,8 @@ export const setUserRole = command(
 			body: { userId: target.id, role },
 			headers: request.headers
 		});
-		log.info(`[admin] role changed username=${username} role=${role}`);
+		const verb = role === 'admin' ? 'granted admin role to' : 'revoked admin role from';
+		log.info(`[admin] apartment ${self.username} ${verb} apartment ${username}`);
 	}
 );
 
@@ -160,11 +163,15 @@ export const setUserReminderPreference = command(
 		enabled: v.boolean()
 	}),
 	async ({ username, resource, offsetMinutes, enabled }) => {
-		requireAdmin();
+		const self = requireAdmin();
 		const target = await findByUsername(username);
 		if (!target) error(404, 'Hittade inte lägenheten');
 
 		await setReminderPreference(target.id, resource, offsetMinutes, enabled);
+		const verb = enabled ? 'enabled' : 'disabled';
+		log.info(
+			`[admin] apartment ${self.username} ${verb} ${offsetMinutes}-minute reminders for the ${resource} for apartment ${username}`
+		);
 	}
 );
 

@@ -8,7 +8,7 @@ export async function sendEmail(options: {
 	templateAlias: string;
 	variables: Record<string, string | number>;
 }): Promise<string | null> {
-	const label = `to ${options.to} template=${options.templateAlias}`;
+	const label = `${options.templateAlias} to ${options.to}`;
 
 	if (!env.RESEND_API_KEY) {
 		const recipient = options.to.toLowerCase().replace(/[@.]/g, '-');

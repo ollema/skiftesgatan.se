@@ -3,6 +3,7 @@ import { TIMEZONE } from '$lib/types/bookings';
 import { eq, and, lte } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { log } from '$lib/server/log';
+import { slotPhrase } from '$lib/server/log.prose';
 import { sendEmail } from '$lib/server/email';
 import { EMAIL_TEMPLATES } from '$lib/server/email.templates';
 import { bookingReminder } from '$lib/server/db/reminder.schema';
@@ -50,7 +51,7 @@ export async function processReminders(): Promise<number> {
 				.set({ status: 'sent', sentAt: currentTime, resendId })
 				.where(eq(bookingReminder.id, reminder.id));
 			log.info(
-				`[scheduler] sent reminder username=${reminder.username} resource=${reminder.resource} date=${reminder.date} startHour=${reminder.startHour} to=${reminder.email}`
+				`[scheduler] sent reminder to apartment ${reminder.username} for ${slotPhrase(reminder.resource, reminder.date, reminder.startHour)}`
 			);
 		} catch (e) {
 			const failReason = e instanceof Error ? e.message : String(e);
@@ -59,7 +60,7 @@ export async function processReminders(): Promise<number> {
 				.set({ status: 'failed', failReason })
 				.where(eq(bookingReminder.id, reminder.id));
 			log.error(
-				`[scheduler] failed reminder username=${reminder.username} resource=${reminder.resource} date=${reminder.date} startHour=${reminder.startHour}: ${failReason}`
+				`[scheduler] failed to send reminder to apartment ${reminder.username} for ${slotPhrase(reminder.resource, reminder.date, reminder.startHour)}: ${failReason}`
 			);
 		}
 	}
@@ -68,7 +69,7 @@ export async function processReminders(): Promise<number> {
 }
 
 export function startScheduler(): void {
-	log.info('[scheduler] reminder scheduler started (interval: 60s)');
+	log.info('[scheduler] started (interval 60s)');
 
 	processReminders().catch((e) => {
 		log.error('[scheduler] initial run failed', e);

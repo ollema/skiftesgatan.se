@@ -1,6 +1,7 @@
 import { query, command } from '$app/server';
 import { env } from '$env/dynamic/private';
 import { requireAuth } from '$lib/server/auth';
+import { log } from '$lib/server/log';
 import { getExistingToken, createToken, regenerateToken, deleteToken } from '$lib/server/calendar';
 
 function buildCalendarUrl(token: string): string {
@@ -16,16 +17,19 @@ export const getCalendarUrl = query(async () => {
 export const createCalendarUrl = command(async () => {
 	const user = requireAuth();
 	const token = await createToken(user.id);
+	log.info(`[calendar] apartment ${user.username} created their calendar subscription`);
 	return buildCalendarUrl(token);
 });
 
 export const regenerateCalendarUrl = command(async () => {
 	const user = requireAuth();
 	const token = await regenerateToken(user.id);
+	log.info(`[calendar] apartment ${user.username} regenerated their calendar subscription URL`);
 	return buildCalendarUrl(token);
 });
 
 export const deleteCalendarUrl = command(async () => {
 	const user = requireAuth();
 	await deleteToken(user.id);
+	log.info(`[calendar] apartment ${user.username} removed their calendar subscription`);
 });
