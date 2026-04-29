@@ -12,7 +12,7 @@ import {
 	cancelBooking as cancelBookingDb,
 	validateBookingDate
 } from '$lib/server/booking';
-import { createBookingNotifications } from '$lib/server/notification';
+import { createBookingReminders } from '$lib/server/reminder';
 import { touchUserActivity } from '$lib/server/activity';
 import { TIMEZONE, RESOURCES } from '$lib/types/bookings';
 
@@ -83,7 +83,7 @@ export const book = command(
 		);
 
 		try {
-			await createBookingNotifications(
+			await createBookingReminders(
 				result.booking.id,
 				user.id,
 				resource,
@@ -92,7 +92,7 @@ export const book = command(
 			);
 		} catch (e) {
 			log.warn(
-				`[notification] failed to create notifications username=${user.username} resource=${resource} date=${date} startHour=${startHour}: ${e}`
+				`[reminder] failed to create reminders username=${user.username} resource=${resource} date=${date} startHour=${startHour}: ${e}`
 			);
 		}
 

@@ -12,7 +12,7 @@
 		updateUserEmail,
 		sendPasswordResetForUser,
 		setUserRole,
-		setUserNotificationPreference,
+		setUserReminderPreference,
 		createUserCalendarUrl,
 		regenerateUserCalendarUrl,
 		deleteUserCalendarUrl
@@ -79,7 +79,7 @@
 		const key = `${resource}-${offsetMinutes}`;
 		preferenceOverrides[key] = checked;
 		try {
-			await setUserNotificationPreference({ username, resource, offsetMinutes, enabled: checked });
+			await setUserReminderPreference({ username, resource, offsetMinutes, enabled: checked });
 			toast.success(checked ? 'Avisering aktiverad' : 'Avisering inaktiverad');
 		} catch {
 			preferenceOverrides[key] = !checked;
@@ -181,15 +181,15 @@
 		<fieldset>
 			<legend class="mb-3 text-sm font-medium text-text-primary">Tvättstuga</legend>
 			<div class="flex flex-col gap-4">
-				{@render notificationSwitch('1 timme innan', data.preferences, 'laundry_room', 60)}
-				{@render notificationSwitch('1 dygn innan', data.preferences, 'laundry_room', 1440)}
+				{@render reminderSwitch('1 timme innan', data.preferences, 'laundry_room', 60)}
+				{@render reminderSwitch('1 dygn innan', data.preferences, 'laundry_room', 1440)}
 			</div>
 		</fieldset>
 
 		<fieldset>
 			<legend class="mb-3 text-sm font-medium text-text-primary">Uteplats</legend>
 			<div class="flex flex-col gap-4">
-				{@render notificationSwitch('1 dygn innan', data.preferences, 'outdoor_area', 1440)}
+				{@render reminderSwitch('1 dygn innan', data.preferences, 'outdoor_area', 1440)}
 			</div>
 		</fieldset>
 	</div>
@@ -303,7 +303,7 @@
 	cancelLabel="Avbryt"
 />
 
-{#snippet notificationSwitch(
+{#snippet reminderSwitch(
 	label: string,
 	preferences: Awaited<ReturnType<typeof getUserByUsername>>['preferences'],
 	resource: Resource,

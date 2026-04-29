@@ -5,17 +5,17 @@ import { db } from '$lib/server/db';
 import { log } from '$lib/server/log';
 import { sendEmail } from '$lib/server/email';
 import { EMAIL_TEMPLATES } from '$lib/server/email.templates';
-import { bookingNotification } from '$lib/server/db/notification.schema';
+import { bookingReminder } from '$lib/server/db/reminder.schema';
 import { booking, timeBlock } from '$lib/server/db/booking.schema';
 import { user } from '$lib/server/db/auth.schema';
-import { buildBookingReminderVariables } from '$lib/server/notification.email';
+import { buildBookingReminderVariables } from '$lib/server/reminder.email';
 
-export async function processNotifications(): Promise<number> {
+export async function processReminders(): Promise<number> {
 	const currentTime = now(TIMEZONE).toDate();
 
 	const due = await db
 		.select({
-			id: bookingNotification.id,
+			id: bookingReminder.id,
 			email: user.email,
 			username: user.username,
 			resource: booking.resource,
@@ -23,45 +23,43 @@ export async function processNotifications(): Promise<number> {
 			startHour: timeBlock.startHour,
 			endHour: timeBlock.endHour
 		})
-		.from(bookingNotification)
-		.innerJoin(user, eq(bookingNotification.userId, user.id))
-		.innerJoin(booking, eq(bookingNotification.bookingId, booking.id))
+		.from(bookingReminder)
+		.innerJoin(user, eq(bookingReminder.userId, user.id))
+		.innerJoin(booking, eq(bookingReminder.bookingId, booking.id))
 		.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
-		.where(
-			and(eq(bookingNotification.status, 'pending'), lte(bookingNotification.notifyAt, currentTime))
-		)
-		.orderBy(bookingNotification.notifyAt)
+		.where(and(eq(bookingReminder.status, 'pending'), lte(bookingReminder.notifyAt, currentTime)))
+		.orderBy(bookingReminder.notifyAt)
 		.limit(50);
 
-	for (const notification of due) {
+	for (const reminder of due) {
 		const variables = buildBookingReminderVariables({
-			resource: notification.resource,
-			date: notification.date,
-			startHour: notification.startHour,
-			endHour: notification.endHour
+			resource: reminder.resource,
+			date: reminder.date,
+			startHour: reminder.startHour,
+			endHour: reminder.endHour
 		});
 
 		try {
 			const resendId = await sendEmail({
-				to: notification.email,
+				to: reminder.email,
 				templateAlias: EMAIL_TEMPLATES.bookingReminder.alias,
 				variables
 			});
 			await db
-				.update(bookingNotification)
+				.update(bookingReminder)
 				.set({ status: 'sent', sentAt: currentTime, resendId })
-				.where(eq(bookingNotification.id, notification.id));
+				.where(eq(bookingReminder.id, reminder.id));
 			log.info(
-				`[scheduler] sent reminder username=${notification.username} resource=${notification.resource} date=${notification.date} startHour=${notification.startHour} to=${notification.email}`
+				`[scheduler] sent reminder username=${reminder.username} resource=${reminder.resource} date=${reminder.date} startHour=${reminder.startHour} to=${reminder.email}`
 			);
 		} catch (e) {
 			const failReason = e instanceof Error ? e.message : String(e);
 			await db
-				.update(bookingNotification)
+				.update(bookingReminder)
 				.set({ status: 'failed', failReason })
-				.where(eq(bookingNotification.id, notification.id));
+				.where(eq(bookingReminder.id, reminder.id));
 			log.error(
-				`[scheduler] failed reminder username=${notification.username} resource=${notification.resource} date=${notification.date} startHour=${notification.startHour}: ${failReason}`
+				`[scheduler] failed reminder username=${reminder.username} resource=${reminder.resource} date=${reminder.date} startHour=${reminder.startHour}: ${failReason}`
 			);
 		}
 	}
@@ -70,15 +68,15 @@ export async function processNotifications(): Promise<number> {
 }
 
 export function startScheduler(): void {
-	log.info('[scheduler] notification scheduler started (interval: 60s)');
+	log.info('[scheduler] reminder scheduler started (interval: 60s)');
 
-	processNotifications().catch((e) => {
+	processReminders().catch((e) => {
 		log.error('[scheduler] initial run failed', e);
 	});
 
 	setInterval(async () => {
 		try {
-			await processNotifications();
+			await processReminders();
 		} catch (e) {
 			log.error('[scheduler] unexpected error', e);
 		}

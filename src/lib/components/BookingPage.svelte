@@ -85,10 +85,7 @@
 
 <!-- setup hints -->
 {#if user}
-	<SetupHints
-		showNotificationHint={hints.showNotificationHint}
-		showCalendarHint={hints.showCalendarHint}
-	/>
+	<SetupHints showReminderHint={hints.showReminderHint} showCalendarHint={hints.showCalendarHint} />
 {/if}
 
 <!-- calendar -->

@@ -12,10 +12,10 @@ import {
 import { user } from './auth.schema';
 import { booking, resourceEnum } from './booking.schema';
 
-export const notificationStatusEnum = pgEnum('notification_status', ['pending', 'sent', 'failed']);
+export const reminderStatusEnum = pgEnum('reminder_status', ['pending', 'sent', 'failed']);
 
-export const notificationPreference = pgTable(
-	'notification_preference',
+export const reminderPreference = pgTable(
+	'reminder_preference',
 	{
 		id: serial('id').primaryKey(),
 		userId: text('user_id')
@@ -31,7 +31,7 @@ export const notificationPreference = pgTable(
 			.notNull()
 	},
 	(table) => [
-		unique('notification_preference_user_resource_offset_unique').on(
+		unique('reminder_preference_user_resource_offset_unique').on(
 			table.userId,
 			table.resource,
 			table.offsetMinutes
@@ -39,8 +39,8 @@ export const notificationPreference = pgTable(
 	]
 );
 
-export const bookingNotification = pgTable(
-	'booking_notification',
+export const bookingReminder = pgTable(
+	'booking_reminder',
 	{
 		id: serial('id').primaryKey(),
 		bookingId: integer('booking_id')
@@ -51,15 +51,15 @@ export const bookingNotification = pgTable(
 			.references(() => user.id, { onDelete: 'cascade' }),
 		offsetMinutes: integer('offset_minutes').notNull(),
 		notifyAt: timestamp('notify_at').notNull(),
-		status: notificationStatusEnum().default('pending').notNull(),
+		status: reminderStatusEnum().default('pending').notNull(),
 		sentAt: timestamp('sent_at'),
 		failReason: text('fail_reason'),
 		resendId: text('resend_id'),
 		createdAt: timestamp('created_at').defaultNow().notNull()
 	},
 	(table) => [
-		unique('booking_notification_booking_offset_unique').on(table.bookingId, table.offsetMinutes),
-		index('booking_notification_pending_idx').on(table.status, table.notifyAt),
-		index('booking_notification_booking_idx').on(table.bookingId)
+		unique('booking_reminder_booking_offset_unique').on(table.bookingId, table.offsetMinutes),
+		index('booking_reminder_pending_idx').on(table.status, table.notifyAt),
+		index('booking_reminder_booking_idx').on(table.bookingId)
 	]
 );

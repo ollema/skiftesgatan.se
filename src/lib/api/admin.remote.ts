@@ -8,7 +8,7 @@ import { auth, requireAdmin } from '$lib/server/auth';
 import { apartmentSchema } from '$lib/server/auth.config';
 import { db } from '$lib/server/db';
 import { user as userTable } from '$lib/server/db/auth.schema';
-import { getNotificationPreferences, setNotificationPreference } from '$lib/server/notification';
+import { getReminderPreferences, setReminderPreference } from '$lib/server/reminder';
 import { getExistingToken, createToken, regenerateToken, deleteToken } from '$lib/server/calendar';
 import { RESOURCES } from '$lib/types/bookings';
 import { log } from '$lib/server/log';
@@ -57,7 +57,7 @@ export const getUserByUsername = query(
 		if (!target) error(404, 'Hittade inte lägenheten');
 
 		const [preferences, token] = await Promise.all([
-			getNotificationPreferences(target.id),
+			getReminderPreferences(target.id),
 			getExistingToken(target.id)
 		]);
 
@@ -152,7 +152,7 @@ export const setUserRole = command(
 	}
 );
 
-export const setUserNotificationPreference = command(
+export const setUserReminderPreference = command(
 	v.object({
 		username: apartmentSchema,
 		resource: v.picklist(RESOURCES),
@@ -164,7 +164,7 @@ export const setUserNotificationPreference = command(
 		const target = await findByUsername(username);
 		if (!target) error(404, 'Hittade inte lägenheten');
 
-		await setNotificationPreference(target.id, resource, offsetMinutes, enabled);
+		await setReminderPreference(target.id, resource, offsetMinutes, enabled);
 	}
 );
 

@@ -2,7 +2,7 @@ import { CalendarDateTime, parseDate, toZoned, today } from '@internationalized/
 import { eq, and, gte, inArray } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { log } from '$lib/server/log';
-import { notificationPreference, bookingNotification } from '$lib/server/db/notification.schema';
+import { reminderPreference, bookingReminder } from '$lib/server/db/reminder.schema';
 import { booking, timeBlock } from '$lib/server/db/booking.schema';
 import { user } from '$lib/server/db/auth.schema';
 import { TIMEZONE, type Resource } from '$lib/types/bookings';
@@ -24,19 +24,19 @@ export function computeNotifyAt(dateStr: string, startHour: number, offsetMinute
 	return notifyZoned.toDate();
 }
 
-export async function getNotificationPreferences(userId: string) {
+export async function getReminderPreferences(userId: string) {
 	return await db
 		.select({
-			id: notificationPreference.id,
-			resource: notificationPreference.resource,
-			enabled: notificationPreference.enabled,
-			offsetMinutes: notificationPreference.offsetMinutes
+			id: reminderPreference.id,
+			resource: reminderPreference.resource,
+			enabled: reminderPreference.enabled,
+			offsetMinutes: reminderPreference.offsetMinutes
 		})
-		.from(notificationPreference)
-		.where(eq(notificationPreference.userId, userId));
+		.from(reminderPreference)
+		.where(eq(reminderPreference.userId, userId));
 }
 
-export async function setNotificationPreference(
+export async function setReminderPreference(
 	userId: string,
 	resource: Resource,
 	offsetMinutes: number,
@@ -46,13 +46,13 @@ export async function setNotificationPreference(
 
 	await db.transaction(async (tx) => {
 		await tx
-			.insert(notificationPreference)
+			.insert(reminderPreference)
 			.values({ userId, resource, enabled, offsetMinutes })
 			.onConflictDoUpdate({
 				target: [
-					notificationPreference.userId,
-					notificationPreference.resource,
-					notificationPreference.offsetMinutes
+					reminderPreference.userId,
+					reminderPreference.resource,
+					reminderPreference.offsetMinutes
 				],
 				set: { enabled }
 			});
@@ -77,7 +77,7 @@ export async function setNotificationPreference(
 			for (const b of futureBookings) {
 				const notifyAt = computeNotifyAt(b.date, b.startHour, offsetMinutes);
 				await tx
-					.insert(bookingNotification)
+					.insert(bookingReminder)
 					.values({
 						bookingId: b.bookingId,
 						userId,
@@ -99,12 +99,12 @@ export async function setNotificationPreference(
 				);
 
 			await tx
-				.delete(bookingNotification)
+				.delete(bookingReminder)
 				.where(
 					and(
-						inArray(bookingNotification.bookingId, futureBookingIds),
-						eq(bookingNotification.offsetMinutes, offsetMinutes),
-						eq(bookingNotification.status, 'pending')
+						inArray(bookingReminder.bookingId, futureBookingIds),
+						eq(bookingReminder.offsetMinutes, offsetMinutes),
+						eq(bookingReminder.status, 'pending')
 					)
 				);
 		}
@@ -112,11 +112,11 @@ export async function setNotificationPreference(
 
 	const username = await lookupUsername(userId);
 	log.info(
-		`[notification] preference set username=${username} resource=${resource} offset=${offsetMinutes} enabled=${enabled}`
+		`[reminder] preference set username=${username} resource=${resource} offset=${offsetMinutes} enabled=${enabled}`
 	);
 }
 
-export async function createBookingNotifications(
+export async function createBookingReminders(
 	bookingId: number,
 	userId: string,
 	resource: Resource,
@@ -131,20 +131,20 @@ export async function createBookingNotifications(
 	if (!block) return;
 
 	const prefs = await db
-		.select({ offsetMinutes: notificationPreference.offsetMinutes })
-		.from(notificationPreference)
+		.select({ offsetMinutes: reminderPreference.offsetMinutes })
+		.from(reminderPreference)
 		.where(
 			and(
-				eq(notificationPreference.userId, userId),
-				eq(notificationPreference.resource, resource),
-				eq(notificationPreference.enabled, true)
+				eq(reminderPreference.userId, userId),
+				eq(reminderPreference.resource, resource),
+				eq(reminderPreference.enabled, true)
 			)
 		);
 
 	for (const pref of prefs) {
 		const notifyAt = computeNotifyAt(dateStr, block.startHour, pref.offsetMinutes);
 		await db
-			.insert(bookingNotification)
+			.insert(bookingReminder)
 			.values({
 				bookingId,
 				userId,
@@ -157,7 +157,7 @@ export async function createBookingNotifications(
 	if (prefs.length > 0) {
 		const username = await lookupUsername(userId);
 		log.info(
-			`[notification] created ${prefs.length} reminder(s) username=${username} resource=${resource} date=${dateStr} startHour=${block.startHour}`
+			`[reminder] created ${prefs.length} reminder(s) username=${username} resource=${resource} date=${dateStr} startHour=${block.startHour}`
 		);
 	}
 }

@@ -1,13 +1,13 @@
 import * as v from 'valibot';
 import { query, command } from '$app/server';
 import { requireAuth } from '$lib/server/auth';
-import { getNotificationPreferences, setNotificationPreference } from '$lib/server/notification';
+import { getReminderPreferences, setReminderPreference } from '$lib/server/reminder';
 import { RESOURCES } from '$lib/types/bookings';
 import { touchUserActivity } from '$lib/server/activity';
 
 export const getPreferences = query(async () => {
 	const user = requireAuth();
-	return getNotificationPreferences(user.id);
+	return getReminderPreferences(user.id);
 });
 
 export const togglePreference = command(
@@ -18,7 +18,7 @@ export const togglePreference = command(
 	}),
 	async ({ resource, offsetMinutes, enabled }) => {
 		const user = requireAuth();
-		await setNotificationPreference(user.id, resource, offsetMinutes, enabled);
+		await setReminderPreference(user.id, resource, offsetMinutes, enabled);
 		await touchUserActivity(user.id);
 	}
 );

@@ -2,20 +2,20 @@
 	import { resolve } from '$app/paths';
 
 	let {
-		showNotificationHint,
+		showReminderHint,
 		showCalendarHint
-	}: { showNotificationHint: boolean; showCalendarHint: boolean } = $props();
+	}: { showReminderHint: boolean; showCalendarHint: boolean } = $props();
 
-	let notificationDismissed = $state(false);
+	let reminderDismissed = $state(false);
 	let calendarDismissed = $state(false);
 
-	let notificationVisible = $derived(showNotificationHint && !notificationDismissed);
+	let reminderVisible = $derived(showReminderHint && !reminderDismissed);
 	let calendarVisible = $derived(showCalendarHint && !calendarDismissed);
-	let anyVisible = $derived(notificationVisible || calendarVisible);
+	let anyVisible = $derived(reminderVisible || calendarVisible);
 
-	function dismissNotification() {
-		document.cookie = 'dismiss_hint_notifications=1; path=/; SameSite=Lax; max-age=2592000';
-		notificationDismissed = true;
+	function dismissReminder() {
+		document.cookie = 'dismiss_hint_reminders=1; path=/; SameSite=Lax; max-age=2592000';
+		reminderDismissed = true;
 	}
 
 	function dismissCalendar() {
@@ -24,16 +24,16 @@
 	}
 
 	function dismissAll() {
-		document.cookie = 'dismiss_hint_notifications=1; path=/; SameSite=Lax; max-age=315360000';
+		document.cookie = 'dismiss_hint_reminders=1; path=/; SameSite=Lax; max-age=315360000';
 		document.cookie = 'dismiss_hint_calendar=1; path=/; SameSite=Lax; max-age=315360000';
-		notificationDismissed = true;
+		reminderDismissed = true;
 		calendarDismissed = true;
 	}
 </script>
 
 {#if anyVisible}
 	<div class="mt-4 mb-2 flex flex-col gap-2">
-		{#if notificationVisible}
+		{#if reminderVisible}
 			<div
 				class="flex items-start justify-between rounded-sm border border-border-subtle px-4 py-3"
 			>
@@ -45,7 +45,7 @@
 					> för att få en påminnelse innan din bokning.
 				</p>
 				<button
-					onclick={dismissNotification}
+					onclick={dismissReminder}
 					class="ml-3 shrink-0 cursor-pointer text-base text-text-muted hover:text-text-secondary"
 					aria-label="Stäng tips">&#215;</button
 				>

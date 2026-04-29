@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { CalendarDate } from '@internationalized/date';
-import { computeNotifyAt } from './notification';
-import { buildBookingReminderVariables } from './notification.email';
+import { computeNotifyAt } from './reminder';
+import { buildBookingReminderVariables } from './reminder.email';
 
 describe('computeNotifyAt', () => {
 	it('subtracts 60 minutes from booking start', () => {

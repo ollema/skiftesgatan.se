@@ -1,15 +1,15 @@
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { notificationPreference } from '$lib/server/db/notification.schema';
+import { reminderPreference } from '$lib/server/db/reminder.schema';
 import { calendarToken } from '$lib/server/db/calendar.schema';
 
 export async function getSetupStatus(userId: string) {
 	const prefs = await db
-		.select({ enabled: notificationPreference.enabled })
-		.from(notificationPreference)
-		.where(eq(notificationPreference.userId, userId));
+		.select({ enabled: reminderPreference.enabled })
+		.from(reminderPreference)
+		.where(eq(reminderPreference.userId, userId));
 
-	const hasNotifications = prefs.some((p) => p.enabled);
+	const hasReminders = prefs.some((p) => p.enabled);
 
 	const tokens = await db
 		.select({ token: calendarToken.token })
@@ -19,5 +19,5 @@ export async function getSetupStatus(userId: string) {
 
 	const hasCalendarToken = tokens.length > 0;
 
-	return { hasNotifications, hasCalendarToken };
+	return { hasReminders, hasCalendarToken };
 }

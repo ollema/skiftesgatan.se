@@ -6,9 +6,9 @@ test.describe('setup hints', () => {
 
 		await page.goto('/tvattstuga');
 
-		const notificationHint = page.getByText('e-postaviseringar');
+		const reminderHint = page.getByText('e-postaviseringar');
 		const calendarHint = page.getByText('Prenumerera på dina bokningar');
-		await expect(notificationHint).toBeVisible();
+		await expect(reminderHint).toBeVisible();
 		await expect(calendarHint).toBeVisible();
 
 		const dismissAll = page.getByRole('button', { name: 'Visa inte tips' });
@@ -16,11 +16,11 @@ test.describe('setup hints', () => {
 
 		const dismissButtons = page.getByRole('button', { name: 'Stäng tips' });
 		await dismissButtons.first().click();
-		await expect(notificationHint).not.toBeVisible();
+		await expect(reminderHint).not.toBeVisible();
 		await expect(calendarHint).toBeVisible();
 
 		await page.reload();
-		await expect(notificationHint).not.toBeVisible();
+		await expect(reminderHint).not.toBeVisible();
 		await expect(calendarHint).toBeVisible();
 	});
 
@@ -49,7 +49,7 @@ test.describe('setup hints', () => {
 		await expect(page.getByText('Prenumerera på dina bokningar')).not.toBeVisible();
 	});
 
-	test('notification hint disappears after enabling notifications', async ({ asUser }) => {
+	test('reminder hint disappears after enabling reminders', async ({ asUser }) => {
 		const { page } = await asUser('C');
 
 		await page.goto('/tvattstuga');

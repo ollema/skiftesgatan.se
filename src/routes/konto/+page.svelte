@@ -9,7 +9,7 @@
 		regenerateCalendarUrl,
 		deleteCalendarUrl
 	} from '$lib/api/calendar.remote';
-	import { getPreferences, togglePreference } from '$lib/api/notification.remote';
+	import { getPreferences, togglePreference } from '$lib/api/reminder.remote';
 	import { Switch } from 'bits-ui';
 	import Button from '$lib/components/Button.svelte';
 	import EditDialog from '$lib/components/EditDialog.svelte';
@@ -110,7 +110,7 @@
 	</div>
 {/snippet}
 
-{#snippet notificationSwitch(
+{#snippet reminderSwitch(
 	label: string,
 	preferences: Awaited<ReturnType<typeof getPreferences>>,
 	resource: Resource,
@@ -150,15 +150,15 @@
 		<fieldset>
 			<legend class="mb-3 text-sm font-medium text-text-primary">Tvättstuga</legend>
 			<div class="flex flex-col gap-4">
-				{@render notificationSwitch('1 timme innan', preferences, 'laundry_room', 60)}
-				{@render notificationSwitch('1 dygn innan', preferences, 'laundry_room', 1440)}
+				{@render reminderSwitch('1 timme innan', preferences, 'laundry_room', 60)}
+				{@render reminderSwitch('1 dygn innan', preferences, 'laundry_room', 1440)}
 			</div>
 		</fieldset>
 
 		<fieldset>
 			<legend class="mb-3 text-sm font-medium text-text-primary">Uteplats</legend>
 			<div class="flex flex-col gap-4">
-				{@render notificationSwitch('1 dygn innan', preferences, 'outdoor_area', 1440)}
+				{@render reminderSwitch('1 dygn innan', preferences, 'outdoor_area', 1440)}
 			</div>
 		</fieldset>
 	</div>

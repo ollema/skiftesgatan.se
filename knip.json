@@ -3,7 +3,7 @@
 	"tags": ["-lintignore"],
 	"entry": [
 		"src/hooks.ts",
-		"src/lib/server/notification.scheduler.ts",
+		"src/lib/server/reminder.scheduler.ts",
 		"content-collections.ts",
 		"scripts/db/*.ts",
 		"scripts/generate-icons.ts",
