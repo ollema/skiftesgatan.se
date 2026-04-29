@@ -80,8 +80,14 @@ export const auth = betterAuth({
 							.set({ lastActiveAt: new Date() })
 							.where(eq(user.id, session.userId));
 					} catch (e) {
+						const [row] = await db
+							.select({ username: user.username })
+							.from(user)
+							.where(eq(user.id, session.userId))
+							.limit(1);
+						const username = row?.username ?? '<unknown>';
 						log.warn(
-							`[activity] failed to bump lastActiveAt on login userId=${session.userId}: ${e}`
+							`[activity] failed to update last-active timestamp on login for apartment ${username}: ${e}`
 						);
 					}
 				}

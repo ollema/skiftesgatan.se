@@ -43,7 +43,7 @@ export function checkRateLimit(name: string, max: number, windowSeconds: number)
 
 	if (bucket.count >= max) {
 		const retryAfter = Math.ceil((bucket.resetAt - now) / 1000);
-		log.warn(`[rate-limit] ${name} exceeded ip=${ip} retryAfter=${retryAfter}s`);
+		log.warn(`[rate-limit] ${name} exceeded for IP ${ip}, retry after ${retryAfter}s`);
 		return retryAfter;
 	}
 

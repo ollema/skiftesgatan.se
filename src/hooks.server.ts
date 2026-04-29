@@ -18,15 +18,19 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 
 	const response = await svelteKitHandler({ event, resolve, auth, building });
 
-	const userId = event.locals.user?.id;
+	const sessionUser = event.locals.user;
 	const method = event.request.method;
 	const isMutation = method !== 'GET' && method !== 'HEAD';
-	if (userId && isMutation && response.status < 400) {
+	if (sessionUser && isMutation && response.status < 400) {
 		void db
 			.update(user)
 			.set({ lastActiveAt: new Date() })
-			.where(eq(user.id, userId))
-			.catch((e) => log.warn(`[activity] failed to bump lastActiveAt userId=${userId}: ${e}`));
+			.where(eq(user.id, sessionUser.id))
+			.catch((e) =>
+				log.warn(
+					`[activity] failed to update last-active timestamp for apartment ${sessionUser.username}: ${e}`
+				)
+			);
 	}
 
 	return response;
