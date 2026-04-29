@@ -58,7 +58,7 @@ test.describe('admin', () => {
 		expect(resetUrl).toMatch(/\/api\/auth\/reset-password\//);
 	});
 
-	test('admin toggles notification preference for another user', async ({ asAdmin, asUser }) => {
+	test('admin toggles reminder preference for another user', async ({ asAdmin, asUser }) => {
 		const { user: target, page: targetPage } = await asUser('D');
 		const { page: adminPage } = await asAdmin();
 

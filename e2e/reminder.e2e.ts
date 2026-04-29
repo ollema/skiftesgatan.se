@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures';
 
-test.describe('notification preferences', () => {
+test.describe('reminder preferences', () => {
 	test('toggle switches update and persist across reload', async ({ asUser }) => {
 		const { page } = await asUser('D');
 

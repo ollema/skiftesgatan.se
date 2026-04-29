@@ -23,7 +23,7 @@ export const init: ServerInit = async () => {
 
 	validateEnv();
 
-	const { startScheduler } = await import('$lib/server/notification.scheduler');
+	const { startScheduler } = await import('$lib/server/reminder.scheduler');
 	startScheduler();
 };
 

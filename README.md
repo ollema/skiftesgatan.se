@@ -65,19 +65,19 @@ src/
         auth.schema.ts         # Better Auth tables (user, session, account, verification)
         booking.schema.ts      # Booking domain (time_block, booking)
         calendar.schema.ts     # iCal subscription tokens
-        notification.schema.ts # Notification preferences and scheduled reminders
+        reminder.schema.ts     # Reminder preferences and scheduled reminders
         schema.ts              # Re-exports all schemas for Drizzle
         index.ts               # Database client (postgres.js for dev/prod, PGlite for E2E)
       auth.ts                  # Better Auth server config
       auth.config.ts           # Username plugin, apartment validation
       booking.ts               # Booking queries and business logic
       calendar.ts              # iCal feed generation and token management
-      notification.ts          # Notification preferences and reminder scheduling
-      notification.scheduler.ts # Periodic worker that sends due reminders
-      notification.email.ts    # Reminder email template variables
+      reminder.ts              # Reminder preferences and scheduling
+      reminder.scheduler.ts    # Periodic worker that sends due reminders
+      reminder.email.ts        # Reminder email template variables
       email.ts                 # Resend integration with file-based fallback
       email.templates.ts       # Email template aliases
-      hints.ts                 # Setup-hint helpers (notifications, calendar)
+      hints.ts                 # Setup-hint helpers (reminders, calendar)
       env.ts                   # Required-env-var validation at startup
       log.ts                   # Console-based logger
     api/
@@ -87,7 +87,7 @@ src/
       calendar.remote.ts       # iCal token regeneration / removal
       contact.remote.ts        # Contact form submission
       hints.remote.ts          # Onboarding-hint state
-      notification.remote.ts   # Notification preference toggles
+      reminder.remote.ts       # Reminder preference toggles
     components/
       Button.svelte            # Primary/destructive button variants
       Calendar.svelte          # Month-view calendar with availability dots

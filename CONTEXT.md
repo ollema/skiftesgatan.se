@@ -47,7 +47,7 @@ _Avoid_: Notification (overly generic — not all system emails are Reminders; p
 
 **Reminder Preference**:
 A per-Apartment, per-Facility setting that controls whether and how far ahead Reminders are scheduled for that Facility's Bookings. Disabling the Preference cancels pending Reminders for the Apartment's future Bookings on that Facility.
-_Avoid_: Notification preference (DB name; planned rename).
+_Avoid_: Notification preference.
 
 **Calendar Subscription**:
 An Apartment's iCal feed of its own Active Bookings, exposed at a secret URL. The Apartment subscribes once from their phone's Calendar app and Bookings sync automatically. An Apartment has zero or one Calendar Subscription; it can be created, regenerated (rotates the URL), or removed.
@@ -102,4 +102,3 @@ _Avoid_: Username (the apartment number is the username), display username, name
 ## Flagged ambiguities
 
 - "User", "resident", and "member" were used interchangeably in early docs. Resolved: the actor is the **Apartment**. "Resident" remains acceptable in human-facing prose ("residents log in to book…") but is not a domain term in code or specs.
-- "Notification" was used for both the reminder concept and the DB tables. Resolved: domain term is **Reminder** / **Reminder Preference**. The DB tables `notification_preference` and `booking_notification`, files `notification*.ts`, and remote functions are to be renamed accordingly. Tracked as planned work.
