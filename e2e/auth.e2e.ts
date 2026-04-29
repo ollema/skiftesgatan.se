@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { uniqueUser, login } from './helpers';
+import { uniqueUser, login, openEditDialog } from './helpers';
 
 test.describe('auth flow', () => {
 	test('login, access protected page, sign out, login again', async ({ page }) => {
@@ -47,9 +47,7 @@ test.describe('auth flow', () => {
 		await expect(page.locator('h1')).toContainText('Hej,');
 
 		// Open the edit dialog
-		await page.getByRole('button', { name: 'Ändra' }).first().click();
-		const dialog = page.getByRole('dialog');
-		await expect(dialog).toBeVisible();
+		const dialog = await openEditDialog(page, 0);
 
 		const newName = 'Nytt Testnamn';
 		await dialog.getByLabel('Nytt visningsnamn').fill(newName);
@@ -67,9 +65,7 @@ test.describe('auth flow', () => {
 		await expect(page.locator('h1')).toContainText('Hej,');
 
 		// Open the password edit dialog (third "Ändra" button)
-		await page.getByRole('button', { name: 'Ändra' }).nth(2).click();
-		const dialog = page.getByRole('dialog');
-		await expect(dialog).toBeVisible();
+		const dialog = await openEditDialog(page, 2);
 
 		// Change password
 		const newPassword = 'NewPassword456!';

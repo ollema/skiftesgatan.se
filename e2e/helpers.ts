@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 import { EMAIL_TEMPLATES } from '../src/lib/server/email.templates';
 
@@ -78,10 +78,27 @@ export async function selectCalendarDate(page: Page, isoDate: string) {
 
 	// Click the day cell — bits-ui Day buttons have data-value="YYYY-MM-DD"
 	await calendar.locator(`[data-calendar-day][data-value="${isoDate}"]`).click();
+
+	// Gate on the slot list binding to the newly-selected date — without this,
+	// subsequent assertions race the calendar's state propagation under CI load.
+	await expect(page.locator(`[data-slots-date="${isoDate}"]`)).toBeVisible();
 }
 
 export async function confirmCancelDialog(page: Page) {
 	await page.getByRole('alertdialog').getByRole('button', { name: 'Bekräfta' }).click();
+}
+
+// Retries the click until the dialog opens. Inline `onclick` handlers on the account
+// page only wire up after Svelte hydration; a click that lands pre-hydration is silently
+// dropped, so a single click can race the page becoming interactive.
+export async function openEditDialog(page: Page, nth: number): Promise<Locator> {
+	const button = page.getByRole('button', { name: 'Ändra' }).nth(nth);
+	const dialog = page.getByRole('dialog');
+	await expect(async () => {
+		await button.click();
+		await expect(dialog).toBeVisible({ timeout: 250 });
+	}).toPass();
+	return dialog;
 }
 
 export async function login(page: Page, user: { username: string; password: string }) {

@@ -81,7 +81,7 @@
 	}
 </script>
 
-<div class="grid grid-cols-5 gap-2">
+<div class="grid grid-cols-5 gap-2" data-slots-date={date.toString()}>
 	{#each slots as slot (slot.timeBlockId)}
 		{@const timeRange = `${formatHourNumShort(slot.start)}–${formatHourNumShort(slot.end)}`}
 		{#if slot.status === 'free'}
