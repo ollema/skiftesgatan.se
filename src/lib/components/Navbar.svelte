@@ -2,11 +2,11 @@
 	import { NavigationMenu } from 'bits-ui';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { allPages, allNews } from 'content-collections';
+	import { allInformation, allNews } from 'content-collections';
 	import { parseDate, DateFormatter } from '@internationalized/date';
 	import { TIMEZONE } from '$lib/types/bookings';
 
-	const informationPages = allPages.filter((p) => p._meta.directory.startsWith('information'));
+	const informationPages = allInformation;
 
 	const latestNews = allNews
 		.toSorted((a, b) => parseDate(b.date).compare(parseDate(a.date)))
@@ -103,7 +103,9 @@
 							{#each informationPages as infoPage (infoPage._meta.path)}
 								<li>
 									<NavigationMenu.Link
-										href={resolve(`/${infoPage._meta.path}` as `/information/${string}`)}
+										href={resolve(
+											`/information/${infoPage._meta.path}` as `/information/${string}`
+										)}
 										class="block rounded-sm p-2 text-sm text-text-secondary no-underline transition-colors duration-120 hover:bg-bg hover:text-text-primary"
 									>
 										{infoPage.title}

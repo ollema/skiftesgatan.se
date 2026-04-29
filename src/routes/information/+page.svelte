@@ -2,12 +2,10 @@
 	import { MetaTags } from 'svelte-meta-tags';
 	import { metaDefaults, canonical } from '$lib/meta';
 	import { page } from '$app/state';
-	import { allPages } from 'content-collections';
+	import { allInformation } from 'content-collections';
 	import { resolve } from '$app/paths';
 
-	const informationPages = allPages.filter((page) =>
-		page._meta.directory.startsWith('information')
-	);
+	const informationPages = allInformation;
 </script>
 
 <MetaTags
@@ -21,7 +19,10 @@
 
 <div class="flex flex-col gap-6">
 	{#each informationPages as page (page._meta.path)}
-		<a href={resolve(`/${page._meta.path}` as `/information/${string}`)} class="text-lg">
+		<a
+			href={resolve(`/information/${page._meta.path}` as `/information/${string}`)}
+			class="text-lg"
+		>
 			{page.title}
 		</a>
 	{/each}
