@@ -18,11 +18,10 @@ const news = defineCollection({
 	}
 });
 
-const pages = defineCollection({
-	name: 'pages',
-	directory: 'content',
+const information = defineCollection({
+	name: 'information',
+	directory: 'content/information',
 	include: '**/*.md',
-	exclude: 'news/**',
 	schema: v.object({
 		title: v.string(),
 		content: v.string()
@@ -34,5 +33,5 @@ const pages = defineCollection({
 });
 
 export default defineConfig({
-	content: [news, pages]
+	content: [news, information]
 });

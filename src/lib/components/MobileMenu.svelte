@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { afterNavigate } from '$app/navigation';
-	import { allPages, allNews } from 'content-collections';
+	import { allInformation, allNews } from 'content-collections';
 	import { parseDate } from '@internationalized/date';
 
 	interface Props {
@@ -18,7 +18,7 @@
 		open = false;
 	});
 
-	const informationPages = allPages.filter((p) => p._meta.directory.startsWith('information'));
+	const informationPages = allInformation;
 
 	const latestNews = allNews
 		.toSorted((a, b) => parseDate(b.date).compare(parseDate(a.date)))
@@ -115,9 +115,10 @@
 					<div class="flex flex-col gap-1.5 pl-3">
 						{#each informationPages as infoPage (infoPage._meta.path)}
 							<a
-								href={resolve(`/${infoPage._meta.path}` as `/information/${string}`)}
+								href={resolve(`/information/${infoPage._meta.path}` as `/information/${string}`)}
 								class={subLinkClass}
-								class:text-text-primary={page.url.pathname === `/${infoPage._meta.path}`}
+								class:text-text-primary={page.url.pathname ===
+									`/information/${infoPage._meta.path}`}
 							>
 								{infoPage.title}
 							</a>
