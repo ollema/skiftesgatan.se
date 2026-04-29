@@ -3,7 +3,6 @@ import { query, command } from '$app/server';
 import { requireAuth } from '$lib/server/auth';
 import { getReminderPreferences, setReminderPreference } from '$lib/server/reminder';
 import { RESOURCES } from '$lib/types/bookings';
-import { touchUserActivity } from '$lib/server/activity';
 
 export const getPreferences = query(async () => {
 	const user = requireAuth();
@@ -19,6 +18,5 @@ export const togglePreference = command(
 	async ({ resource, offsetMinutes, enabled }) => {
 		const user = requireAuth();
 		await setReminderPreference(user.id, resource, offsetMinutes, enabled);
-		await touchUserActivity(user.id);
 	}
 );

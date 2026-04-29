@@ -1,6 +1,10 @@
 import type { Handle, HandleServerError, ServerInit } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
 import { building } from '$app/environment';
 import { auth } from '$lib/server/auth';
+import { db } from '$lib/server/db';
+import { user } from '$lib/server/db/auth.schema';
+import { log } from '$lib/server/log';
 import { validateEnv } from '$lib/server/env';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 
@@ -12,7 +16,20 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 		event.locals.user = session.user;
 	}
 
-	return svelteKitHandler({ event, resolve, auth, building });
+	const response = await svelteKitHandler({ event, resolve, auth, building });
+
+	const userId = event.locals.user?.id;
+	const method = event.request.method;
+	const isMutation = method !== 'GET' && method !== 'HEAD';
+	if (userId && isMutation && response.status < 400) {
+		void db
+			.update(user)
+			.set({ lastActiveAt: new Date() })
+			.where(eq(user.id, userId))
+			.catch((e) => log.warn(`[activity] failed to bump lastActiveAt userId=${userId}: ${e}`));
+	}
+
+	return response;
 };
 
 export const handle: Handle = handleBetterAuth;

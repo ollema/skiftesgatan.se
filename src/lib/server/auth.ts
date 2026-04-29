@@ -3,13 +3,15 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { redirect } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
+import { user } from '$lib/server/db/auth.schema';
+import { log } from '$lib/server/log';
 import { sendEmail } from '$lib/server/email';
 import { EMAIL_TEMPLATES } from '$lib/server/email.templates';
 import { PASSWORD_CONFIG, usernamePlugin } from '$lib/server/auth.config';
-import { touchUserActivity } from '$lib/server/activity';
 
 export const auth = betterAuth({
 	baseURL: env.ORIGIN,
@@ -72,15 +74,15 @@ export const auth = betterAuth({
 		session: {
 			create: {
 				after: async (session) => {
-					await touchUserActivity(session.userId);
-				}
-			}
-		},
-		user: {
-			update: {
-				after: async (updatedUser, ctx) => {
-					if (ctx?.context.session?.user.id === updatedUser.id) {
-						await touchUserActivity(updatedUser.id);
+					try {
+						await db
+							.update(user)
+							.set({ lastActiveAt: new Date() })
+							.where(eq(user.id, session.userId));
+					} catch (e) {
+						log.warn(
+							`[activity] failed to bump lastActiveAt on login userId=${session.userId}: ${e}`
+						);
 					}
 				}
 			}
