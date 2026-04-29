@@ -1,7 +1,86 @@
 import { describe, it, expect } from 'vitest';
-import { today } from '@internationalized/date';
+import { CalendarDateTime, toZoned, today } from '@internationalized/date';
 import { TIMEZONE } from '$lib/types/bookings';
-import { buildBookingPayload, validateBookingDate, type BookingCalendarRow } from './booking';
+import {
+	activeBookingWhere,
+	buildBookingPayload,
+	isBookingActive,
+	validateBookingDate,
+	type BookingCalendarRow
+} from './booking';
+
+describe('isBookingActive', () => {
+	// Slot 10–13 on 2026-04-15 in Europe/Stockholm. slotEnd = 2026-04-15 13:00:00.
+	const booking = { date: '2026-04-15', endHour: 13 };
+
+	function stockholmZdt(year: number, month: number, day: number, h: number, m: number, s = 0) {
+		return toZoned(new CalendarDateTime(year, month, day, h, m, s), TIMEZONE);
+	}
+
+	it('is Active at slotEnd - 1min', () => {
+		const now = stockholmZdt(2026, 4, 15, 12, 59, 0);
+		expect(isBookingActive(booking, now)).toBe(true);
+	});
+
+	it('is not Active at slotEnd exactly', () => {
+		const now = stockholmZdt(2026, 4, 15, 13, 0, 0);
+		expect(isBookingActive(booking, now)).toBe(false);
+	});
+
+	it('is not Active at slotEnd + 1min', () => {
+		const now = stockholmZdt(2026, 4, 15, 13, 1, 0);
+		expect(isBookingActive(booking, now)).toBe(false);
+	});
+
+	it('is Active when the Booking date is strictly in the future', () => {
+		const now = stockholmZdt(2026, 4, 15, 23, 59, 59);
+		expect(isBookingActive({ date: '2026-04-16', endHour: 7 }, now)).toBe(true);
+	});
+
+	it('is not Active when the Booking date is strictly in the past', () => {
+		const now = stockholmZdt(2026, 4, 15, 0, 0, 0);
+		expect(isBookingActive({ date: '2026-04-14', endHour: 22 }, now)).toBe(false);
+	});
+});
+
+describe('activeBookingWhere', () => {
+	function stockholmZdt(year: number, month: number, day: number, h: number, m: number, s = 0) {
+		return toZoned(new CalendarDateTime(year, month, day, h, m, s), TIMEZONE);
+	}
+
+	// The predicate is consumed by drizzle-orm; we rely on its queryChunks
+	// param values for behavioural assertions. Drizzle stores user-supplied
+	// values as `Param` instances whose `value` field is the bound value.
+	function paramValues(expr: ReturnType<typeof activeBookingWhere>): unknown[] {
+		const out: unknown[] = [];
+		function walk(node: unknown): void {
+			if (node === null || typeof node !== 'object') return;
+			const obj = node as Record<string, unknown>;
+			if ('value' in obj && !('queryChunks' in obj) && !('table' in obj)) {
+				out.push(obj.value);
+				return;
+			}
+			if ('queryChunks' in obj && Array.isArray(obj.queryChunks)) {
+				for (const c of obj.queryChunks) walk(c);
+			}
+		}
+		walk(expr);
+		return out;
+	}
+
+	it('parameterizes the predicate with today date string and current hour', () => {
+		const now = stockholmZdt(2026, 4, 15, 12, 30, 0);
+		const params = paramValues(activeBookingWhere(now));
+		expect(params).toContain('2026-04-15');
+		expect(params).toContain(12);
+	});
+
+	it('uses now.hour even at HH:00:00 boundary so endHour=HH is excluded', () => {
+		const now = stockholmZdt(2026, 4, 15, 13, 0, 0);
+		const params = paramValues(activeBookingWhere(now));
+		expect(params).toContain(13);
+	});
+});
 
 describe('validateBookingDate', () => {
 	const now = today(TIMEZONE);
@@ -34,6 +113,14 @@ describe('buildBookingPayload', () => {
 	const end = start.add({ months: 1 });
 	const startStr = start.toString();
 	const endStr = end.toString();
+	// `now` defaults to start-of-today so existing tests behave identically to the
+	// previous `today(TIMEZONE)`-based implementation.
+	const startOfToday = toZoned(
+		new CalendarDateTime(start.year, start.month, start.day, 0, 0, 0),
+		TIMEZONE
+	);
+	const callBuild = (rows: BookingCalendarRow[], user: { id: string } | null) =>
+		buildBookingPayload(rows, user, startOfToday);
 
 	function expectedDateStrings(): string[] {
 		const dates: string[] = [];
@@ -46,7 +133,7 @@ describe('buildBookingPayload', () => {
 	}
 
 	it('returns an empty slot array per day in the Booking Window when there are no time blocks', () => {
-		const { bookingCalendar, activeBooking } = buildBookingPayload([], me);
+		const { bookingCalendar, activeBooking } = callBuild([], me);
 
 		const dates = expectedDateStrings();
 		expect(Object.keys(bookingCalendar).sort()).toEqual([...dates].sort());
@@ -69,7 +156,7 @@ describe('buildBookingPayload', () => {
 			}
 		];
 
-		const { bookingCalendar, activeBooking } = buildBookingPayload(rows, me);
+		const { bookingCalendar, activeBooking } = callBuild(rows, me);
 
 		const dates = expectedDateStrings();
 		for (const d of dates) {
@@ -107,7 +194,7 @@ describe('buildBookingPayload', () => {
 			}
 		];
 
-		const { bookingCalendar, activeBooking } = buildBookingPayload(rows, me);
+		const { bookingCalendar, activeBooking } = callBuild(rows, me);
 
 		const todaySlot = bookingCalendar[startStr][0];
 		expect(todaySlot.status).toBe('mine');
@@ -143,7 +230,7 @@ describe('buildBookingPayload', () => {
 			}
 		];
 
-		const { activeBooking } = buildBookingPayload(rows, me);
+		const { activeBooking } = callBuild(rows, me);
 
 		expect(activeBooking?.bookingId).toBe(42);
 		expect(activeBooking?.date.toString()).toBe(startStr);
@@ -162,7 +249,7 @@ describe('buildBookingPayload', () => {
 			}
 		];
 
-		const { bookingCalendar, activeBooking } = buildBookingPayload(rows, me);
+		const { bookingCalendar, activeBooking } = callBuild(rows, me);
 
 		const slot = bookingCalendar[startStr][0];
 		expect(slot.status).toBe('other');
@@ -184,7 +271,7 @@ describe('buildBookingPayload', () => {
 			}
 		];
 
-		const { bookingCalendar, activeBooking } = buildBookingPayload(rows, null);
+		const { bookingCalendar, activeBooking } = callBuild(rows, null);
 
 		const slot = bookingCalendar[startStr][0];
 		expect(slot.status).toBe('other');
@@ -274,7 +361,7 @@ describe('buildBookingPayload', () => {
 			}
 		];
 
-		const { bookingCalendar, activeBooking } = buildBookingPayload(rows, me);
+		const { bookingCalendar, activeBooking } = callBuild(rows, me);
 
 		const dates = expectedDateStrings();
 		expect(Object.keys(bookingCalendar)).toHaveLength(dates.length);
@@ -302,5 +389,143 @@ describe('buildBookingPayload', () => {
 
 		expect(activeBooking?.bookingId).toBe(101);
 		expect(activeBooking?.date.toString()).toBe(midStr);
+	});
+
+	describe('past-end slots on today (slot-end-grain)', () => {
+		// Pin `now` to today at 13:30 in Stockholm. The 07–10 and 10–13 Slots have
+		// passed; 13–16, 16–19, 19–22 are still bookable.
+		const now1330 = toZoned(
+			new CalendarDateTime(start.year, start.month, start.day, 13, 30, 0),
+			TIMEZONE
+		);
+
+		const fiveLaundryBlocks: BookingCalendarRow[] = [
+			{
+				timeBlockId: 1,
+				startHour: 7,
+				endHour: 10,
+				date: null,
+				bookingId: null,
+				userId: null,
+				username: null
+			},
+			{
+				timeBlockId: 2,
+				startHour: 10,
+				endHour: 13,
+				date: null,
+				bookingId: null,
+				userId: null,
+				username: null
+			},
+			{
+				timeBlockId: 3,
+				startHour: 13,
+				endHour: 16,
+				date: null,
+				bookingId: null,
+				userId: null,
+				username: null
+			},
+			{
+				timeBlockId: 4,
+				startHour: 16,
+				endHour: 19,
+				date: null,
+				bookingId: null,
+				userId: null,
+				username: null
+			},
+			{
+				timeBlockId: 5,
+				startHour: 19,
+				endHour: 22,
+				date: null,
+				bookingId: null,
+				userId: null,
+				username: null
+			}
+		];
+
+		it('marks today\'s past-end Slots as "past" with no Booking info exposed', () => {
+			const rows: BookingCalendarRow[] = [
+				...fiveLaundryBlocks,
+				{
+					timeBlockId: 2,
+					startHour: 10,
+					endHour: 13,
+					date: startStr,
+					bookingId: 500,
+					userId: someoneElse.id,
+					username: 'B2002'
+				}
+			];
+
+			const { bookingCalendar } = buildBookingPayload(rows, me, now1330);
+
+			const todaySlots = bookingCalendar[startStr];
+			expect(todaySlots[0].status).toBe('past');
+			expect(todaySlots[0].bookingId).toBeNull();
+			expect(todaySlots[0].username).toBeNull();
+			expect(todaySlots[1].status).toBe('past');
+			expect(todaySlots[1].bookingId).toBeNull();
+			expect(todaySlots[1].username).toBeNull();
+			// 13–16 just-ended boundary: at 13:30 it's still active (endHour 16 > 13).
+			expect(todaySlots[2].status).toBe('free');
+			expect(todaySlots[3].status).toBe('free');
+			expect(todaySlots[4].status).toBe('free');
+		});
+
+		it('does not surface a Historical Booking as activeBooking', () => {
+			const rows: BookingCalendarRow[] = [
+				...fiveLaundryBlocks,
+				{
+					timeBlockId: 2,
+					startHour: 10,
+					endHour: 13,
+					date: startStr,
+					bookingId: 600,
+					userId: me.id,
+					username: 'A1001'
+				}
+			];
+
+			const { bookingCalendar, activeBooking } = buildBookingPayload(rows, me, now1330);
+
+			// My past-end Booking is invisible: slot is 'past', activeBooking undefined.
+			expect(bookingCalendar[startStr][1].status).toBe('past');
+			expect(bookingCalendar[startStr][1].bookingId).toBeNull();
+			expect(activeBooking).toBeUndefined();
+		});
+
+		it('still surfaces a future-slot Booking as activeBooking even if there is a Historical one earlier today', () => {
+			const tomorrowStr = start.add({ days: 1 }).toString();
+			const rows: BookingCalendarRow[] = [
+				...fiveLaundryBlocks,
+				{
+					timeBlockId: 2,
+					startHour: 10,
+					endHour: 13,
+					date: startStr,
+					bookingId: 700,
+					userId: me.id,
+					username: 'A1001'
+				},
+				{
+					timeBlockId: 1,
+					startHour: 7,
+					endHour: 10,
+					date: tomorrowStr,
+					bookingId: 701,
+					userId: me.id,
+					username: 'A1001'
+				}
+			];
+
+			const { activeBooking } = buildBookingPayload(rows, me, now1330);
+
+			expect(activeBooking?.bookingId).toBe(701);
+			expect(activeBooking?.date.toString()).toBe(tomorrowStr);
+		});
 	});
 });

@@ -4,7 +4,7 @@ export const TIMEZONE = 'Europe/Stockholm';
 export const RESOURCES = ['laundry_room', 'outdoor_area'] as const;
 export type Resource = (typeof RESOURCES)[number];
 
-export type SlotStatus = 'free' | 'mine' | 'other';
+export type SlotStatus = 'free' | 'mine' | 'other' | 'past';
 
 export type Slot = {
 	timeBlockId: number;

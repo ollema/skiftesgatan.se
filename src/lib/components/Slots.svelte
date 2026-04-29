@@ -106,6 +106,15 @@
 			>
 				{slot.username}
 			</button>
+		{:else if slot.status === 'past'}
+			<button
+				data-slot-status="past"
+				aria-label={`Tiden ${timeRange} har varit`}
+				class="cursor-not-allowed rounded-sm border border-border px-2 py-1.5 text-center text-xs whitespace-nowrap text-text-secondary opacity-50 sm:text-sm"
+				disabled
+			>
+				{formatHourNumShort(slot.start)}&ndash;{formatHourNumShort(slot.end)}
+			</button>
 		{:else}
 			<button
 				data-slot-status="booked"

@@ -1,9 +1,10 @@
 import { randomUUID } from 'crypto';
-import { eq, and, gte } from 'drizzle-orm';
-import { today } from '@internationalized/date';
+import { eq, and } from 'drizzle-orm';
+import type { ZonedDateTime } from '@internationalized/date';
 import ical, { ICalCalendarMethod } from 'ical-generator';
 import { db } from '$lib/server/db';
 import { booking, timeBlock, calendarToken } from '$lib/server/db/schema';
+import { activeBookingWhere } from '$lib/server/booking';
 import { TIMEZONE } from '$lib/types/bookings';
 
 const RESOURCE_LABELS = {
@@ -55,9 +56,7 @@ function pad(n: number): string {
 	return n.toString().padStart(2, '0');
 }
 
-export async function generateCalendarFeed(userId: string): Promise<string> {
-	const todayStr = today(TIMEZONE).toString();
-
+export async function generateCalendarFeed(userId: string, now: ZonedDateTime): Promise<string> {
 	const bookings = await db
 		.select({
 			bookingId: booking.id,
@@ -68,7 +67,7 @@ export async function generateCalendarFeed(userId: string): Promise<string> {
 		})
 		.from(booking)
 		.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
-		.where(and(eq(booking.userId, userId), gte(booking.date, todayStr)));
+		.where(and(eq(booking.userId, userId), activeBookingWhere(now)));
 
 	const cal = ical({
 		name: 'BRF Skiftesgatan 4 - Bokningar',

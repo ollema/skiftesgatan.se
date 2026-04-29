@@ -17,7 +17,8 @@
 	const statusColorMap: Record<SlotStatus, string> = {
 		free: 'border border-border',
 		mine: 'bg-slot-mine',
-		other: 'bg-slot-occupied'
+		other: 'bg-slot-occupied',
+		past: 'border border-border opacity-50'
 	};
 
 	function onValueChange(newValue: DateValue | undefined) {

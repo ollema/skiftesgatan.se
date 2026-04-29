@@ -34,7 +34,7 @@ export const getBookingData = query(
 		const zdt = now(TIMEZONE);
 		const fetchedAt = new Time(zdt.hour, zdt.minute, zdt.second);
 
-		const { bookingCalendar, activeBooking } = buildBookingPayload(rawRows, user);
+		const { bookingCalendar, activeBooking } = buildBookingPayload(rawRows, user, zdt);
 
 		return { bookingCalendar, activeBooking, fetchedAt };
 	}
@@ -60,7 +60,8 @@ export const book = command(
 			timeBlockId,
 			resource,
 			date,
-			replaceBookingId
+			replaceBookingId,
+			now: now(TIMEZONE)
 		});
 
 		if (result.kind === 'replace_not_found') error(404, 'Befintlig bokning hittades inte');
@@ -105,7 +106,7 @@ export const book = command(
 export const cancelBooking = command(v.object({ bookingId: v.number() }), async ({ bookingId }) => {
 	const user = requireAuth();
 
-	const result = await cancelBookingDb(bookingId, user.id);
+	const result = await cancelBookingDb(bookingId, user.id, now(TIMEZONE));
 	if (!result) {
 		error(404, 'Bokningen hittades inte');
 	}
