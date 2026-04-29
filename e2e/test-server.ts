@@ -2,11 +2,17 @@ import { spawn, type ChildProcess } from 'node:child_process';
 
 type SpawnedServer = { proc: ChildProcess; url: string };
 
+// Pin a fixed secret so the global-setup session bake and the per-worker
+// preview servers sign and verify cookies with the same key, regardless of
+// what `.env` or the host environment provides.
+export const TEST_AUTH_SECRET = 'ci-dummy-secret-not-for-production';
+
 const SERVER_ENV = {
 	RESEND_API_KEY: '',
 	LOG_LEVEL: 'error',
 	SKIP_ENV_VALIDATION: '1',
-	RATE_LIMIT_DISABLED: '1'
+	RATE_LIMIT_DISABLED: '1',
+	BETTER_AUTH_SECRET: TEST_AUTH_SECRET
 } as const;
 
 export function spawnPreview(port: number, dbPath: string): SpawnedServer {

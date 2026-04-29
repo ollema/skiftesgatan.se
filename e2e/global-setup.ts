@@ -1,9 +1,13 @@
-import { mkdirSync, rmSync } from 'node:fs';
-import { chromium, type Browser } from '@playwright/test';
-import { runScript, spawnPreview, waitForReady } from './test-server';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { PGlite } from '@electric-sql/pglite';
+import { betterAuth } from 'better-auth/minimal';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { drizzle } from 'drizzle-orm/pglite';
+import { PASSWORD_CONFIG, usernamePlugin } from '../src/lib/server/auth.config.js';
+import * as schema from '../src/lib/server/db/schema.js';
+import { runScript, TEST_AUTH_SECRET } from './test-server';
 
 const TEMPLATE_PATH = '.pglite-test-template';
-const SETUP_PORT = 4172;
 const AUTH_DIR = '.auth';
 
 const APARTMENTS: string[] = [];
@@ -31,41 +35,91 @@ export default async function globalSetup() {
 	await runScript('pnpx', ['tsx', 'scripts/db/seed-test.ts'], { PGLITE_PATH: TEMPLATE_PATH });
 	await runScript('pnpm', ['build'], {});
 
-	const server = spawnPreview(SETUP_PORT, TEMPLATE_PATH);
-	try {
-		await waitForReady(server.url);
+	await bakeStorageStates();
+}
 
-		const browser = await chromium.launch();
-		try {
-			// Bake serially: even 4-way parallelism queues on PGlite's single
-			// writer hard enough to blow the 60s waitForURL on 2-vCPU GitHub
-			// runners. Issue #22 tracks skipping HTTP login entirely.
-			const BATCH = 1;
-			for (let i = 0; i < APARTMENTS.length; i += BATCH) {
-				const batch = APARTMENTS.slice(i, i + BATCH);
-				await Promise.all(batch.map((u) => bakeStorageState(browser, server.url, u)));
+async function bakeStorageStates() {
+	const client = new PGlite(TEMPLATE_PATH);
+	try {
+		const db = drizzle(client, { schema });
+		const auth = betterAuth({
+			baseURL: 'http://localhost',
+			secret: TEST_AUTH_SECRET,
+			logger: { disabled: true },
+			database: drizzleAdapter(db, { provider: 'pg' }),
+			emailAndPassword: {
+				enabled: true,
+				requireEmailVerification: false,
+				...PASSWORD_CONFIG
+			},
+			plugins: [usernamePlugin()]
+		});
+
+		for (const username of APARTMENTS) {
+			const result = await auth.api.signInUsername({
+				body: { username, password: `password-${username}` },
+				returnHeaders: true
+			});
+			const setCookies = result.headers?.getSetCookie() ?? [];
+			if (setCookies.length === 0) {
+				throw new Error(`No Set-Cookie header returned when baking session for ${username}`);
 			}
-		} finally {
-			await browser.close();
+			const cookies = setCookies.map((raw) => parseSetCookieForStorageState(raw));
+			writeFileSync(`${AUTH_DIR}/${username}.json`, JSON.stringify({ cookies, origins: [] }));
 		}
 	} finally {
-		server.proc.kill('SIGTERM');
+		await client.close();
 	}
 }
 
-async function bakeStorageState(browser: Browser, serverUrl: string, username: string) {
-	const ctx = await browser.newContext({ baseURL: serverUrl });
-	try {
-		const page = await ctx.newPage();
-		await page.goto('/konto/logga-in');
-		const loginForm = page.locator('form').nth(0);
-		await loginForm.getByLabel('Lägenhet').fill(username);
-		await loginForm.getByLabel('Lösenord').fill(`password-${username}`);
-		await loginForm.getByRole('button', { name: 'Logga in' }).click();
-		// Slow CI runners can take >30s under contention to drain the PGlite write queue.
-		await page.waitForURL('/konto', { timeout: 60_000 });
-		await ctx.storageState({ path: `${AUTH_DIR}/${username}.json` });
-	} finally {
-		await ctx.close();
+type PlaywrightCookie = {
+	name: string;
+	value: string;
+	domain: string;
+	path: string;
+	expires: number;
+	httpOnly: boolean;
+	secure: boolean;
+	sameSite: 'Strict' | 'Lax' | 'None';
+};
+
+function parseSetCookieForStorageState(setCookie: string): PlaywrightCookie {
+	const [nameValue, ...attrs] = setCookie.split(';').map((s) => s.trim());
+	const eqIdx = nameValue.indexOf('=');
+	const name = nameValue.slice(0, eqIdx);
+	const value = nameValue.slice(eqIdx + 1);
+
+	let path = '/';
+	let httpOnly = false;
+	let secure = false;
+	let sameSite: 'Strict' | 'Lax' | 'None' = 'Lax';
+	let expires = -1;
+
+	for (const attr of attrs) {
+		const [rawName, ...rawValueParts] = attr.split('=');
+		const attrName = rawName.trim().toLowerCase();
+		const attrValue = rawValueParts.join('=').trim();
+		if (attrName === 'max-age') {
+			const maxAge = parseInt(attrValue, 10);
+			if (Number.isFinite(maxAge)) {
+				expires = Math.floor(Date.now() / 1000) + maxAge;
+			}
+		} else if (attrName === 'expires') {
+			const t = Date.parse(attrValue);
+			if (!Number.isNaN(t)) expires = Math.floor(t / 1000);
+		} else if (attrName === 'path') {
+			path = attrValue || '/';
+		} else if (attrName === 'httponly') {
+			httpOnly = true;
+		} else if (attrName === 'secure') {
+			secure = true;
+		} else if (attrName === 'samesite') {
+			const v = attrValue.toLowerCase();
+			sameSite = v === 'strict' ? 'Strict' : v === 'none' ? 'None' : 'Lax';
+		}
 	}
+
+	// Tests visit different localhost ports across workers; cookies are not
+	// scoped by port, so a domain of `localhost` matches every worker URL.
+	return { name, value, domain: 'localhost', path, expires, httpOnly, secure, sameSite };
 }
