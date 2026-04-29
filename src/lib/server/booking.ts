@@ -1,8 +1,41 @@
-import { type CalendarDate, today } from '@internationalized/date';
-import { eq, and, gte, lte } from 'drizzle-orm';
+import {
+	CalendarDateTime,
+	type CalendarDate,
+	type ZonedDateTime,
+	parseDate,
+	toZoned,
+	today
+} from '@internationalized/date';
+import { eq, and, gt, gte, lte, or, type SQL } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { booking, timeBlock, user } from '$lib/server/db/schema';
 import { TIMEZONE, type Resource, type Slot } from '$lib/types/bookings';
+
+export function isBookingActive(b: { date: string; endHour: number }, now: ZonedDateTime): boolean {
+	const d = parseDate(b.date);
+	const slotEnd = toZoned(new CalendarDateTime(d.year, d.month, d.day, b.endHour), TIMEZONE);
+	return slotEnd.compare(now) > 0;
+}
+
+function pad2(n: number): string {
+	return n.toString().padStart(2, '0');
+}
+
+function nowDateStr(now: ZonedDateTime): string {
+	return `${now.year}-${pad2(now.month)}-${pad2(now.day)}`;
+}
+
+export function activeBookingWhere(now: ZonedDateTime): SQL {
+	const todayStr = nowDateStr(now);
+	// SlotEnd > now ⇔ either the Booking is on a strictly-future date, or it is
+	// on today and its endHour exceeds the current hour. Endhours are integer
+	// hours (≤ 22), so comparing to `now.hour` correctly excludes a slot that
+	// just ended at HH:00:00 (then `now.hour === HH`, so `endHour > HH` fails).
+	return or(
+		gt(booking.date, todayStr),
+		and(eq(booking.date, todayStr), gt(timeBlock.endHour, now.hour))
+	) as SQL;
+}
 
 const PG_UNIQUE_VIOLATION = '23505';
 
@@ -73,7 +106,8 @@ export async function getBookingCalendar(resource: Resource): Promise<BookingCal
 
 export function buildBookingPayload(
 	rawRows: BookingCalendarRow[],
-	user: { id: string } | null
+	user: { id: string } | null,
+	now: ZonedDateTime
 ): { bookingCalendar: Record<string, Slot[]>; activeBooking: Slot | undefined } {
 	const timeBlockSet = new Map<number, { startHour: number; endHour: number }>();
 	for (const row of rawRows) {
@@ -100,6 +134,8 @@ export function buildBookingPayload(
 		}
 	}
 
+	// Date-grain stays for "show all of today's Slots" — past Slots from earlier
+	// today remain visible as a non-interactive 'past' status.
 	const start = today(TIMEZONE);
 	const end = start.add({ months: 1 });
 
@@ -113,7 +149,18 @@ export function buildBookingPayload(
 
 		for (const [tid, tb] of timeBlocks) {
 			const b = bookingMap.get(`${dateStr}:${tid}`);
-			const status = b === undefined ? 'free' : b.userId === user?.id ? 'mine' : 'other';
+			const slotActive = isBookingActive({ date: dateStr, endHour: tb.endHour }, now);
+			const status: Slot['status'] = !slotActive
+				? 'past'
+				: b === undefined
+					? 'free'
+					: b.userId === user?.id
+						? 'mine'
+						: 'other';
+
+			// Past-end slots: Historical Bookings are invisible on user-facing
+			// surfaces. The cell stays in the grid but exposes no Booking info.
+			const exposeBooking = slotActive && b !== undefined;
 
 			slots.push({
 				timeBlockId: tid,
@@ -121,11 +168,11 @@ export function buildBookingPayload(
 				start: tb.startHour,
 				end: tb.endHour,
 				status,
-				bookingId: b?.bookingId ?? null,
-				username: user ? (b?.username ?? null) : null
+				bookingId: exposeBooking ? b.bookingId : null,
+				username: exposeBooking && user ? (b.username ?? null) : null
 			});
 
-			if (activeBooking === undefined && b !== undefined && b.userId === user?.id) {
+			if (activeBooking === undefined && slotActive && b !== undefined && b.userId === user?.id) {
 				activeBooking = {
 					timeBlockId: tid,
 					date: current,
@@ -167,6 +214,7 @@ export async function bookSlot(params: {
 	resource: Resource;
 	date: CalendarDate;
 	replaceBookingId?: number;
+	now: ZonedDateTime;
 }): Promise<BookSlotResult> {
 	try {
 		return await db.transaction(async (tx) => {
@@ -175,7 +223,7 @@ export async function bookSlot(params: {
 			// breaking the one-active-booking-per-user-per-resource rule.
 			await tx.select({ id: user.id }).from(user).where(eq(user.id, params.userId)).for('update');
 
-			const todayStr = today(TIMEZONE).toString();
+			const activeWhere = activeBookingWhere(params.now);
 			let cancelled: { resource: Resource; date: string; startHour: number } | null = null;
 
 			if (params.replaceBookingId !== undefined) {
@@ -191,7 +239,7 @@ export async function bookSlot(params: {
 						and(
 							eq(booking.id, params.replaceBookingId),
 							eq(booking.userId, params.userId),
-							gte(booking.date, todayStr)
+							activeWhere
 						)
 					)
 					.limit(1);
@@ -200,13 +248,7 @@ export async function bookSlot(params: {
 
 				const deleted = await tx
 					.delete(booking)
-					.where(
-						and(
-							eq(booking.id, params.replaceBookingId),
-							eq(booking.userId, params.userId),
-							gte(booking.date, todayStr)
-						)
-					)
+					.where(and(eq(booking.id, params.replaceBookingId), eq(booking.userId, params.userId)))
 					.returning();
 
 				if (deleted.length === 0) throw new BookSlotConflict('replace_not_found');
@@ -215,11 +257,12 @@ export async function bookSlot(params: {
 				const existing = await tx
 					.select({ id: booking.id })
 					.from(booking)
+					.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
 					.where(
 						and(
 							eq(booking.userId, params.userId),
 							eq(booking.resource, params.resource),
-							gte(booking.date, todayStr)
+							activeWhere
 						)
 					)
 					.limit(1);
@@ -252,9 +295,10 @@ export async function bookSlot(params: {
 
 export async function cancelBooking(
 	bookingId: number,
-	userId: string
+	userId: string,
+	now: ZonedDateTime
 ): Promise<{ resource: Resource; date: string; startHour: number } | null> {
-	const todayStr = today(TIMEZONE).toString();
+	const activeWhere = activeBookingWhere(now);
 	const [info] = await db
 		.select({
 			resource: booking.resource,
@@ -263,12 +307,12 @@ export async function cancelBooking(
 		})
 		.from(booking)
 		.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
-		.where(and(eq(booking.id, bookingId), eq(booking.userId, userId), gte(booking.date, todayStr)))
+		.where(and(eq(booking.id, bookingId), eq(booking.userId, userId), activeWhere))
 		.limit(1);
 	if (!info) return null;
 	const result = await db
 		.delete(booking)
-		.where(and(eq(booking.id, bookingId), eq(booking.userId, userId), gte(booking.date, todayStr)))
+		.where(and(eq(booking.id, bookingId), eq(booking.userId, userId)))
 		.returning();
 	if (result.length === 0) return null;
 	return info;
