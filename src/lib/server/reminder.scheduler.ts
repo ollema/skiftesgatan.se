@@ -51,7 +51,7 @@ export async function processReminders(): Promise<number> {
 				.set({ status: 'sent', sentAt: currentTime, resendId })
 				.where(eq(bookingReminder.id, reminder.id));
 			log.info(
-				`[scheduler] sent reminder to apartment ${reminder.username} for ${slotPhrase(reminder.resource, reminder.date, reminder.startHour)}`
+				`[scheduler] sent reminder to apartment ${reminder.username} for ${slotPhrase(reminder.resource, reminder.date, reminder.startHour, reminder.endHour)}`
 			);
 		} catch (e) {
 			const failReason = e instanceof Error ? e.message : String(e);
@@ -60,7 +60,7 @@ export async function processReminders(): Promise<number> {
 				.set({ status: 'failed', failReason })
 				.where(eq(bookingReminder.id, reminder.id));
 			log.error(
-				`[scheduler] failed to send reminder to apartment ${reminder.username} for ${slotPhrase(reminder.resource, reminder.date, reminder.startHour)}: ${failReason}`
+				`[scheduler] failed to send reminder to apartment ${reminder.username} for ${slotPhrase(reminder.resource, reminder.date, reminder.startHour, reminder.endHour)}: ${failReason}`
 			);
 		}
 	}
