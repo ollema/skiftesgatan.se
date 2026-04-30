@@ -7,8 +7,9 @@ import { slotPhrase } from '$lib/server/log.prose';
 import { sendEmail } from '$lib/server/email';
 import { EMAIL_TEMPLATES } from '$lib/server/email.templates';
 import { bookingReminder } from '$lib/server/db/reminder.schema';
-import { booking, timeBlock } from '$lib/server/db/booking.schema';
+import { booking } from '$lib/server/db/booking.schema';
 import { user } from '$lib/server/db/auth.schema';
+import { getTimeBlockHours } from '$lib/server/booking';
 import { buildBookingReminderVariables } from '$lib/server/reminder.email';
 
 export async function processReminders(): Promise<number> {
@@ -21,23 +22,22 @@ export async function processReminders(): Promise<number> {
 			username: user.username,
 			resource: booking.resource,
 			date: booking.date,
-			startHour: timeBlock.startHour,
-			endHour: timeBlock.endHour
+			timeBlockId: booking.timeBlockId
 		})
 		.from(bookingReminder)
 		.innerJoin(user, eq(bookingReminder.userId, user.id))
 		.innerJoin(booking, eq(bookingReminder.bookingId, booking.id))
-		.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
 		.where(and(eq(bookingReminder.status, 'pending'), lte(bookingReminder.notifyAt, currentTime)))
 		.orderBy(bookingReminder.notifyAt)
 		.limit(50);
 
 	for (const reminder of due) {
+		const { startHour, endHour } = await getTimeBlockHours(reminder.timeBlockId);
 		const variables = buildBookingReminderVariables({
 			resource: reminder.resource,
 			date: reminder.date,
-			startHour: reminder.startHour,
-			endHour: reminder.endHour
+			startHour,
+			endHour
 		});
 
 		try {
@@ -51,7 +51,7 @@ export async function processReminders(): Promise<number> {
 				.set({ status: 'sent', sentAt: currentTime, resendId })
 				.where(eq(bookingReminder.id, reminder.id));
 			log.info(
-				`[scheduler] sent reminder to apartment ${reminder.username} for ${slotPhrase(reminder.resource, reminder.date, reminder.startHour, reminder.endHour)}`
+				`[scheduler] sent reminder to apartment ${reminder.username} for ${slotPhrase(reminder.resource, reminder.date, startHour, endHour)}`
 			);
 		} catch (e) {
 			const failReason = e instanceof Error ? e.message : String(e);
@@ -60,7 +60,7 @@ export async function processReminders(): Promise<number> {
 				.set({ status: 'failed', failReason })
 				.where(eq(bookingReminder.id, reminder.id));
 			log.error(
-				`[scheduler] failed to send reminder to apartment ${reminder.username} for ${slotPhrase(reminder.resource, reminder.date, reminder.startHour, reminder.endHour)}: ${failReason}`
+				`[scheduler] failed to send reminder to apartment ${reminder.username} for ${slotPhrase(reminder.resource, reminder.date, startHour, endHour)}: ${failReason}`
 			);
 		}
 	}
