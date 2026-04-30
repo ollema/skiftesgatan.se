@@ -2,7 +2,8 @@ import { CalendarDateTime, parseDate, toZoned, today } from '@internationalized/
 import { eq, and, gte, inArray } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { reminderPreference, bookingReminder } from '$lib/server/db/reminder.schema';
-import { booking, timeBlock } from '$lib/server/db/booking.schema';
+import { booking } from '$lib/server/db/booking.schema';
+import { getTimeBlockHours } from '$lib/server/booking';
 import { TIMEZONE, type Resource } from '$lib/types/bookings';
 
 export function computeNotifyAt(dateStr: string, startHour: number, offsetMinutes: number): Date {
@@ -51,10 +52,9 @@ export async function setReminderPreference(
 				.select({
 					bookingId: booking.id,
 					date: booking.date,
-					startHour: timeBlock.startHour
+					timeBlockId: booking.timeBlockId
 				})
 				.from(booking)
-				.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
 				.where(
 					and(
 						eq(booking.userId, userId),
@@ -64,7 +64,8 @@ export async function setReminderPreference(
 				);
 
 			for (const b of futureBookings) {
-				const notifyAt = computeNotifyAt(b.date, b.startHour, offsetMinutes);
+				const { startHour } = await getTimeBlockHours(b.timeBlockId);
+				const notifyAt = computeNotifyAt(b.date, startHour, offsetMinutes);
 				await tx
 					.insert(bookingReminder)
 					.values({
@@ -107,12 +108,7 @@ export async function createBookingReminders(
 	dateStr: string,
 	timeBlockId: number
 ): Promise<number> {
-	const [block] = await db
-		.select({ startHour: timeBlock.startHour })
-		.from(timeBlock)
-		.where(eq(timeBlock.id, timeBlockId));
-
-	if (!block) return 0;
+	const { startHour } = await getTimeBlockHours(timeBlockId);
 
 	const prefs = await db
 		.select({ offsetMinutes: reminderPreference.offsetMinutes })
@@ -126,7 +122,7 @@ export async function createBookingReminders(
 		);
 
 	for (const pref of prefs) {
-		const notifyAt = computeNotifyAt(dateStr, block.startHour, pref.offsetMinutes);
+		const notifyAt = computeNotifyAt(dateStr, startHour, pref.offsetMinutes);
 		await db
 			.insert(bookingReminder)
 			.values({

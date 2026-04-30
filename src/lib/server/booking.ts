@@ -68,14 +68,9 @@ export async function __buildTimeBlockMap(
 
 /**
  * Resolves a `time_block_id` to its `(resource, startHour, endHour)` via a
- * lazy module-level cache. Used internally by `bookSlot`; exported for the
- * follow-up slice of #34 that drops `innerJoin(timeBlock, ...)` from
- * `reminder.ts` / `reminder.scheduler.ts` / `calendar.ts` and resolves a
- * Booking's hours through this cache instead. Per ADR-0004 the cache covers
- * historic rows (whose `(resource, startHour)` may no longer be in
- * `TIME_BLOCKS`), which a `findTimeBlock` constant lookup cannot.
- *
- * @lintignore
+ * lazy module-level cache. Per ADR-0004 the cache covers historic rows
+ * (whose `(resource, startHour)` may no longer be in `TIME_BLOCKS`), which a
+ * `findTimeBlock` constant lookup cannot.
  */
 export async function getTimeBlockHours(timeBlockId: number): Promise<TimeBlockHours> {
 	timeBlockCachePromise ??= __buildTimeBlockMap(db);
