@@ -1,10 +1,10 @@
 import { randomUUID } from 'crypto';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, gte } from 'drizzle-orm';
 import type { ZonedDateTime } from '@internationalized/date';
 import ical, { ICalCalendarMethod } from 'ical-generator';
 import { db } from '$lib/server/db';
-import { booking, timeBlock, calendarToken } from '$lib/server/db/schema';
-import { activeBookingWhere } from '$lib/server/booking';
+import { booking, calendarToken } from '$lib/server/db/schema';
+import { getTimeBlockHours, isBookingActive } from '$lib/server/booking';
 import { TIMEZONE } from '$lib/types/bookings';
 
 const RESOURCE_LABELS = {
@@ -56,18 +56,20 @@ function pad(n: number): string {
 	return n.toString().padStart(2, '0');
 }
 
+function todayStr(now: ZonedDateTime): string {
+	return `${now.year}-${pad(now.month)}-${pad(now.day)}`;
+}
+
 export async function generateCalendarFeed(userId: string, now: ZonedDateTime): Promise<string> {
-	const bookings = await db
+	const rows = await db
 		.select({
 			bookingId: booking.id,
 			resource: booking.resource,
 			date: booking.date,
-			startHour: timeBlock.startHour,
-			endHour: timeBlock.endHour
+			timeBlockId: booking.timeBlockId
 		})
 		.from(booking)
-		.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
-		.where(and(eq(booking.userId, userId), activeBookingWhere(now)));
+		.where(and(eq(booking.userId, userId), gte(booking.date, todayStr(now))));
 
 	const cal = ical({
 		name: 'BRF Skiftesgatan 4 - Bokningar',
@@ -76,14 +78,15 @@ export async function generateCalendarFeed(userId: string, now: ZonedDateTime): 
 		timezone: TIMEZONE
 	});
 
-	for (const b of bookings) {
-		const label = RESOURCE_LABELS[b.resource];
+	for (const b of rows) {
+		const { startHour, endHour } = await getTimeBlockHours(b.timeBlockId);
+		if (!isBookingActive({ date: b.date, endHour }, now)) continue;
 
 		cal.createEvent({
 			id: `booking-${b.bookingId}@skiftesgatan.se`,
-			summary: label,
-			start: new Date(`${b.date}T${pad(b.startHour)}:00:00`),
-			end: new Date(`${b.date}T${pad(b.endHour)}:00:00`),
+			summary: RESOURCE_LABELS[b.resource],
+			start: new Date(`${b.date}T${pad(startHour)}:00:00`),
+			end: new Date(`${b.date}T${pad(endHour)}:00:00`),
 			timezone: TIMEZONE,
 			location: 'Skiftesgatan 4 41739 Göteborg'
 		});
