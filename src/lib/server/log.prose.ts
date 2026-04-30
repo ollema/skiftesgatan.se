@@ -1,15 +1,4 @@
-import type { Resource } from '$lib/types/bookings';
-
-const TIME_BLOCKS: Record<Resource, ReadonlyArray<readonly [number, number]>> = {
-	laundry_room: [
-		[7, 10],
-		[10, 13],
-		[13, 16],
-		[16, 19],
-		[19, 22]
-	],
-	outdoor_area: [[7, 22]]
-};
+import { findTimeBlock, type Resource } from '$lib/types/bookings';
 
 function pad2(n: number): string {
 	return n.toString().padStart(2, '0');
@@ -20,11 +9,7 @@ function pad2(n: number): string {
 // passed in, so call sites carry the (resource, date, startHour) trio they
 // already have.
 export function slotTimeRange(resource: Resource, date: string, startHour: number): string {
-	const block = TIME_BLOCKS[resource].find(([s]) => s === startHour);
-	if (!block) {
-		throw new Error(`unknown time block for ${resource} startHour=${startHour}`);
-	}
-	const [start, end] = block;
+	const { startHour: start, endHour: end } = findTimeBlock(resource, startHour);
 	return `${date} ${pad2(start)}:00-${pad2(end)}:00`;
 }
 
