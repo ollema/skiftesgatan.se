@@ -1,6 +1,6 @@
 ---
 title: Trädgårdsfix på innergården 6 maj
-date: '2026-05-01'
+date: '2026-04-29'
 summary: Onsdagen den 6 maj kl. 18:00 ses vi på innergården för en kväll i trädgårdens tecken, med fokus på våra pallkragar. Du som vill plantera är varmt välkommen att hjälpa till!
 ---
 

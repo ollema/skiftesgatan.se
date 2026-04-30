@@ -1,6 +1,6 @@
 ---
 title: Årsmöte den 15 juni
-date: '2026-04-29'
+date: '2026-05-01'
 summary: Måndagen den 15 juni kl. 18:00 håller vi årsmöte i BRF Skiftesgatan 4 på innergården. Vi går igenom årsredovisningen och väljer ny styrelse.
 ---
 
