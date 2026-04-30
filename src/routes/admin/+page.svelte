@@ -6,7 +6,48 @@
 	import { listUsers } from '$lib/api/admin.remote';
 	import { formatDateTime } from '$lib/utils/date';
 
+	type SortKey = 'username' | 'name' | 'lastActiveAt';
+	type SortDir = 'asc' | 'desc';
+
+	const defaultDir: Record<SortKey, SortDir> = {
+		username: 'asc',
+		name: 'asc',
+		lastActiveAt: 'desc'
+	};
+
 	let users = $derived(await listUsers());
+	let sort = $state<{ key: SortKey; dir: SortDir }>({ key: 'username', dir: 'asc' });
+
+	let sortedUsers = $derived.by(() => {
+		const factor = sort.dir === 'asc' ? 1 : -1;
+		return [...users].sort((a, b) => {
+			if (sort.key === 'lastActiveAt') {
+				if (a.lastActiveAt && b.lastActiveAt) {
+					return factor * (a.lastActiveAt.getTime() - b.lastActiveAt.getTime());
+				}
+				if (a.lastActiveAt) return -1;
+				if (b.lastActiveAt) return 1;
+				return 0;
+			}
+			const av = a[sort.key] ?? '';
+			const bv = b[sort.key] ?? '';
+			return factor * av.localeCompare(bv, 'sv');
+		});
+	});
+
+	function toggleSort(key: SortKey) {
+		if (sort.key === key) {
+			sort.dir = sort.dir === 'asc' ? 'desc' : 'asc';
+		} else {
+			sort.key = key;
+			sort.dir = defaultDir[key];
+		}
+	}
+
+	function ariaSort(key: SortKey): 'ascending' | 'descending' | 'none' {
+		if (sort.key !== key) return 'none';
+		return sort.dir === 'asc' ? 'ascending' : 'descending';
+	}
 
 	function rowHref(username: string | null) {
 		return resolve('/admin/[username]', { username: username ?? '' });
@@ -35,14 +76,20 @@
 			<tr
 				class="border-b border-border text-left text-xs tracking-wide text-text-secondary uppercase"
 			>
-				<th class="w-px py-3 pr-4 font-normal whitespace-nowrap">Lägenhet</th>
-				<th class="w-px py-3 pr-4 font-normal whitespace-nowrap">Namn</th>
+				<th class="w-px py-3 pr-4 font-normal whitespace-nowrap" aria-sort={ariaSort('username')}>
+					{@render sortHeader('username', 'Lägenhet')}
+				</th>
+				<th class="w-px py-3 pr-4 font-normal whitespace-nowrap" aria-sort={ariaSort('name')}>
+					{@render sortHeader('name', 'Namn')}
+				</th>
 				<th class="w-px py-3 pr-10 font-normal whitespace-nowrap">Status</th>
-				<th class="py-3 font-normal">Senast aktiv</th>
+				<th class="py-3 font-normal" aria-sort={ariaSort('lastActiveAt')}>
+					{@render sortHeader('lastActiveAt', 'Senast aktiv')}
+				</th>
 			</tr>
 		</thead>
 		<tbody>
-			{#each users as user (user.id)}
+			{#each sortedUsers as user (user.id)}
 				<tr
 					class="cursor-pointer border-b border-border-subtle transition-colors duration-120 focus-within:bg-bg-alt hover:bg-bg-alt"
 					onclick={(e) => handleRowClick(e, user.username)}
@@ -122,3 +169,30 @@
 		</tbody>
 	</table>
 </div>
+
+{#snippet sortHeader(key: SortKey, label: string)}
+	<button
+		type="button"
+		class="inline-flex cursor-pointer items-center gap-1 transition-colors duration-120 hover:text-text-primary"
+		onclick={() => toggleSort(key)}
+	>
+		{label}
+		<svg
+			class={['size-3', sort.key !== key && 'invisible']}
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			aria-hidden="true"
+		>
+			{#if sort.dir === 'asc'}
+				<polyline points="6 15 12 9 18 15" />
+			{:else}
+				<polyline points="6 9 12 15 18 9" />
+			{/if}
+		</svg>
+	</button>
+{/snippet}
