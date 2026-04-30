@@ -5,8 +5,8 @@ import { drizzle } from 'drizzle-orm/pglite';
 import { PGlite } from '@electric-sql/pglite';
 import { PASSWORD_CONFIG, usernamePlugin } from '../../src/lib/server/auth.config.js';
 import { user } from '../../src/lib/server/db/auth.schema.js';
-import { timeBlock } from '../../src/lib/server/db/booking.schema.js';
 import * as schema from '../../src/lib/server/db/schema.js';
+import { seedTimeBlocks } from '../../src/lib/server/db/seed-time-blocks.js';
 
 const pglitePath = process.env.PGLITE_PATH;
 if (!pglitePath) {
@@ -61,15 +61,6 @@ const DEV_NAMES = [
 	'Mikael Fransson'
 ];
 
-const TIME_BLOCK_SEEDS = [
-	{ startHour: 7, endHour: 10, resource: 'laundry_room' as const },
-	{ startHour: 10, endHour: 13, resource: 'laundry_room' as const },
-	{ startHour: 13, endHour: 16, resource: 'laundry_room' as const },
-	{ startHour: 16, endHour: 19, resource: 'laundry_room' as const },
-	{ startHour: 19, endHour: 22, resource: 'laundry_room' as const },
-	{ startHour: 7, endHour: 22, resource: 'outdoor_area' as const }
-];
-
 const client = new PGlite(pglitePath);
 const db = drizzle(client, { schema });
 
@@ -83,9 +74,7 @@ const seedAuth = betterAuth({
 	plugins: [usernamePlugin()]
 });
 
-for (const tb of TIME_BLOCK_SEEDS) {
-	await db.insert(timeBlock).values(tb).onConflictDoNothing();
-}
+await seedTimeBlocks(db);
 
 for (let i = 0; i < APARTMENTS.length; i++) {
 	const apt = APARTMENTS[i];
