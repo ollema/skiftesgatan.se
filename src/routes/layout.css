@@ -50,7 +50,7 @@
 	html {
 		font-family: var(--font-body);
 		color: var(--color-text-primary);
-		background: linear-gradient(to bottom, var(--color-accent) 50%, var(--color-bg) 50%) fixed;
+		background-color: var(--color-accent);
 		line-height: 1.6;
 	}
 
