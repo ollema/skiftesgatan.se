@@ -103,7 +103,7 @@ test.describe('admin', () => {
 		await expect(page.getByRole('columnheader', { name: 'Senast aktiv' })).toBeVisible();
 
 		// The admin's own row should have a populated cell because login bumped the timestamp.
-		// Column order: Lägenhet, Namn, E-post, Senast aktiv, Status, action.
+		// Column order: Lägenhet, Namn, indicators, Senast aktiv.
 		const adminRow = page.getByRole('row').filter({ hasText: admin.username });
 		const lastActiveCell = adminRow.locator('td').nth(3);
 		await expect(lastActiveCell).toBeVisible();

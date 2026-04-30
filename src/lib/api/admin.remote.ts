@@ -8,6 +8,8 @@ import { auth, requireAdmin } from '$lib/server/auth';
 import { apartmentSchema } from '$lib/server/auth.config';
 import { db } from '$lib/server/db';
 import { user as userTable } from '$lib/server/db/auth.schema';
+import { reminderPreference } from '$lib/server/db/reminder.schema';
+import { calendarToken } from '$lib/server/db/calendar.schema';
 import { getReminderPreferences, setReminderPreference } from '$lib/server/reminder';
 import { getExistingToken, createToken, regenerateToken, deleteToken } from '$lib/server/calendar';
 import { RESOURCES } from '$lib/types/bookings';
@@ -35,18 +37,32 @@ function buildCalendarUrl(token: string): string {
 
 export const listUsers = query(async () => {
 	requireAdmin();
-	return db
-		.select({
-			id: userTable.id,
-			username: userTable.username,
-			name: userTable.name,
-			email: userTable.email,
-			emailVerified: userTable.emailVerified,
-			role: userTable.role,
-			lastActiveAt: userTable.lastActiveAt
-		})
-		.from(userTable)
-		.orderBy(userTable.username);
+	const [users, reminderRows, calendarRows] = await Promise.all([
+		db
+			.select({
+				id: userTable.id,
+				username: userTable.username,
+				name: userTable.name,
+				role: userTable.role,
+				lastActiveAt: userTable.lastActiveAt
+			})
+			.from(userTable)
+			.orderBy(userTable.username),
+		db
+			.selectDistinct({ userId: reminderPreference.userId })
+			.from(reminderPreference)
+			.where(eq(reminderPreference.enabled, true)),
+		db.select({ userId: calendarToken.userId }).from(calendarToken)
+	]);
+
+	const withReminders = new Set(reminderRows.map((r) => r.userId));
+	const withCalendar = new Set(calendarRows.map((r) => r.userId));
+
+	return users.map((u) => ({
+		...u,
+		hasActiveReminderPreference: withReminders.has(u.id),
+		hasCalendarSubscription: withCalendar.has(u.id)
+	}));
 });
 
 export const getUserByUsername = query(
