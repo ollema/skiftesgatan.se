@@ -1,15 +1,18 @@
 ---
-title: Vårstädning 2026 är senarelagd
-date: '2026-04-20'
-summary: Årets vårstädning skjuts upp något jämfört med tidigare år för att den nysådda gräsmattan ska hinna etablera sig. Datum meddelas senare.
+title: Vårstädning den 18 maj
+date: '2026-04-30'
+summary: Måndagen den 18 maj kl. 18:00 samlas vi på innergården för vårstädning. Vi bär upp utemöblerna från källaren och putsar dörrar och fönster. Fika utlovas!
 ---
 
-## Vårstädningen skjuts upp i år
+## Vårstädning på innergården
 
-Årets vårstädning kommer att hållas senare än vanligt. Anledningen är att vi nyligen har sått nytt gräs på föreningens gemensamma ytor, och vi vill ge det nya gräset tid att slå rot och etablera sig innan vi samlas för att trampa, kratta och städa runt omkring.
+Måndagen den 18 maj kl. 18:00 är det dags för årets vårstädning. Vi ses på innergården och hjälps åt med några viktiga sysslor inför sommaren:
 
-Att gå på en nysådd gräsmatta för tidigt riskerar att skada de späda grässtråna och ge oss en ojämn och glesare gräsmatta under resten av säsongen. Genom att vänta några extra veckor ger vi gräset bästa möjliga start.
+- Bära upp utemöblerna från källaren och ställa i ordning på innergården
+- Putsa och torka av entrédörrar i de gemensamma utrymmena
 
-Nytt datum för vårstädningen meddelas så snart gräset har kommit igång ordentligt. Håll utkik efter mer information i Facebook-gruppen och här på hemsidan.
+Föreningen står för redskap och städmaterial — det räcker att du själv kommer. Som tack för hjälpen bjuder vi förstås på fika.
 
-Tack för ert tålamod!
+Passa också på att slå en pratstund med oss i styrelsen. Vi finns på plats hela kvällen och svarar gärna på frågor om föreningen — eller berättar om hur det är att själv sitta i styrelsen, för dig som funderar på att engagera dig.
+
+Välkomna!
