@@ -12,6 +12,7 @@ import {
 	buildBookingPayload,
 	isBookingActive,
 	validateBookingDate,
+	__buildTimeBlockMap,
 	type BookingCalendarRow
 } from './booking';
 
@@ -67,6 +68,77 @@ describe('TIME_BLOCKS drift', () => {
 					expect.objectContaining({ resource: 'laundry_room', startHour: 8, endHour: 11 })
 				])
 			);
+		} finally {
+			await client.close();
+		}
+	});
+});
+
+describe('time block cache', () => {
+	it('builds a map from time_block id to (resource, startHour, endHour) covering the current schedule', async () => {
+		const client = new PGlite();
+		const db = drizzle(client, { schema });
+		try {
+			const pushed = await pushSchema(schema, db as unknown as Parameters<typeof pushSchema>[1]);
+			await pushed.apply();
+
+			await seedTimeBlocks(db);
+
+			const map = await __buildTimeBlockMap(db);
+
+			const rows = await db.select().from(timeBlock);
+			for (const row of rows) {
+				expect(map.get(row.id)).toEqual({
+					resource: row.resource,
+					startHour: row.startHour,
+					endHour: row.endHour
+				});
+			}
+			for (const [resource, blocks] of Object.entries(TIME_BLOCKS)) {
+				for (const block of blocks) {
+					const row = rows.find(
+						(r) =>
+							r.resource === resource &&
+							r.startHour === block.startHour &&
+							r.endHour === block.endHour
+					);
+					expect(
+						row,
+						`seeded row for ${resource} ${block.startHour}-${block.endHour}`
+					).toBeDefined();
+					expect(map.get(row!.id)).toEqual({
+						resource,
+						startHour: block.startHour,
+						endHour: block.endHour
+					});
+				}
+			}
+		} finally {
+			await client.close();
+		}
+	});
+
+	it('resolves a historic time_block row whose (resource, startHour) is not in the current TIME_BLOCKS', async () => {
+		const client = new PGlite();
+		const db = drizzle(client, { schema });
+		try {
+			const pushed = await pushSchema(schema, db as unknown as Parameters<typeof pushSchema>[1]);
+			await pushed.apply();
+
+			const [historic] = await db
+				.insert(timeBlock)
+				.values({ resource: 'laundry_room', startHour: 8, endHour: 11 })
+				.returning();
+
+			await seedTimeBlocks(db);
+
+			const map = await __buildTimeBlockMap(db);
+
+			expect(map.get(historic.id)).toEqual({
+				resource: 'laundry_room',
+				startHour: 8,
+				endHour: 11
+			});
 		} finally {
 			await client.close();
 		}

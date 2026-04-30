@@ -7,7 +7,6 @@ import { log } from '$lib/server/log';
 import { slotPhrase, slotTimeRange } from '$lib/server/log.prose';
 import {
 	getBookingCalendar,
-	getTimeBlockStartHour,
 	bookSlot,
 	buildBookingPayload,
 	cancelBooking as cancelBookingDb,
@@ -53,8 +52,6 @@ export const book = command(
 		const dateError = validateBookingDate(date);
 		if (dateError) error(400, VALIDATE_DATE_MESSAGES[dateError]);
 
-		const startHour = await getTimeBlockStartHour(timeBlockId);
-
 		const result = await bookSlot({
 			userId: user.id,
 			timeBlockId,
@@ -68,19 +65,19 @@ export const book = command(
 		if (result.kind === 'already_booked') error(409, 'Du har redan en kommande bokning');
 		if (result.kind === 'slot_taken') {
 			log.warn(
-				`[booking] apartment ${user.username} tried to book ${slotPhrase(resource, date.toString(), startHour!)} but the slot was already taken`
+				`[booking] apartment ${user.username} tried to book ${slotPhrase(resource, date.toString(), result.startHour, result.endHour)} but the slot was already taken`
 			);
 			error(409, 'Tiden är redan bokad');
 		}
 
-		const newSlot = slotPhrase(resource, date.toString(), startHour!);
+		const newSlot = slotPhrase(resource, date.toString(), result.startHour, result.endHour);
 		if (result.cancelled) {
 			const fromRange = slotTimeRange(
-				result.cancelled.resource,
 				result.cancelled.date,
-				result.cancelled.startHour
+				result.cancelled.startHour,
+				result.cancelled.endHour
 			);
-			const toRange = slotTimeRange(resource, date.toString(), startHour!);
+			const toRange = slotTimeRange(date.toString(), result.startHour, result.endHour);
 			log.info(
 				`[booking] apartment ${user.username} moved their ${resource} booking from ${fromRange} to ${toRange}`
 			);
@@ -120,7 +117,7 @@ export const cancelBooking = command(v.object({ bookingId: v.number() }), async 
 		error(404, 'Bokningen hittades inte');
 	}
 	log.info(
-		`[booking] apartment ${user.username} cancelled their booking of ${slotPhrase(result.resource, result.date, result.startHour)}`
+		`[booking] apartment ${user.username} cancelled their booking of ${slotPhrase(result.resource, result.date, result.startHour, result.endHour)}`
 	);
 
 	await requested(getBookingData, 5).refreshAll();

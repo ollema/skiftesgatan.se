@@ -43,13 +43,46 @@ function isUniqueViolation(e: unknown): boolean {
 	return e instanceof Error && 'code' in e && e.code === PG_UNIQUE_VIOLATION;
 }
 
-export async function getTimeBlockStartHour(timeBlockId: number): Promise<number | null> {
-	const [row] = await db
-		.select({ startHour: timeBlock.startHour })
-		.from(timeBlock)
-		.where(eq(timeBlock.id, timeBlockId))
-		.limit(1);
-	return row?.startHour ?? null;
+type TimeBlockHours = { resource: Resource; startHour: number; endHour: number };
+
+// Module-private lazy cache. Concurrent callers race the synchronous `??=`
+// assignment and end up sharing the same in-flight Promise — see ADR-0004 for
+// why historic time_block rows must resolve through this cache.
+let timeBlockCachePromise: Promise<Map<number, TimeBlockHours>> | undefined;
+
+export async function __buildTimeBlockMap(
+	database: typeof db
+): Promise<Map<number, TimeBlockHours>> {
+	const rows = await database
+		.select({
+			id: timeBlock.id,
+			resource: timeBlock.resource,
+			startHour: timeBlock.startHour,
+			endHour: timeBlock.endHour
+		})
+		.from(timeBlock);
+	return new Map(
+		rows.map((r) => [r.id, { resource: r.resource, startHour: r.startHour, endHour: r.endHour }])
+	);
+}
+
+/**
+ * Resolves a `time_block_id` to its `(resource, startHour, endHour)` via a
+ * lazy module-level cache. Used internally by `bookSlot`; exported for the
+ * follow-up slice of #34 that drops `innerJoin(timeBlock, ...)` from
+ * `reminder.ts` / `reminder.scheduler.ts` / `calendar.ts` and resolves a
+ * Booking's hours through this cache instead. Per ADR-0004 the cache covers
+ * historic rows (whose `(resource, startHour)` may no longer be in
+ * `TIME_BLOCKS`), which a `findTimeBlock` constant lookup cannot.
+ *
+ * @lintignore
+ */
+export async function getTimeBlockHours(timeBlockId: number): Promise<TimeBlockHours> {
+	timeBlockCachePromise ??= __buildTimeBlockMap(db);
+	const map = await timeBlockCachePromise;
+	const hours = map.get(timeBlockId);
+	if (!hours) throw new Error(`unknown time block id ${timeBlockId}`);
+	return hours;
 }
 
 function maxBookingDate(from: CalendarDate = today(TIMEZONE)): CalendarDate {
@@ -192,15 +225,24 @@ export function buildBookingPayload(
 	return { bookingCalendar, activeBooking };
 }
 
+type CancelledSlot = {
+	resource: Resource;
+	date: string;
+	startHour: number;
+	endHour: number;
+};
+
 type BookSlotResult =
 	| {
 			kind: 'ok';
 			booking: typeof booking.$inferSelect;
-			cancelled: { resource: Resource; date: string; startHour: number } | null;
+			startHour: number;
+			endHour: number;
+			cancelled: CancelledSlot | null;
 	  }
-	| { kind: 'replace_not_found' }
-	| { kind: 'already_booked' }
-	| { kind: 'slot_taken' };
+	| { kind: 'replace_not_found'; startHour: number; endHour: number }
+	| { kind: 'already_booked'; startHour: number; endHour: number }
+	| { kind: 'slot_taken'; startHour: number; endHour: number };
 
 class BookSlotConflict extends Error {
 	constructor(public kind: 'replace_not_found' | 'already_booked' | 'slot_taken') {
@@ -216,6 +258,7 @@ export async function bookSlot(params: {
 	replaceBookingId?: number;
 	now: ZonedDateTime;
 }): Promise<BookSlotResult> {
+	const target = await getTimeBlockHours(params.timeBlockId);
 	try {
 		return await db.transaction(async (tx) => {
 			// Serialize concurrent booking attempts by the same user. Without this lock,
@@ -224,14 +267,15 @@ export async function bookSlot(params: {
 			await tx.select({ id: user.id }).from(user).where(eq(user.id, params.userId)).for('update');
 
 			const activeWhere = activeBookingWhere(params.now);
-			let cancelled: { resource: Resource; date: string; startHour: number } | null = null;
+			let cancelled: CancelledSlot | null = null;
 
 			if (params.replaceBookingId !== undefined) {
 				const [info] = await tx
 					.select({
 						resource: booking.resource,
 						date: booking.date,
-						startHour: timeBlock.startHour
+						startHour: timeBlock.startHour,
+						endHour: timeBlock.endHour
 					})
 					.from(booking)
 					.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
@@ -281,14 +325,22 @@ export async function bookSlot(params: {
 					})
 					.returning();
 
-				return { kind: 'ok', booking: created, cancelled };
+				return {
+					kind: 'ok',
+					booking: created,
+					startHour: target.startHour,
+					endHour: target.endHour,
+					cancelled
+				};
 			} catch (e) {
 				if (isUniqueViolation(e)) throw new BookSlotConflict('slot_taken');
 				throw e;
 			}
 		});
 	} catch (e) {
-		if (e instanceof BookSlotConflict) return { kind: e.kind };
+		if (e instanceof BookSlotConflict) {
+			return { kind: e.kind, startHour: target.startHour, endHour: target.endHour };
+		}
 		throw e;
 	}
 }
@@ -297,13 +349,14 @@ export async function cancelBooking(
 	bookingId: number,
 	userId: string,
 	now: ZonedDateTime
-): Promise<{ resource: Resource; date: string; startHour: number } | null> {
+): Promise<CancelledSlot | null> {
 	const activeWhere = activeBookingWhere(now);
 	const [info] = await db
 		.select({
 			resource: booking.resource,
 			date: booking.date,
-			startHour: timeBlock.startHour
+			startHour: timeBlock.startHour,
+			endHour: timeBlock.endHour
 		})
 		.from(booking)
 		.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
