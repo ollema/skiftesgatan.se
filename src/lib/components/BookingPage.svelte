@@ -8,8 +8,6 @@
 	import { TIMEZONE, type Resource } from '$lib/types/bookings';
 	import { formatDate, formatHourNum } from '$lib/utils/date';
 	import { today } from '@internationalized/date';
-	// TODO: will this cause a bug if the user leaves the page open past midnight?
-	// maybe we should also update the date at midnight?
 	const todayDate = today(TIMEZONE);
 
 	const minDate = todayDate;
@@ -20,7 +18,8 @@
 	// load data
 	let user = $derived(await getOptionalUser());
 	let hints = $derived(await getSetupHints());
-	let data = $derived(await getBookingData({ resource }));
+	let live = $derived(getBookingData({ resource }));
+	let data = $derived(await live);
 
 	// calendar state
 	let date = $state(minDate);
@@ -32,35 +31,6 @@
 	let bookingCalendar = $derived(data.bookingCalendar);
 	let activeBooking = $derived(data.activeBooking);
 	let slots = $derived(bookingCalendar[date.toString()] ?? []);
-
-	// TODO: replace polling with SSE once $derived(await ...) + .refresh() is stable
-	// poll for booking changes and refresh when the page becomes visible after being hidden
-	$effect(() => {
-		let lastHidden = 0;
-
-		function onVisibilityChange() {
-			if (document.visibilityState === 'hidden') {
-				lastHidden = Date.now();
-			}
-			if (document.visibilityState === 'visible' && Date.now() - lastHidden > 5_000) {
-				getBookingData({ resource }).refresh();
-			}
-		}
-
-		const interval = setInterval(() => {
-			getBookingData({ resource }).refresh();
-		}, 10_000);
-
-		document.addEventListener('visibilitychange', onVisibilityChange);
-		return () => {
-			clearInterval(interval);
-			document.removeEventListener('visibilitychange', onVisibilityChange);
-		};
-	});
-
-	async function refreshNow() {
-		await getBookingData({ resource }).refresh();
-	}
 
 	// derived text
 	let title = $derived(laundryRoom ? 'Tvättstuga' : 'Uteplats');
@@ -97,13 +67,15 @@
 	<h2 class="font-heading text-lg font-normal">
 		{formatDate(date)}
 	</h2>
-	<p class="text-xs text-text-muted">
-		Uppdaterades {data.fetchedAt.toString()}.
-		<button
-			class="cursor-pointer text-text-muted underline decoration-1 underline-offset-2"
-			onclick={refreshNow}>Uppdatera nu</button
-		>
-	</p>
+	{#if !live.connected}
+		<p class="text-xs text-text-muted" data-testid="live-disconnected">
+			Frånkopplad —
+			<button
+				class="cursor-pointer text-text-muted underline decoration-1 underline-offset-2"
+				onclick={() => live.reconnect()}>försök igen</button
+			>
+		</p>
+	{/if}
 </div>
 
 <!-- time slots -->

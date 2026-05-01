@@ -50,7 +50,11 @@ sw.addEventListener('fetch', (event) => {
 			// Everything else: network-first, fall back to cache when offline
 			try {
 				const response = await fetch(event.request);
-				if (response instanceof Response && response.status === 200) {
+				if (
+					response instanceof Response &&
+					response.status === 200 &&
+					!response.headers.get('cache-control')?.includes('no-store')
+				) {
 					cache.put(event.request, response.clone());
 				}
 				return response;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { CalendarDate } from '@internationalized/date';
 	import { toast } from 'svelte-sonner';
-	import { getBookingData, book, cancelBooking } from '$lib/api/booking.remote';
+	import { book, cancelBooking } from '$lib/api/booking.remote';
 	import { getOptionalUser } from '$lib/api/auth.remote';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import { type Slot, type Resource } from '$lib/types/bookings';
@@ -55,7 +55,7 @@
 		if (cancelBookingId === null) return;
 		error = '';
 		try {
-			await cancelBooking({ bookingId: cancelBookingId }).updates(getBookingData({ resource }));
+			await cancelBooking({ bookingId: cancelBookingId });
 			toast.success('Bokning avbokad!');
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
