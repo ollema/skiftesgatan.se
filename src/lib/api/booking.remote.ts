@@ -1,7 +1,7 @@
 import * as v from 'valibot';
-import { CalendarDate, now } from '@internationalized/date';
+import { CalendarDate, Time, now } from '@internationalized/date';
 import { error } from '@sveltejs/kit';
-import { query, command } from '$app/server';
+import { query, command, requested } from '$app/server';
 import { requireAuth, getAuthUser } from '$lib/server/auth';
 import { log } from '$lib/server/log';
 import { slotPhrase, slotTimeRange } from '$lib/server/log.prose';
@@ -12,7 +12,6 @@ import {
 	cancelBooking as cancelBookingDb,
 	validateBookingDate
 } from '$lib/server/booking';
-import { bookingEvents } from '$lib/server/booking-events';
 import { createBookingReminders } from '$lib/server/reminder';
 import { TIMEZONE, RESOURCES } from '$lib/types/bookings';
 
@@ -24,42 +23,19 @@ const VALIDATE_DATE_MESSAGES = {
 	too_far: 'Du kan inte boka mer än en månad i förväg'
 } as const;
 
-export const getBookingData = query.live(
+export const getBookingData = query(
 	v.object({
 		resource: resourceSchema
 	}),
-	async function* ({ resource }) {
+	async ({ resource }) => {
+		const rawRows = await getBookingCalendar(resource);
 		const user = getAuthUser();
+		const zdt = now(TIMEZONE);
+		const fetchedAt = new Time(zdt.hour, zdt.minute, zdt.second);
 
-		const buildPayload = async () => {
-			const rawRows = await getBookingCalendar(resource);
-			return buildBookingPayload(rawRows, user, now(TIMEZONE));
-		};
+		const { bookingCalendar, activeBooking } = buildBookingPayload(rawRows, user, zdt);
 
-		let pending = false;
-		let wake: (() => void) | undefined;
-
-		const unsubscribe = bookingEvents.subscribe(resource, () => {
-			pending = true;
-			wake?.();
-			wake = undefined;
-		});
-
-		try {
-			yield await buildPayload();
-
-			while (true) {
-				if (!pending) {
-					await new Promise<void>((resolve) => {
-						wake = resolve;
-					});
-				}
-				pending = false;
-				yield await buildPayload();
-			}
-		} finally {
-			unsubscribe();
-		}
+		return { bookingCalendar, activeBooking, fetchedAt };
 	}
 );
 
@@ -128,8 +104,7 @@ export const book = command(
 			);
 		}
 
-		bookingEvents.emit(resource);
-		getBookingData({ resource }).reconnect();
+		await getBookingData({ resource }).refresh();
 		return result.booking;
 	}
 );
@@ -145,6 +120,5 @@ export const cancelBooking = command(v.object({ bookingId: v.number() }), async 
 		`[booking] apartment ${user.username} cancelled their booking of ${slotPhrase(result.resource, result.date, result.startHour, result.endHour)}`
 	);
 
-	bookingEvents.emit(result.resource);
-	getBookingData({ resource: result.resource }).reconnect();
+	await requested(getBookingData, 5).refreshAll();
 });
