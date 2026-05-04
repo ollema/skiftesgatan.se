@@ -1,9 +1,10 @@
-import { CalendarDate, type ZonedDateTime } from '@internationalized/date';
+import { CalendarDate, now, type ZonedDateTime } from '@internationalized/date';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { booking, timeBlock, user } from '$lib/server/db/schema';
-import type { Resource, Slot } from '$lib/types/bookings';
+import { TIMEZONE, type Resource, type Slot } from '$lib/types/bookings';
 import { isBookingActive } from './booking';
+import { bookingEvents } from './booking-events';
 
 type BookingCalendarRow = {
 	timeBlockId: number;
@@ -152,18 +153,10 @@ function assemblePayload(
  * Snapshot read for the Booking Calendar an Apartment sees for one Facility:
  * every Slot in the Booking Window (today through today + 1 month), each
  * tagged `free` / `mine` / `other` / `past`, plus the Active Booking if any.
- */
-export async function getBookingCalendar(
-	resource: Resource,
-	caller: { id: string } | null,
-	now: ZonedDateTime
-): Promise<BookingCalendarPayload> {
-	return __getBookingCalendarSnapshot(db, resource, caller, now);
-}
-
-/**
- * Test seam: same snapshot read as `getBookingCalendar` but accepts an explicit
- * database handle so PGlite-backed integration tests can drive the read.
+ *
+ * Test seam: accepts an explicit database handle so PGlite-backed integration
+ * tests can drive the read directly. Production callers go through
+ * `watchBookingCalendar` and never see this entry point.
  */
 export async function __getBookingCalendarSnapshot(
 	database: Database,
@@ -173,4 +166,91 @@ export async function __getBookingCalendarSnapshot(
 ): Promise<BookingCalendarPayload> {
 	const rows = await readBookingCalendarRows(database, resource, now);
 	return assemblePayload(rows, caller, now);
+}
+
+/**
+ * Live read for the Booking Calendar an Apartment sees for one Facility.
+ * Yields a fresh payload on subscribe and on every relevant `bookingEvents`
+ * tick for the same resource. Single-flight buffering: events that fire
+ * during an in-flight read coalesce into one subsequent re-yield. Owns its
+ * `bookingEvents.subscribe` and unsubscribes on teardown.
+ */
+export function watchBookingCalendar(
+	resource: Resource,
+	caller: { id: string } | null
+): AsyncIterableIterator<BookingCalendarPayload> {
+	return __watchBookingCalendar(db, resource, caller, () => now(TIMEZONE));
+}
+
+/**
+ * Test seam for `watchBookingCalendar`: same iteration semantics but accepts
+ * an explicit database handle and a clock so PGlite-backed integration tests
+ * can drive the live iterable deterministically.
+ */
+export function __watchBookingCalendar(
+	database: Database,
+	resource: Resource,
+	caller: { id: string } | null,
+	getNow: () => ZonedDateTime
+): AsyncIterableIterator<BookingCalendarPayload> {
+	let pending = false;
+	let wake: (() => void) | undefined;
+	let active = true;
+	let yielded = false;
+
+	const unsubscribe = bookingEvents.subscribe(resource, () => {
+		pending = true;
+		wake?.();
+		wake = undefined;
+	});
+
+	const teardown = () => {
+		if (!active) return;
+		active = false;
+		unsubscribe();
+		wake?.();
+		wake = undefined;
+	};
+
+	const buildPayload = () => __getBookingCalendarSnapshot(database, resource, caller, getNow());
+
+	const done = (): IteratorResult<BookingCalendarPayload> => ({
+		done: true,
+		value: undefined as unknown as BookingCalendarPayload
+	});
+
+	return {
+		async next(): Promise<IteratorResult<BookingCalendarPayload>> {
+			if (!active) return done();
+
+			if (!yielded) {
+				yielded = true;
+				const value = await buildPayload();
+				if (!active) return done();
+				return { done: false, value };
+			}
+
+			if (!pending) {
+				await new Promise<void>((resolve) => {
+					wake = resolve;
+				});
+			}
+			if (!active) return done();
+			pending = false;
+			const value = await buildPayload();
+			if (!active) return done();
+			return { done: false, value };
+		},
+		async return(): Promise<IteratorResult<BookingCalendarPayload>> {
+			teardown();
+			return done();
+		},
+		async throw(err: unknown): Promise<IteratorResult<BookingCalendarPayload>> {
+			teardown();
+			throw err;
+		},
+		[Symbol.asyncIterator]() {
+			return this;
+		}
+	};
 }
