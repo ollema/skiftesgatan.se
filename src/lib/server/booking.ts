@@ -71,8 +71,29 @@ export async function __buildTimeBlockMap(
  * lazy module-level cache. Per ADR-0004 the cache covers historic rows
  * (whose `(resource, startHour)` may no longer be in `TIME_BLOCKS`), which a
  * `findTimeBlock` constant lookup cannot.
+ *
+ * The optional `database` handle bypasses the cache and queries it directly —
+ * a test seam for PGlite-backed tests that need lookups against an isolated
+ * handle. A drizzle handle that exposes `.select()` qualifies (top-level `db`
+ * or a transaction `tx`).
  */
-export async function getTimeBlockHours(timeBlockId: number): Promise<TimeBlockHours> {
+export async function getTimeBlockHours(
+	timeBlockId: number,
+	database?: Pick<typeof db, 'select'>
+): Promise<TimeBlockHours> {
+	if (database) {
+		const [row] = await database
+			.select({
+				resource: timeBlock.resource,
+				startHour: timeBlock.startHour,
+				endHour: timeBlock.endHour
+			})
+			.from(timeBlock)
+			.where(eq(timeBlock.id, timeBlockId))
+			.limit(1);
+		if (!row) throw new Error(`unknown time block id ${timeBlockId}`);
+		return { resource: row.resource, startHour: row.startHour, endHour: row.endHour };
+	}
 	timeBlockCachePromise ??= __buildTimeBlockMap(db);
 	const map = await timeBlockCachePromise;
 	const hours = map.get(timeBlockId);
