@@ -2,27 +2,11 @@ import { CalendarDateTime, type ZonedDateTime, parseDate, toZoned } from '@inter
 import { eq, and, gte, inArray } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { reminderPreference, bookingReminder } from '$lib/server/db/reminder.schema';
-import { booking, timeBlock } from '$lib/server/db/booking.schema';
+import { booking } from '$lib/server/db/booking.schema';
+import { getTimeBlockHours } from '$lib/server/booking';
 import { TIMEZONE, type Resource } from '$lib/types/bookings';
 
-type Database = typeof db;
-// A drizzle handle that exposes `.select()` — both the top-level `db` and a
-// transaction handle (`tx`) qualify. PGlite serializes all queries through one
-// connection, so when we are inside `database.transaction(...)` we must use
-// `tx`, never the parent `database` (the latter would deadlock).
-type Selectable = Pick<Database, 'select'>;
-
-async function lookupStartHour(database: Selectable, timeBlockId: number): Promise<number> {
-	const [row] = await database
-		.select({ startHour: timeBlock.startHour })
-		.from(timeBlock)
-		.where(eq(timeBlock.id, timeBlockId))
-		.limit(1);
-	if (!row) throw new Error(`unknown time block id ${timeBlockId}`);
-	return row.startHour;
-}
-
-export function computeNotifyAt(dateStr: string, startHour: number, offsetMinutes: number): Date {
+export function __computeNotifyAt(dateStr: string, startHour: number, offsetMinutes: number): Date {
 	const date = parseDate(dateStr);
 	const bookingStart = new CalendarDateTime(date.year, date.month, date.day, startHour);
 	const zoned = toZoned(bookingStart, TIMEZONE);
@@ -84,8 +68,8 @@ export async function setReminderPreference(
 				);
 
 			for (const b of futureBookings) {
-				const startHour = await lookupStartHour(tx, b.timeBlockId);
-				const notifyAt = computeNotifyAt(b.date, startHour, offsetMinutes);
+				const { startHour } = await getTimeBlockHours(b.timeBlockId, tx);
+				const notifyAt = __computeNotifyAt(b.date, startHour, offsetMinutes);
 				// Skip Bookings whose reminder window has already closed — sending a
 				// reminder for a Slot that starts imminently (or has started) is noise,
 				// not a reminder. The actor just made or held the Booking on purpose.
@@ -138,7 +122,7 @@ export async function createBookingReminders(
 	now: ZonedDateTime,
 	database: typeof db = db
 ): Promise<number> {
-	const startHour = await lookupStartHour(database, timeBlockId);
+	const { startHour } = await getTimeBlockHours(timeBlockId, database);
 	const nowMs = now.toDate().getTime();
 
 	const prefs = await database
@@ -154,7 +138,7 @@ export async function createBookingReminders(
 
 	let scheduled = 0;
 	for (const pref of prefs) {
-		const notifyAt = computeNotifyAt(dateStr, startHour, pref.offsetMinutes);
+		const notifyAt = __computeNotifyAt(dateStr, startHour, pref.offsetMinutes);
 		// Skip preferences whose reminder window has already closed — see
 		// setReminderPreference for rationale.
 		if (notifyAt.getTime() <= nowMs) continue;

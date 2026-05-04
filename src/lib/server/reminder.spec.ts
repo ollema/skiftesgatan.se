@@ -9,7 +9,7 @@ import * as schema from './db/schema';
 import { booking, timeBlock, user } from './db/schema';
 import { reminderPreference, bookingReminder } from './db/reminder.schema';
 import { seedTimeBlocks } from './db/seed-time-blocks';
-import { computeNotifyAt, createBookingReminders, setReminderPreference } from './reminder';
+import { __computeNotifyAt, createBookingReminders, setReminderPreference } from './reminder';
 
 type TestDb = ReturnType<typeof drizzle<typeof schema>>;
 
@@ -52,15 +52,15 @@ async function timeBlockId(
 	return row.id;
 }
 
-describe('computeNotifyAt', () => {
+describe('__computeNotifyAt', () => {
 	it('subtracts 60 minutes from booking start', () => {
-		const result = computeNotifyAt('2026-04-15', 10, 60);
+		const result = __computeNotifyAt('2026-04-15', 10, 60);
 		// 2026-04-15 10:00 Stockholm (CEST, UTC+2) = 08:00 UTC → minus 60 min = 07:00 UTC
 		expect(result.toISOString()).toBe('2026-04-15T07:00:00.000Z');
 	});
 
 	it('subtracts 1440 minutes (24 hours) crossing day boundary', () => {
-		const result = computeNotifyAt('2026-04-15', 7, 1440);
+		const result = __computeNotifyAt('2026-04-15', 7, 1440);
 		// 2026-04-15 07:00 Stockholm (CEST, UTC+2) = 05:00 UTC → minus 24h = 2026-04-14 05:00 UTC
 		expect(result.toISOString()).toBe('2026-04-14T05:00:00.000Z');
 	});
@@ -69,7 +69,7 @@ describe('computeNotifyAt', () => {
 		// Sweden switches CET→CEST on 2026-03-29 at 02:00
 		// 2026-03-29 07:00 Stockholm is CEST (UTC+2) = 05:00 UTC
 		// Minus 60 min = 06:00 Stockholm = 04:00 UTC (still CEST)
-		const result = computeNotifyAt('2026-03-29', 7, 60);
+		const result = __computeNotifyAt('2026-03-29', 7, 60);
 		expect(result.toISOString()).toBe('2026-03-29T04:00:00.000Z');
 	});
 
@@ -77,7 +77,7 @@ describe('computeNotifyAt', () => {
 		// 2026-03-29 07:00 Stockholm (CEST, UTC+2) = 05:00 UTC
 		// Minus 1440 absolute minutes = 2026-03-28 05:00 UTC = 06:00 CET
 		// (24 real hours before, not wall-clock hours)
-		const result = computeNotifyAt('2026-03-29', 7, 1440);
+		const result = __computeNotifyAt('2026-03-29', 7, 1440);
 		expect(result.toISOString()).toBe('2026-03-28T05:00:00.000Z');
 	});
 });
