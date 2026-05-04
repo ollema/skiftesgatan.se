@@ -1,10 +1,26 @@
-import { CalendarDateTime, parseDate, toZoned, today } from '@internationalized/date';
+import { CalendarDateTime, type ZonedDateTime, parseDate, toZoned } from '@internationalized/date';
 import { eq, and, gte, inArray } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { reminderPreference, bookingReminder } from '$lib/server/db/reminder.schema';
-import { booking } from '$lib/server/db/booking.schema';
-import { getTimeBlockHours } from '$lib/server/booking';
+import { booking, timeBlock } from '$lib/server/db/booking.schema';
 import { TIMEZONE, type Resource } from '$lib/types/bookings';
+
+type Database = typeof db;
+// A drizzle handle that exposes `.select()` — both the top-level `db` and a
+// transaction handle (`tx`) qualify. PGlite serializes all queries through one
+// connection, so when we are inside `database.transaction(...)` we must use
+// `tx`, never the parent `database` (the latter would deadlock).
+type Selectable = Pick<Database, 'select'>;
+
+async function lookupStartHour(database: Selectable, timeBlockId: number): Promise<number> {
+	const [row] = await database
+		.select({ startHour: timeBlock.startHour })
+		.from(timeBlock)
+		.where(eq(timeBlock.id, timeBlockId))
+		.limit(1);
+	if (!row) throw new Error(`unknown time block id ${timeBlockId}`);
+	return row.startHour;
+}
 
 export function computeNotifyAt(dateStr: string, startHour: number, offsetMinutes: number): Date {
 	const date = parseDate(dateStr);
@@ -30,11 +46,15 @@ export async function setReminderPreference(
 	userId: string,
 	resource: Resource,
 	offsetMinutes: number,
-	enabled: boolean
-) {
-	const todayStr = today(TIMEZONE).toString();
+	enabled: boolean,
+	now: ZonedDateTime,
+	database: typeof db = db
+): Promise<number> {
+	const todayStr = `${now.year}-${String(now.month).padStart(2, '0')}-${String(now.day).padStart(2, '0')}`;
+	const nowMs = now.toDate().getTime();
+	let scheduled = 0;
 
-	await db.transaction(async (tx) => {
+	await database.transaction(async (tx) => {
 		await tx
 			.insert(reminderPreference)
 			.values({ userId, resource, enabled, offsetMinutes })
@@ -64,9 +84,13 @@ export async function setReminderPreference(
 				);
 
 			for (const b of futureBookings) {
-				const { startHour } = await getTimeBlockHours(b.timeBlockId);
+				const startHour = await lookupStartHour(tx, b.timeBlockId);
 				const notifyAt = computeNotifyAt(b.date, startHour, offsetMinutes);
-				await tx
+				// Skip Bookings whose reminder window has already closed — sending a
+				// reminder for a Slot that starts imminently (or has started) is noise,
+				// not a reminder. The actor just made or held the Booking on purpose.
+				if (notifyAt.getTime() <= nowMs) continue;
+				const inserted = await tx
 					.insert(bookingReminder)
 					.values({
 						bookingId: b.bookingId,
@@ -74,7 +98,9 @@ export async function setReminderPreference(
 						offsetMinutes,
 						notifyAt
 					})
-					.onConflictDoNothing();
+					.onConflictDoNothing()
+					.returning();
+				scheduled += inserted.length;
 			}
 		} else {
 			const futureBookingIds = tx
@@ -99,6 +125,8 @@ export async function setReminderPreference(
 				);
 		}
 	});
+
+	return scheduled;
 }
 
 export async function createBookingReminders(
@@ -106,11 +134,14 @@ export async function createBookingReminders(
 	userId: string,
 	resource: Resource,
 	dateStr: string,
-	timeBlockId: number
+	timeBlockId: number,
+	now: ZonedDateTime,
+	database: typeof db = db
 ): Promise<number> {
-	const { startHour } = await getTimeBlockHours(timeBlockId);
+	const startHour = await lookupStartHour(database, timeBlockId);
+	const nowMs = now.toDate().getTime();
 
-	const prefs = await db
+	const prefs = await database
 		.select({ offsetMinutes: reminderPreference.offsetMinutes })
 		.from(reminderPreference)
 		.where(
@@ -121,9 +152,13 @@ export async function createBookingReminders(
 			)
 		);
 
+	let scheduled = 0;
 	for (const pref of prefs) {
 		const notifyAt = computeNotifyAt(dateStr, startHour, pref.offsetMinutes);
-		await db
+		// Skip preferences whose reminder window has already closed — see
+		// setReminderPreference for rationale.
+		if (notifyAt.getTime() <= nowMs) continue;
+		const inserted = await database
 			.insert(bookingReminder)
 			.values({
 				bookingId,
@@ -131,8 +166,10 @@ export async function createBookingReminders(
 				offsetMinutes: pref.offsetMinutes,
 				notifyAt
 			})
-			.onConflictDoNothing();
+			.onConflictDoNothing()
+			.returning();
+		scheduled += inserted.length;
 	}
 
-	return prefs.length;
+	return scheduled;
 }
