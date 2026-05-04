@@ -1,3 +1,6 @@
+import { type CalendarDate, parseDate, today, getDayOfWeek } from '@internationalized/date';
+import { TIMEZONE, type Resource } from '$lib/types/bookings';
+
 const BRAND = 'BRF Skiftesgatan 4';
 
 const COLOR = {
@@ -88,9 +91,16 @@ export type EmailTemplateSpec = {
 	variables: TemplateVariableSpec[];
 };
 
+/** @public */
+export type EmailTemplate<Input> = EmailTemplateSpec & {
+	build: (input: Input) => Record<string, string>;
+};
+
 const URL_VAR = mustache('URL');
 
-const verifyEmail: EmailTemplateSpec = {
+type UrlInput = { URL: string };
+
+const verifyEmail: EmailTemplate<UrlInput> = {
 	alias: 'skiftesgatan-verify-email',
 	name: 'Verify email',
 	subject: 'Bekräfta din nya e-postadress',
@@ -106,10 +116,11 @@ const verifyEmail: EmailTemplateSpec = {
 			paragraph('Om du inte har begärt någon ändring kan du kontakta styrelsen.')
 		].join('\n')
 	}),
-	variables: [{ key: 'URL', type: 'string' }]
+	variables: [{ key: 'URL', type: 'string' }],
+	build: ({ URL }) => ({ URL })
 };
 
-const resetPassword: EmailTemplateSpec = {
+const resetPassword: EmailTemplate<UrlInput> = {
 	alias: 'skiftesgatan-reset-password',
 	name: 'Reset password',
 	subject: 'Återställ ditt lösenord',
@@ -127,10 +138,52 @@ const resetPassword: EmailTemplateSpec = {
 			)
 		].join('\n')
 	}),
-	variables: [{ key: 'URL', type: 'string' }]
+	variables: [{ key: 'URL', type: 'string' }],
+	build: ({ URL }) => ({ URL })
 };
 
-const bookingReminder: EmailTemplateSpec = {
+const RESOURCE_NAMES: Record<Resource, string> = {
+	laundry_room: 'Tvättstugan',
+	outdoor_area: 'Uteplats'
+};
+
+const WEEKDAYS = ['måndag', 'tisdag', 'onsdag', 'torsdag', 'fredag', 'lördag', 'söndag'];
+const MONTHS = [
+	'januari',
+	'februari',
+	'mars',
+	'april',
+	'maj',
+	'juni',
+	'juli',
+	'augusti',
+	'september',
+	'oktober',
+	'november',
+	'december'
+];
+
+function pad(n: number): string {
+	return n.toString().padStart(2, '0');
+}
+
+function formatRelativeDay(date: CalendarDate, referenceDate: CalendarDate): string {
+	const diff = date.compare(referenceDate);
+	if (diff === 0) return 'idag';
+	if (diff === 1) return 'imorgon';
+	const dayIndex = getDayOfWeek(date, 'sv-SE');
+	return `${WEEKDAYS[dayIndex]} ${date.day} ${MONTHS[date.month - 1]}`;
+}
+
+type BookingReminderInput = {
+	resource: Resource;
+	date: string;
+	startHour: number;
+	endHour: number;
+	referenceDate?: CalendarDate;
+};
+
+const bookingReminder: EmailTemplate<BookingReminderInput> = {
 	alias: 'skiftesgatan-booking-reminder',
 	name: 'Booking reminder',
 	subject: `Påminnelse: ${mustache('RESOURCE')} ${mustache('RELATIVE_DAY')} kl ${mustache('TIME_RANGE')}`,
@@ -148,13 +201,25 @@ const bookingReminder: EmailTemplateSpec = {
 		{ key: 'RESOURCE_LOWER', type: 'string' },
 		{ key: 'RELATIVE_DAY', type: 'string' },
 		{ key: 'TIME_RANGE', type: 'string' }
-	]
+	],
+	build: ({ resource, date, startHour, endHour, referenceDate }) => {
+		const calendarDate = parseDate(date);
+		const ref = referenceDate ?? today(TIMEZONE);
+		const resourceName = RESOURCE_NAMES[resource];
+
+		return {
+			RESOURCE: resourceName,
+			RESOURCE_LOWER: resourceName.toLowerCase(),
+			RELATIVE_DAY: formatRelativeDay(calendarDate, ref),
+			TIME_RANGE: `${pad(startHour)}:00–${pad(endHour)}:00`
+		};
+	}
 };
 
 export const EMAIL_TEMPLATES = {
 	verifyEmail,
 	resetPassword,
 	bookingReminder
-} satisfies Record<string, EmailTemplateSpec>;
+};
 
 export const EMAIL_TEMPLATE_LIST: EmailTemplateSpec[] = Object.values(EMAIL_TEMPLATES);

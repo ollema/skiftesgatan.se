@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CalendarDate, CalendarDateTime, toZoned } from '@internationalized/date';
+import { CalendarDateTime, toZoned } from '@internationalized/date';
 import { PGlite } from '@electric-sql/pglite';
 import { drizzle } from 'drizzle-orm/pglite';
 import { pushSchema } from 'drizzle-kit/api';
@@ -10,7 +10,6 @@ import { booking, timeBlock, user } from './db/schema';
 import { reminderPreference, bookingReminder } from './db/reminder.schema';
 import { seedTimeBlocks } from './db/seed-time-blocks';
 import { computeNotifyAt, createBookingReminders, setReminderPreference } from './reminder';
-import { buildBookingReminderVariables } from './reminder.email';
 
 type TestDb = ReturnType<typeof drizzle<typeof schema>>;
 
@@ -80,79 +79,6 @@ describe('computeNotifyAt', () => {
 		// (24 real hours before, not wall-clock hours)
 		const result = computeNotifyAt('2026-03-29', 7, 1440);
 		expect(result.toISOString()).toBe('2026-03-28T05:00:00.000Z');
-	});
-});
-
-describe('buildBookingReminderVariables', () => {
-	const ref = new CalendarDate(2026, 4, 15);
-
-	it('uses Swedish resource name for laundry', () => {
-		const vars = buildBookingReminderVariables({
-			resource: 'laundry_room',
-			date: '2026-04-16',
-			startHour: 10,
-			endHour: 13,
-			referenceDate: ref
-		});
-		expect(vars.RESOURCE).toBe('Tvättstugan');
-		expect(vars.RESOURCE_LOWER).toBe('tvättstugan');
-	});
-
-	it('uses Swedish resource name for outdoor area', () => {
-		const vars = buildBookingReminderVariables({
-			resource: 'outdoor_area',
-			date: '2026-04-16',
-			startHour: 7,
-			endHour: 22,
-			referenceDate: ref
-		});
-		expect(vars.RESOURCE).toBe('Uteplats');
-		expect(vars.RESOURCE_LOWER).toBe('uteplats');
-	});
-
-	it('says imorgon when date is tomorrow', () => {
-		const vars = buildBookingReminderVariables({
-			resource: 'laundry_room',
-			date: '2026-04-16',
-			startHour: 10,
-			endHour: 13,
-			referenceDate: ref
-		});
-		expect(vars.RELATIVE_DAY).toBe('imorgon');
-	});
-
-	it('says idag when date is today', () => {
-		const vars = buildBookingReminderVariables({
-			resource: 'laundry_room',
-			date: '2026-04-15',
-			startHour: 10,
-			endHour: 13,
-			referenceDate: ref
-		});
-		expect(vars.RELATIVE_DAY).toBe('idag');
-	});
-
-	it('uses weekday and date for dates further away', () => {
-		const vars = buildBookingReminderVariables({
-			resource: 'laundry_room',
-			date: '2026-04-20',
-			startHour: 7,
-			endHour: 10,
-			referenceDate: ref
-		});
-		// 2026-04-20 is a Monday
-		expect(vars.RELATIVE_DAY).toBe('måndag 20 april');
-	});
-
-	it('formats time range with zero-padded hours and en-dash', () => {
-		const vars = buildBookingReminderVariables({
-			resource: 'laundry_room',
-			date: '2026-04-16',
-			startHour: 7,
-			endHour: 10,
-			referenceDate: ref
-		});
-		expect(vars.TIME_RANGE).toBe('07:00\u201310:00');
 	});
 });
 

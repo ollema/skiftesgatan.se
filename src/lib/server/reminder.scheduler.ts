@@ -10,7 +10,6 @@ import { bookingReminder } from '$lib/server/db/reminder.schema';
 import { booking } from '$lib/server/db/booking.schema';
 import { user } from '$lib/server/db/auth.schema';
 import { getTimeBlockHours } from '$lib/server/booking';
-import { buildBookingReminderVariables } from '$lib/server/reminder.email';
 
 export async function processReminders(): Promise<number> {
 	const currentTime = now(TIMEZONE).toDate();
@@ -33,7 +32,7 @@ export async function processReminders(): Promise<number> {
 
 	for (const reminder of due) {
 		const { startHour, endHour } = await getTimeBlockHours(reminder.timeBlockId);
-		const variables = buildBookingReminderVariables({
+		const variables = EMAIL_TEMPLATES.bookingReminder.build({
 			resource: reminder.resource,
 			date: reminder.date,
 			startHour,
