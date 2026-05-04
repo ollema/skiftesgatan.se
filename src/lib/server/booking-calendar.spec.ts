@@ -8,7 +8,8 @@ import { TIMEZONE, type Resource } from '$lib/types/bookings';
 import * as schema from './db/schema';
 import { booking, timeBlock, user } from './db/schema';
 import { seedTimeBlocks } from './db/seed-time-blocks';
-import { __getBookingCalendarSnapshot } from './booking-calendar';
+import { __getBookingCalendarSnapshot, __watchBookingCalendar } from './booking-calendar';
+import { bookingEvents, __listenerCount } from './booking-events';
 
 type TestDb = ReturnType<typeof drizzle<typeof schema>>;
 
@@ -461,5 +462,139 @@ describe('getBookingCalendar', () => {
 				await client.close();
 			}
 		});
+	});
+});
+
+describe('watchBookingCalendar', () => {
+	const clock = () => startOfToday;
+
+	function nextOrTimeout<T>(
+		iter: AsyncIterator<T>,
+		ms: number
+	): Promise<IteratorResult<T> | 'timeout'> {
+		return Promise.race([
+			iter.next(),
+			new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), ms))
+		]);
+	}
+
+	it('yields a fresh payload on subscribe', async () => {
+		const { client, db } = await makeTestDb();
+		try {
+			await seedTimeBlocks(db);
+			await insertUser(db, me.id, 'A1001');
+
+			const iter = __watchBookingCalendar(db, 'laundry_room', me, clock);
+			try {
+				const first = await iter.next();
+				expect(first.done).toBe(false);
+				expect(first.value?.bookingCalendar).toBeDefined();
+				expect(first.value?.bookingCalendar[startStr]).toHaveLength(5);
+			} finally {
+				await iter.return?.();
+			}
+		} finally {
+			await client.close();
+		}
+	});
+
+	it('yields a fresh payload on every bookingEvents.emit for the same resource', async () => {
+		const { client, db } = await makeTestDb();
+		try {
+			await seedTimeBlocks(db);
+			await insertUser(db, me.id, 'A1001');
+			const tb7_10 = await timeBlockId(db, 'laundry_room', 7, 10);
+			const tomorrow = start.add({ days: 1 }).toString();
+
+			const iter = __watchBookingCalendar(db, 'laundry_room', me, clock);
+			try {
+				const first = await iter.next();
+				expect(first.value?.activeBooking).toBeUndefined();
+
+				const bookingId = await insertBooking(db, {
+					userId: me.id,
+					timeBlockId: tb7_10,
+					resource: 'laundry_room',
+					date: tomorrow
+				});
+				bookingEvents.emit('laundry_room');
+
+				const second = await iter.next();
+				expect(second.done).toBe(false);
+				expect(second.value?.activeBooking?.bookingId).toBe(bookingId);
+				expect(second.value?.activeBooking?.date.toString()).toBe(tomorrow);
+			} finally {
+				await iter.return?.();
+			}
+		} finally {
+			await client.close();
+		}
+	});
+
+	it('does not yield on bookingEvents.emit for a different resource', async () => {
+		const { client, db } = await makeTestDb();
+		try {
+			await seedTimeBlocks(db);
+			await insertUser(db, me.id, 'A1001');
+
+			const iter = __watchBookingCalendar(db, 'laundry_room', me, clock);
+			try {
+				await iter.next();
+
+				bookingEvents.emit('outdoor_area');
+
+				const second = await nextOrTimeout(iter, 50);
+				expect(second).toBe('timeout');
+			} finally {
+				await iter.return?.();
+			}
+		} finally {
+			await client.close();
+		}
+	});
+
+	it('coalesces two rapid emits into a single re-yield (single-flight buffering)', async () => {
+		const { client, db } = await makeTestDb();
+		try {
+			await seedTimeBlocks(db);
+			await insertUser(db, me.id, 'A1001');
+
+			const iter = __watchBookingCalendar(db, 'laundry_room', me, clock);
+			try {
+				await iter.next();
+
+				bookingEvents.emit('laundry_room');
+				bookingEvents.emit('laundry_room');
+
+				const second = await iter.next();
+				expect(second.done).toBe(false);
+
+				const third = await nextOrTimeout(iter, 50);
+				expect(third).toBe('timeout');
+			} finally {
+				await iter.return?.();
+			}
+		} finally {
+			await client.close();
+		}
+	});
+
+	it('unsubscribes from bookingEvents when iteration terminates', async () => {
+		const { client, db } = await makeTestDb();
+		try {
+			await seedTimeBlocks(db);
+			await insertUser(db, me.id, 'A1001');
+
+			const baseline = __listenerCount();
+
+			const iter = __watchBookingCalendar(db, 'laundry_room', me, clock);
+			await iter.next();
+			expect(__listenerCount()).toBe(baseline + 1);
+
+			await iter.return?.();
+			expect(__listenerCount()).toBe(baseline);
+		} finally {
+			await client.close();
+		}
 	});
 });

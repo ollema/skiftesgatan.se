@@ -10,7 +10,7 @@ import {
 	cancelBooking as cancelBookingDb,
 	validateBookingDate
 } from '$lib/server/booking';
-import { getBookingCalendar } from '$lib/server/booking-calendar';
+import { watchBookingCalendar } from '$lib/server/booking-calendar';
 import { bookingEvents } from '$lib/server/booking-events';
 import { createBookingReminders } from '$lib/server/reminder';
 import { TIMEZONE, RESOURCES } from '$lib/types/bookings';
@@ -29,33 +29,7 @@ export const getBookingData = query.live(
 	}),
 	async function* ({ resource }) {
 		const user = getAuthUser();
-
-		const buildPayload = () => getBookingCalendar(resource, user, now(TIMEZONE));
-
-		let pending = false;
-		let wake: (() => void) | undefined;
-
-		const unsubscribe = bookingEvents.subscribe(resource, () => {
-			pending = true;
-			wake?.();
-			wake = undefined;
-		});
-
-		try {
-			yield await buildPayload();
-
-			while (true) {
-				if (!pending) {
-					await new Promise<void>((resolve) => {
-						wake = resolve;
-					});
-				}
-				pending = false;
-				yield await buildPayload();
-			}
-		} finally {
-			unsubscribe();
-		}
+		yield* watchBookingCalendar(resource, user);
 	}
 );
 

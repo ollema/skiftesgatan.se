@@ -18,3 +18,11 @@ export const bookingEvents = {
 		return () => emitter.off(CHANGE, listener);
 	}
 };
+
+/**
+ * Test seam: returns the current number of `change` listeners on the
+ * underlying emitter so tests can assert that subscribers tear down cleanly.
+ */
+export function __listenerCount(): number {
+	return emitter.listenerCount(CHANGE);
+}
