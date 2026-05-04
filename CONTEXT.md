@@ -41,6 +41,10 @@ _Avoid_: Open booking, current booking, future booking (these are vaguer or wron
 The range of dates an Apartment is allowed to book into. Earliest is today; latest is today plus one calendar month (Europe/Stockholm). Slots outside the Booking Window are not bookable, even if visible.
 _Avoid_: 30-day window (incorrect — it's calendar-month, not day-count), advance window, booking horizon, lookahead.
 
+**Booking Calendar**:
+What a signed-in Apartment sees for one Facility: every **Slot** in the **Booking Window**, each tagged `free`, `mine`, `other`, or `past`, plus the Apartment's **Active Booking** for that Facility (if any). Updates in real time as other Apartments book or cancel — see ADR-0002. One Booking Calendar per (Apartment, Facility) pair.
+_Avoid_: booking grid, booking view, slots view, calendar (ambiguous with **Calendar Subscription**).
+
 **Reminder**:
 A scheduled email sent to an Apartment ahead of one of its Bookings. Has a `notify_at` instant, a status (pending / sent / failed), and is tied to exactly one Booking. At most one Reminder exists per (Booking, offset) pair.
 _Avoid_: Notification (overly generic — not all system emails are Reminders; password-reset and verification emails are not), alert.
@@ -80,6 +84,7 @@ _Avoid_: Username (the apartment number is the username), display username, name
 - A **Booking** fills exactly one **Slot** for exactly one **Apartment**
 - An **Apartment** holds at most one **Active Booking** per **Facility**
 - A **Booking** must fall within the **Booking Window** (today through today + 1 month)
+- Each (**Apartment**, **Facility**) pair has one **Booking Calendar**, scoped to the **Booking Window**
 - Replacing a **Booking** is atomic: the old Booking is only cancelled if the new Slot is successfully claimed. An Apartment cannot lose its existing Booking by attempting to grab a Slot that turns out to be taken.
 - An **Apartment** has at most one **Reminder Preference** per **Facility** per offset
 - A **Booking** may have zero or more **Reminders**, one per Reminder Preference offset that was enabled at the time the Booking was created
