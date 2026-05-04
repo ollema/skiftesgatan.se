@@ -85,7 +85,8 @@ export const book = command(
 				user.id,
 				resource,
 				date.toString(),
-				timeBlockId
+				timeBlockId,
+				now(TIMEZONE)
 			);
 			if (count > 0) {
 				log.info(
