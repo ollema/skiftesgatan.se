@@ -18,6 +18,13 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 
 	const response = await svelteKitHandler({ event, resolve, auth, building });
 
+	// Workaround for sveltejs/kit#15790: nginx buffers query.live (application/x-ndjson)
+	// streams until they time out. X-Accel-Buffering: no opts the response out of buffering;
+	// non-nginx proxies ignore it.
+	if (response.headers.get('content-type')?.includes('application/x-ndjson')) {
+		response.headers.set('X-Accel-Buffering', 'no');
+	}
+
 	const sessionUser = event.locals.user;
 	const method = event.request.method;
 	const isMutation = method !== 'GET' && method !== 'HEAD';
