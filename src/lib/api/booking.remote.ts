@@ -6,12 +6,11 @@ import { requireAuth, getAuthUser } from '$lib/server/auth';
 import { log } from '$lib/server/log';
 import { slotPhrase, slotTimeRange } from '$lib/server/log.prose';
 import {
-	getBookingCalendar,
 	bookSlot,
-	buildBookingPayload,
 	cancelBooking as cancelBookingDb,
 	validateBookingDate
 } from '$lib/server/booking';
+import { getBookingCalendar } from '$lib/server/booking-calendar';
 import { bookingEvents } from '$lib/server/booking-events';
 import { createBookingReminders } from '$lib/server/reminder';
 import { TIMEZONE, RESOURCES } from '$lib/types/bookings';
@@ -31,10 +30,7 @@ export const getBookingData = query.live(
 	async function* ({ resource }) {
 		const user = getAuthUser();
 
-		const buildPayload = async () => {
-			const rawRows = await getBookingCalendar(resource);
-			return buildBookingPayload(rawRows, user, now(TIMEZONE));
-		};
+		const buildPayload = () => getBookingCalendar(resource, user, now(TIMEZONE));
 
 		let pending = false;
 		let wake: (() => void) | undefined;
