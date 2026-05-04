@@ -81,7 +81,10 @@ export default defineConfig({
 					include: ['src/**/*.{test,spec}.{js,ts}'],
 					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}'],
 					setupFiles: ['src/lib/server/test-setup.ts'],
-					env: { LOG_LEVEL: 'error' }
+					env: { LOG_LEVEL: 'error' },
+					// PGlite cold-start in CI eats ~4–5s on the first makeTestDb() call
+					// in each spec file; the default 5000ms is too tight.
+					testTimeout: 15000
 				}
 			}
 		]
