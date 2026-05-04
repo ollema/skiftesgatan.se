@@ -6,10 +6,10 @@ import {
 	toZoned,
 	today
 } from '@internationalized/date';
-import { eq, and, gt, gte, lte, or, type SQL } from 'drizzle-orm';
+import { eq, and, gt, or, type SQL } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { booking, timeBlock, user } from '$lib/server/db/schema';
-import { TIMEZONE, type Resource, type Slot } from '$lib/types/bookings';
+import { TIMEZONE, type Resource } from '$lib/types/bookings';
 
 export function isBookingActive(b: { date: string; endHour: number }, now: ZonedDateTime): boolean {
 	const d = parseDate(b.date);
@@ -91,133 +91,6 @@ export function validateBookingDate(date: CalendarDate): ValidateBookingDateErro
 	if (date.compare(now) < 0) return 'past';
 	if (date.compare(maxBookingDate(now)) > 0) return 'too_far';
 	return null;
-}
-
-export type BookingCalendarRow = {
-	timeBlockId: number;
-	startHour: number;
-	endHour: number;
-	date: string | null;
-	bookingId: number | null;
-	userId: string | null;
-	username: string | null;
-};
-
-export async function getBookingCalendar(resource: Resource): Promise<BookingCalendarRow[]> {
-	const startDate = today(TIMEZONE).toString();
-	const endDate = maxBookingDate().toString();
-
-	return await db
-		.select({
-			timeBlockId: timeBlock.id,
-			startHour: timeBlock.startHour,
-			endHour: timeBlock.endHour,
-			date: booking.date,
-			bookingId: booking.id,
-			userId: booking.userId,
-			username: user.username
-		})
-		.from(timeBlock)
-		.leftJoin(
-			booking,
-			and(
-				eq(booking.timeBlockId, timeBlock.id),
-				eq(booking.resource, resource),
-				gte(booking.date, startDate),
-				lte(booking.date, endDate)
-			)
-		)
-		.leftJoin(user, eq(booking.userId, user.id))
-		.where(eq(timeBlock.resource, resource))
-		.orderBy(timeBlock.startHour);
-}
-
-export function buildBookingPayload(
-	rawRows: BookingCalendarRow[],
-	user: { id: string } | null,
-	now: ZonedDateTime
-): { bookingCalendar: Record<string, Slot[]>; activeBooking: Slot | undefined } {
-	const timeBlockSet = new Map<number, { startHour: number; endHour: number }>();
-	for (const row of rawRows) {
-		if (!timeBlockSet.has(row.timeBlockId)) {
-			timeBlockSet.set(row.timeBlockId, {
-				startHour: row.startHour,
-				endHour: row.endHour
-			});
-		}
-	}
-	const timeBlocks = [...timeBlockSet.entries()];
-
-	const bookingMap = new Map<
-		string,
-		{ bookingId: number; userId: string; username: string | null }
-	>();
-	for (const row of rawRows) {
-		if (row.date !== null && row.bookingId !== null) {
-			bookingMap.set(`${row.date}:${row.timeBlockId}`, {
-				bookingId: row.bookingId,
-				userId: row.userId!,
-				username: row.username
-			});
-		}
-	}
-
-	// Date-grain stays for "show all of today's Slots" — past Slots from earlier
-	// today remain visible as a non-interactive 'past' status.
-	const start = today(TIMEZONE);
-	const end = start.add({ months: 1 });
-
-	const bookingCalendar: Record<string, Slot[]> = {};
-	let activeBooking: Slot | undefined = undefined;
-
-	let current = start;
-	while (current.compare(end) <= 0) {
-		const dateStr = current.toString();
-		const slots: Slot[] = [];
-
-		for (const [tid, tb] of timeBlocks) {
-			const b = bookingMap.get(`${dateStr}:${tid}`);
-			const slotActive = isBookingActive({ date: dateStr, endHour: tb.endHour }, now);
-			const status: Slot['status'] = !slotActive
-				? 'past'
-				: b === undefined
-					? 'free'
-					: b.userId === user?.id
-						? 'mine'
-						: 'other';
-
-			// Past-end slots: Historical Bookings are invisible on user-facing
-			// surfaces. The cell stays in the grid but exposes no Booking info.
-			const exposeBooking = slotActive && b !== undefined;
-
-			slots.push({
-				timeBlockId: tid,
-				date: current,
-				start: tb.startHour,
-				end: tb.endHour,
-				status,
-				bookingId: exposeBooking ? b.bookingId : null,
-				username: exposeBooking && user ? (b.username ?? null) : null
-			});
-
-			if (activeBooking === undefined && slotActive && b !== undefined && b.userId === user?.id) {
-				activeBooking = {
-					timeBlockId: tid,
-					date: current,
-					start: tb.startHour,
-					end: tb.endHour,
-					status,
-					bookingId: b.bookingId,
-					username: b.username
-				};
-			}
-		}
-
-		bookingCalendar[dateStr] = slots;
-		current = current.add({ days: 1 });
-	}
-
-	return { bookingCalendar, activeBooking };
 }
 
 type CancelledSlot = {
