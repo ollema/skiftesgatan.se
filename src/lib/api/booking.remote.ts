@@ -12,7 +12,7 @@ import {
 } from '$lib/server/booking';
 import { watchBookingCalendar } from '$lib/server/booking-calendar';
 import { bookingEvents } from '$lib/server/booking-events';
-import { createBookingReminders } from '$lib/server/reminder';
+import { reminderSchedule } from '$lib/server/reminder-schedule';
 import { TIMEZONE, RESOURCES } from '$lib/types/bookings';
 
 const resourceSchema = v.picklist(RESOURCES);
@@ -80,14 +80,13 @@ export const book = command(
 		}
 
 		try {
-			const count = await createBookingReminders(
-				result.booking.id,
-				user.id,
-				resource,
-				date.toString(),
-				timeBlockId,
-				now(TIMEZONE)
-			);
+			const { scheduled: count } = await reminderSchedule.extendForBooking({
+				bookingId: result.booking.id,
+				apartmentId: user.id,
+				facility: resource,
+				date,
+				timeBlockId
+			});
 			if (count > 0) {
 				log.info(
 					`[reminder] scheduled ${count} reminder(s) for apartment ${user.username} ahead of ${newSlot}`

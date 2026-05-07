@@ -53,6 +53,10 @@ _Avoid_: Notification (overly generic — not all system emails are Reminders; p
 A per-Apartment, per-Facility setting that controls whether and how far ahead Reminders are scheduled for that Facility's Bookings. Disabling the Preference cancels pending Reminders for the Apartment's future Bookings on that Facility.
 _Avoid_: Notification preference.
 
+**Reminder Schedule**:
+The per-(Apartment, Facility) cohesive whole: which offsets the Apartment has enabled (its **Reminder Preferences**) and the resulting pending **Reminders** for upcoming **Bookings**. Toggling a Reminder Preference reschedules; creating a Booking adds to the Schedule; cancelling a Booking (or letting a Slot end) removes from it. The Schedule is the seam that keeps Preferences and Reminders in sync — disabling a Preference mid-month cancels its pending Reminders; making a Booking while a Preference is on creates one. A "window has already closed" rule belongs to the Schedule: an offset whose `notify_at` is at or before now is silently skipped, since a reminder for a Slot that's about to start (or has started) is noise, not a reminder.
+_Avoid_: reminder configuration, reminder setup, notification schedule.
+
 **Calendar Subscription**:
 An Apartment's iCal feed of its own Active Bookings, exposed at a secret URL. The Apartment subscribes once from their phone's Calendar app and Bookings sync automatically. An Apartment has zero or one Calendar Subscription; it can be created, regenerated (rotates the URL), or removed.
 _Avoid_: Calendar (ambiguous — also refers to the booking month-view UI), iCal feed (the technical surface, not the domain concept), calendar token (implementation detail).
@@ -87,6 +91,7 @@ _Avoid_: Username (the apartment number is the username), display username, name
 - Each (**Apartment**, **Facility**) pair has one **Booking Calendar**, scoped to the **Booking Window**
 - Replacing a **Booking** is atomic: the old Booking is only cancelled if the new Slot is successfully claimed. An Apartment cannot lose its existing Booking by attempting to grab a Slot that turns out to be taken.
 - An **Apartment** has at most one **Reminder Preference** per **Facility** per offset
+- Each (**Apartment**, **Facility**) pair has one **Reminder Schedule**, comprising its enabled Reminder Preferences and the resulting pending Reminders
 - A **Booking** may have zero or more **Reminders**, one per Reminder Preference offset that was enabled at the time the Booking was created
 - An **Apartment** has zero or one **Calendar Subscription**, which exposes only that Apartment's own Active Bookings
 
