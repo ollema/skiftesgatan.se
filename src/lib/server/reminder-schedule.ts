@@ -22,7 +22,7 @@ type Preference = {
 	offsetMinutes: number;
 };
 
-export type ReminderSchedule = {
+type ReminderSchedule = {
 	getPreferences(apartmentId: string): Promise<Preference[]>;
 	setPreference(
 		apartmentId: string,
