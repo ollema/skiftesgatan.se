@@ -9,7 +9,6 @@
 		minValue: CalendarDate;
 		maxValue: CalendarDate;
 		bookingCalendar: Record<string, Slot[]>;
-		slotCount: number;
 	}
 
 	let { date = $bindable(), minValue, maxValue, bookingCalendar }: Props = $props();
