@@ -220,10 +220,10 @@
 
 <EditDialog open={editingName} onClose={() => (editingName = false)} title="Byt visningsnamn">
 	<form
-		{...updateUserName.enhance(async ({ submit, form }) => {
+		{...updateUserName.enhance(async (form) => {
 			try {
-				await submit();
-				form.reset();
+				await form.submit();
+				form.element.reset();
 				editingName = false;
 				toast.success('Namn uppdaterat');
 			} catch {
@@ -246,10 +246,10 @@
 
 <EditDialog open={editingEmail} onClose={() => (editingEmail = false)} title="Byt e-post">
 	<form
-		{...updateUserEmail.enhance(async ({ submit, form }) => {
+		{...updateUserEmail.enhance(async (form) => {
 			try {
-				await submit();
-				form.reset();
+				await form.submit();
+				form.element.reset();
 				editingEmail = false;
 				toast.success('E-post uppdaterad');
 			} catch {
