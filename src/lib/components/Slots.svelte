@@ -99,7 +99,7 @@
 			<button
 				data-slot-status="mine"
 				aria-label={`Din bokning ${timeRange}, avboka`}
-				class="cursor-pointer rounded-sm bg-slot-mine px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface transition-colors duration-120 hover:opacity-90 sm:text-sm"
+				class="cursor-pointer rounded-sm border border-transparent bg-slot-mine px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface transition-colors duration-120 hover:opacity-90 sm:text-sm"
 				onclick={() => {
 					cancelBookingId = slot.bookingId;
 				}}
@@ -119,7 +119,7 @@
 			<button
 				data-slot-status="booked"
 				aria-label={`Bokad av ${slot.username}, ${timeRange}`}
-				class="cursor-not-allowed rounded-sm bg-slot-occupied px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface sm:text-sm"
+				class="cursor-not-allowed rounded-sm border border-transparent bg-slot-occupied px-2 py-1.5 text-center text-xs whitespace-nowrap text-surface sm:text-sm"
 				disabled
 			>
 				{slot.username}
