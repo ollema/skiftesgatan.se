@@ -27,7 +27,6 @@
 	// derived state/data
 	let laundryRoom = $derived(resource === 'laundry_room');
 	let plural = $derived(user?.name?.includes('&') ?? false);
-	let slotCount = $derived(laundryRoom ? 5 : 1);
 	let bookingCalendar = $derived(data.bookingCalendar);
 	let activeBooking = $derived(data.activeBooking);
 	let slots = $derived(bookingCalendar[date.toString()] ?? []);
@@ -60,7 +59,7 @@
 
 <!-- calendar -->
 <div>
-	<Calendar bind:date minValue={minDate} maxValue={maxDate} {slotCount} {bookingCalendar} />
+	<Calendar bind:date minValue={minDate} maxValue={maxDate} {bookingCalendar} />
 </div>
 
 <div class="mt-8 mb-3 flex flex-col-reverse gap-1 sm:flex-row sm:items-baseline sm:justify-between">

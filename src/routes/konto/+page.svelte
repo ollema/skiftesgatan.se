@@ -202,10 +202,10 @@
 
 <EditDialog open={editingName} onClose={() => (editingName = false)} title="Byt visningsnamn">
 	<form
-		{...changeName.enhance(async ({ submit, form }) => {
+		{...changeName.enhance(async (form) => {
 			try {
-				await submit();
-				form.reset();
+				await form.submit();
+				form.element.reset();
 				editingName = false;
 				toast.success('Namn uppdaterat');
 			} catch {
@@ -227,10 +227,10 @@
 
 <EditDialog open={editingEmail} onClose={() => (editingEmail = false)} title="Byt e-post">
 	<form
-		{...changeEmail.enhance(async ({ submit, form }) => {
+		{...changeEmail.enhance(async (form) => {
 			try {
-				await submit();
-				form.reset();
+				await form.submit();
+				form.element.reset();
 				editingEmail = false;
 				toast.success('Verifieringsmail skickat');
 			} catch {
@@ -252,10 +252,10 @@
 
 <EditDialog open={editingPassword} onClose={() => (editingPassword = false)} title="Byt lösenord">
 	<form
-		{...changePassword.enhance(async ({ submit, form }) => {
+		{...changePassword.enhance(async (form) => {
 			try {
-				await submit();
-				form.reset();
+				await form.submit();
+				form.element.reset();
 				editingPassword = false;
 				toast.success('Lösenordet ändrat');
 			} catch {
