@@ -42,7 +42,8 @@
 		{#snippet children({ months, weekdays })}
 			<Calendar.Header class="flex items-center justify-center gap-1 pb-2">
 				<Calendar.PrevButton
-					class="inline-flex size-8 items-center justify-center transition-colors duration-120 hover:bg-bg-alt"
+					class="inline-flex size-8 items-center justify-center transition-colors duration-120 hover:bg-bg-alt
+						data-disabled:cursor-not-allowed data-disabled:text-text-disabled data-disabled:hover:bg-transparent"
 				>
 					&lt;
 				</Calendar.PrevButton>
@@ -52,7 +53,8 @@
 				</Calendar.Heading>
 
 				<Calendar.NextButton
-					class="inline-flex size-8 items-center justify-center transition-colors duration-120 hover:bg-bg-alt"
+					class="inline-flex size-8 items-center justify-center transition-colors duration-120 hover:bg-bg-alt
+						data-disabled:cursor-not-allowed data-disabled:text-text-disabled data-disabled:hover:bg-transparent"
 				>
 					&gt;
 				</Calendar.NextButton>
@@ -78,8 +80,8 @@
 										<Calendar.Day
 											class="inline-flex h-12 w-full flex-col items-center justify-center py-1 text-sm
 												hover:bg-bg-alt
-												data-disabled:cursor-not-allowed data-disabled:text-border data-disabled:hover:bg-transparent
-												data-outside-month:text-text-muted data-selected:ring-2 data-selected:ring-text-primary/20 data-selected:ring-inset
+												data-disabled:cursor-not-allowed data-disabled:text-text-disabled data-disabled:hover:bg-transparent
+												data-selected:ring-2 data-selected:ring-text-primary/20 data-selected:ring-inset
 												data-today:font-semibold sm:py-2.5"
 										>
 											{day.day}

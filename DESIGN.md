@@ -21,6 +21,7 @@ Use CSS custom properties throughout. Warm neutrals with a structural green and 
 	--color-text-primary: #2c2a25; /* warm near-black — body text */
 	--color-text-secondary: #6b6560; /* warm gray — supporting text, metadata */
 	--color-text-muted: #9c9590; /* stone — captions, timestamps */
+	--color-text-disabled: #c4bdb0; /* faded stone — disabled controls & out-of-range calendar days */
 
 	/* accent (background/structural use only — never as text color) */
 	--color-accent: #4a6741; /* muted forest green — navbar, buttons, filled slots */
@@ -201,6 +202,19 @@ Focus rings use green — this is a structural indicator, not text color.
 - Terracotta distinguishes "mine" from "others" at a glance
 - Slot buttons show only time range (e.g. "10–16"), no action labels
 - Use `--radius-sm` (3px), no shadow
+
+### Calendar
+
+The booking calendar styles days on a single axis — **bookable vs. not** — never on the calendar-month boundary. The valid range (`today … today + 1 month`) straddles two months, so a bookable day looks identical whether it belongs to the visible month or spills in from the adjacent one.
+
+| State                                                              | Treatment                                                                |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| In range (bookable, incl. fully-booked — still selectable to view) | `--color-text-primary` number + slot dots, subtle `--color-bg-alt` hover |
+| Out of range (before today, past max, or grid filler)              | `--color-text-disabled` number, no dots, no hover, `cursor-not-allowed`  |
+
+- The month-spillover days from the previous/next month are **not** given a distinct "muted" shade — they follow the same bookable/disabled rule as everything else.
+- Prev/next month chevrons share the same disabled treatment: `--color-text-disabled` + `cursor-not-allowed` when navigation is blocked at the range edge. Enabled chevrons are `--color-text-primary`.
+- `--color-text-disabled` is the single shared "inert" color across dead days and disabled chevrons.
 
 ---
 

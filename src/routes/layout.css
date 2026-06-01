@@ -12,6 +12,7 @@
 	--color-text-primary: #2c2a25;
 	--color-text-secondary: #6b6560;
 	--color-text-muted: #9c9590;
+	--color-text-disabled: #c4bdb0;
 
 	/* Accent (backgrounds/structural only — never as text color) */
 	--color-accent: #4a6741;
