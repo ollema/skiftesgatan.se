@@ -55,10 +55,20 @@ export const init: ServerInit = async () => {
 	startScheduler();
 };
 
-export const handleError: HandleServerError = ({ error, status, event, message }) => {
+export const handleError: HandleServerError = ({ kind, error, event, issues }) => {
 	if (process.env.LOG_LEVEL !== 'error') {
+		const status = kind === 'unknown' ? 500 : error.status;
 		console.error(`[${status}] ${event.request.method} ${event.url.pathname}`);
-		if (error instanceof Error) console.error(error.stack);
+
+		if (kind === 'unknown') {
+			if (error instanceof Error) console.error(error.stack);
+			else console.error(error);
+		} else if (kind === 'validation' && issues?.length) {
+			console.error(issues);
+		}
 	}
-	return { message };
+
+	// Returning nothing keeps SvelteKit's defaults: the error body for app
+	// errors, and a safe status/message for framework, validation, and
+	// unknown errors (whose details must not reach the client).
 };

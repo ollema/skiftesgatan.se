@@ -2,12 +2,17 @@
 	"$schema": "https://unpkg.com/knip@6/schema.json",
 	"tags": ["-lintignore"],
 	"entry": [
+		"src/env.ts",
 		"src/hooks.ts",
+		"src/hooks.server.ts",
+		"src/routes/**/+*.{ts,svelte}",
+		"src/service-worker/index.ts",
 		"src/lib/server/reminder.scheduler.ts",
 		"content-collections.ts",
 		"scripts/db/*.ts",
 		"scripts/generate-icons.ts",
 		"scripts/sync-email-templates.ts"
 	],
-	"ignoreDependencies": ["vitest-browser-svelte"]
+	"ignoreDependencies": ["vitest-browser-svelte"],
+	"ignoreUnresolved": ["^\\$app/"]
 }

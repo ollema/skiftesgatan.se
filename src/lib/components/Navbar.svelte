@@ -52,7 +52,7 @@
 							{#each latestNews as item (item._meta.path)}
 								<li>
 									<NavigationMenu.Link
-										href={resolve(`/nyheter/${item._meta.path}` as `/nyheter/${string}`)}
+										href={resolve('/nyheter/[slug]', { slug: item._meta.path })}
 										class="block rounded-sm p-2 no-underline transition-colors duration-120 hover:bg-bg"
 									>
 										<time
@@ -99,9 +99,7 @@
 							{#each informationPages as infoPage (infoPage._meta.path)}
 								<li>
 									<NavigationMenu.Link
-										href={resolve(
-											`/information/${infoPage._meta.path}` as `/information/${string}`
-										)}
+										href={resolve('/information/[...slug]', { slug: infoPage._meta.path })}
 										class="block rounded-sm p-2 text-sm text-text-secondary no-underline transition-colors duration-120 hover:bg-bg hover:text-text-primary"
 									>
 										{infoPage.title}

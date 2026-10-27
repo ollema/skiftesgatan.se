@@ -95,7 +95,7 @@
 					<div class="flex flex-col gap-1.5 pl-3">
 						{#each latestNews as item (item._meta.path)}
 							<a
-								href={resolve(`/nyheter/${item._meta.path}` as `/nyheter/${string}`)}
+								href={resolve('/nyheter/[slug]', { slug: item._meta.path })}
 								class={subLinkClass}
 								class:text-text-primary={page.url.pathname === `/nyheter/${item._meta.path}`}
 							>
@@ -117,7 +117,7 @@
 					<div class="flex flex-col gap-1.5 pl-3">
 						{#each informationPages as infoPage (infoPage._meta.path)}
 							<a
-								href={resolve(`/information/${infoPage._meta.path}` as `/information/${string}`)}
+								href={resolve('/information/[...slug]', { slug: infoPage._meta.path })}
 								class={subLinkClass}
 								class:text-text-primary={page.url.pathname ===
 									`/information/${infoPage._meta.path}`}
