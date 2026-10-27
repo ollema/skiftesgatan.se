@@ -6,8 +6,7 @@ import { PGLITE_PATH, DATABASE_URL } from '$app/env/private';
 import * as schema from './schema';
 
 type Db =
-	| ReturnType<typeof drizzlePg<typeof schema>>
-	| ReturnType<typeof drizzlePglite<typeof schema>>;
+	ReturnType<typeof drizzlePg<typeof schema>> | ReturnType<typeof drizzlePglite<typeof schema>>;
 
 function makeDb(): Db {
 	if (PGLITE_PATH) {

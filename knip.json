@@ -4,9 +4,7 @@
 	"entry": [
 		"src/env.ts",
 		"src/hooks.ts",
-		"src/hooks.server.ts",
 		"src/routes/**/+*.{ts,svelte}",
-		"src/service-worker/index.ts",
 		"src/lib/server/reminder.scheduler.ts",
 		"content-collections.ts",
 		"scripts/db/*.ts",
