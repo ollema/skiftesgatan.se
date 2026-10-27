@@ -2,18 +2,18 @@ import * as v from 'valibot';
 import { CalendarDate, now } from '@internationalized/date';
 import { error } from '@sveltejs/kit';
 import { query, command } from '$app/server';
-import { requireAuth, getAuthUser } from '$lib/server/auth';
-import { log } from '$lib/server/log';
-import { slotPhrase, slotTimeRange } from '$lib/server/log.prose';
+import { requireAuth, getAuthUser } from '#lib/server/auth.js';
+import { log } from '#lib/server/log.js';
+import { slotPhrase, slotTimeRange } from '#lib/server/log.prose.js';
 import {
 	bookSlot,
 	cancelBooking as cancelBookingDb,
 	validateBookingDate
-} from '$lib/server/booking';
-import { watchBookingCalendar } from '$lib/server/booking-calendar';
-import { bookingEvents } from '$lib/server/booking-events';
-import { reminderSchedule } from '$lib/server/reminder-schedule';
-import { TIMEZONE, RESOURCES } from '$lib/types/bookings';
+} from '#lib/server/booking.js';
+import { watchBookingCalendar } from '#lib/server/booking-calendar.js';
+import { bookingEvents } from '#lib/server/booking-events.js';
+import { reminderSchedule } from '#lib/server/reminder-schedule.js';
+import { TIMEZONE, RESOURCES } from '#lib/types/bookings.js';
 
 const resourceSchema = v.picklist(RESOURCES);
 const calendarDateSchema = v.instance(CalendarDate);

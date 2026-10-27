@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { Calendar } from 'bits-ui';
 	import { type CalendarDate, type DateValue } from '@internationalized/date';
-	import { type Slot, type SlotStatus } from '$lib/types/bookings';
-	import { formatMonth } from '$lib/utils/date';
+	import { type Slot, type SlotStatus } from '#lib/types/bookings.js';
+	import { formatMonth } from '#lib/utils/date.js';
 
 	interface Props {
 		date: CalendarDate;

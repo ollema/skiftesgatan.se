@@ -9,7 +9,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { drizzle } from 'drizzle-orm/pglite';
 import { pushSchema } from 'drizzle-kit/api';
 import { and, eq } from 'drizzle-orm';
-import { TIMEZONE, type Resource } from '$lib/types/bookings';
+import { TIMEZONE, type Resource } from '#lib/types/bookings.js';
 import * as schema from './db/schema';
 import { booking, timeBlock, user } from './db/schema';
 import { reminderPreference, bookingReminder } from './db/reminder.schema';

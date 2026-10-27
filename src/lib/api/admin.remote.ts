@@ -3,17 +3,22 @@ import { error, invalid } from '@sveltejs/kit';
 import { getRequestEvent, query, command, form } from '$app/server';
 import { eq } from 'drizzle-orm';
 import { APIError } from 'better-auth/api';
-import { env } from '$env/dynamic/private';
-import { auth, requireAdmin } from '$lib/server/auth';
-import { apartmentSchema } from '$lib/server/auth.config';
-import { db } from '$lib/server/db';
-import { user as userTable } from '$lib/server/db/auth.schema';
-import { reminderPreference } from '$lib/server/db/reminder.schema';
-import { calendarToken } from '$lib/server/db/calendar.schema';
-import { reminderSchedule } from '$lib/server/reminder-schedule';
-import { getExistingToken, createToken, regenerateToken, deleteToken } from '$lib/server/calendar';
-import { RESOURCES } from '$lib/types/bookings';
-import { log } from '$lib/server/log';
+import { ORIGIN } from '$app/env/private';
+import { auth, requireAdmin } from '#lib/server/auth.js';
+import { apartmentSchema } from '#lib/server/auth.config.js';
+import { db } from '#lib/server/db/index.js';
+import { user as userTable } from '#lib/server/db/auth.schema.js';
+import { reminderPreference } from '#lib/server/db/reminder.schema.js';
+import { calendarToken } from '#lib/server/db/calendar.schema.js';
+import { reminderSchedule } from '#lib/server/reminder-schedule.js';
+import {
+	getExistingToken,
+	createToken,
+	regenerateToken,
+	deleteToken
+} from '#lib/server/calendar.js';
+import { RESOURCES } from '#lib/types/bookings.js';
+import { log } from '#lib/server/log.js';
 
 async function findByUsername(username: string) {
 	const [row] = await db
@@ -32,7 +37,7 @@ async function findByUsername(username: string) {
 }
 
 function buildCalendarUrl(token: string): string {
-	return `${env.ORIGIN}/kalender/${token}.ics`;
+	return `${ORIGIN}/kalender/${token}.ics`;
 }
 
 export const listUsers = query(async () => {

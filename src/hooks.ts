@@ -1,3 +1,5 @@
+import type { Transport } from '@sveltejs/kit/hooks';
+
 import {
 	CalendarDate,
 	CalendarDateTime,
@@ -6,7 +8,6 @@ import {
 	parseDateTime,
 	parseTime
 } from '@internationalized/date';
-import type { Transport } from '@sveltejs/kit';
 
 export const transport: Transport = {
 	CalendarDate: {

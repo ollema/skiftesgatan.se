@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { MetaTags } from 'svelte-meta-tags';
-	import { metaDefaults } from '$lib/meta';
-	import BookingPage from '$lib/components/BookingPage.svelte';
+	import { metaDefaults } from '#lib/meta.js';
+	import BookingPage from '#lib/components/BookingPage.svelte';
 	import { Collapsible } from 'bits-ui';
 </script>
 

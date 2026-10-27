@@ -1,20 +1,26 @@
 <script lang="ts">
 	import { MetaTags } from 'svelte-meta-tags';
-	import { metaDefaults } from '$lib/meta';
+	import { metaDefaults } from '#lib/meta.js';
 	import { toast } from 'svelte-sonner';
-	import { getUser, signout, changeName, changeEmail, changePassword } from '$lib/api/auth.remote';
+	import {
+		getUser,
+		signout,
+		changeName,
+		changeEmail,
+		changePassword
+	} from '#lib/api/auth.remote.js';
 	import {
 		getCalendarUrl,
 		createCalendarUrl,
 		regenerateCalendarUrl,
 		deleteCalendarUrl
-	} from '$lib/api/calendar.remote';
-	import { getPreferences, togglePreference } from '$lib/api/reminder.remote';
+	} from '#lib/api/calendar.remote.js';
+	import { getPreferences, togglePreference } from '#lib/api/reminder.remote.js';
 	import { Switch } from 'bits-ui';
-	import Button from '$lib/components/Button.svelte';
-	import EditDialog from '$lib/components/EditDialog.svelte';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import type { Resource } from '$lib/types/bookings';
+	import Button from '#lib/components/Button.svelte';
+	import EditDialog from '#lib/components/EditDialog.svelte';
+	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+	import type { Resource } from '#lib/types/bookings.js';
 
 	let calendarUrlOverride = $state<string | null | undefined>(undefined);
 	let preferenceOverrides = $state<Record<string, boolean>>({});

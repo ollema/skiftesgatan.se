@@ -2,9 +2,9 @@
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { MetaTags } from 'svelte-meta-tags';
-	import { metaDefaults } from '$lib/meta';
-	import { listUsers } from '$lib/api/admin.remote';
-	import { formatDateTime } from '$lib/utils/date';
+	import { metaDefaults } from '#lib/meta.js';
+	import { listUsers } from '#lib/api/admin.remote.js';
+	import { formatDateTime } from '#lib/utils/date.js';
 
 	type SortKey = 'username' | 'name' | 'lastActiveAt';
 	type SortDir = 'asc' | 'desc';

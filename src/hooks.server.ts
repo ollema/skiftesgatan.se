@@ -1,11 +1,11 @@
-import type { Handle, HandleServerError, ServerInit } from '@sveltejs/kit';
+import type { Handle, HandleServerError, ServerInit } from '@sveltejs/kit/hooks';
 import { eq } from 'drizzle-orm';
-import { building } from '$app/environment';
-import { auth } from '$lib/server/auth';
-import { db } from '$lib/server/db';
-import { user } from '$lib/server/db/auth.schema';
-import { log } from '$lib/server/log';
-import { validateEnv } from '$lib/server/env';
+import { building } from '$app/env';
+import { auth } from '#lib/server/auth.js';
+import { db } from '#lib/server/db/index.js';
+import { user } from '#lib/server/db/auth.schema.js';
+import { log } from '#lib/server/log.js';
+import { validateEnv } from '#lib/server/env.js';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 
 const handleBetterAuth: Handle = async ({ event, resolve }) => {
@@ -51,7 +51,7 @@ export const init: ServerInit = async () => {
 
 	validateEnv();
 
-	const { startScheduler } = await import('$lib/server/reminder.scheduler');
+	const { startScheduler } = await import('#lib/server/reminder.scheduler.js');
 	startScheduler();
 };
 

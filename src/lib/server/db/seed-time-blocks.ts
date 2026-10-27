@@ -1,5 +1,5 @@
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
-import { TIME_BLOCKS, type Resource } from '$lib/types/bookings';
+import { TIME_BLOCKS, type Resource } from '#lib/types/bookings.js';
 import { timeBlock } from './booking.schema';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

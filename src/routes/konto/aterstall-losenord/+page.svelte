@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { MetaTags } from 'svelte-meta-tags';
-	import { metaDefaults } from '$lib/meta';
-	import { resetPassword } from '$lib/api/auth.remote';
+	import { metaDefaults } from '#lib/meta.js';
+	import { resetPassword } from '#lib/api/auth.remote.js';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import Button from '$lib/components/Button.svelte';
+	import Button from '#lib/components/Button.svelte';
 
 	const token = page.url.searchParams.get('token');
 	const error = page.url.searchParams.get('error');
@@ -17,7 +17,8 @@
 	<p class="mb-6 text-text-secondary">
 		Länken för att återställa lösenordet är ogiltig eller har gått ut.
 	</p>
-	<a href={resolve('/konto/glomt-losenord')} class="text-sm">Begär en ny länk</a>
+
+	<a href={resolve('konto/glomt-losenord')} class="text-sm">Begär en ny länk</a>
 {:else}
 	<h1 class="mb-4 font-heading text-2xl font-normal">Återställ ditt lösenord</h1>
 	<form {...resetPassword} class="mb-6 flex max-w-sm flex-col gap-4">
@@ -31,5 +32,5 @@
 			<p class="text-sm text-error">{issue.message}</p>
 		{/each}
 	</form>
-	<a href={resolve('/konto/logga-in')} class="text-sm">Tillbaka till inloggning</a>
+	<a href={resolve('konto/logga-in')} class="text-sm">Tillbaka till inloggning</a>
 {/if}

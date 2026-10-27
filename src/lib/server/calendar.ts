@@ -2,10 +2,10 @@ import { randomUUID } from 'crypto';
 import { eq, and, gte } from 'drizzle-orm';
 import type { ZonedDateTime } from '@internationalized/date';
 import ical, { ICalCalendarMethod } from 'ical-generator';
-import { db } from '$lib/server/db';
-import { booking, calendarToken } from '$lib/server/db/schema';
-import { getTimeBlockHours, isBookingActive } from '$lib/server/booking';
-import { TIMEZONE } from '$lib/types/bookings';
+import { db } from '#lib/server/db/index.js';
+import { booking, calendarToken } from '#lib/server/db/schema.js';
+import { getTimeBlockHours, isBookingActive } from '#lib/server/booking.js';
+import { TIMEZONE } from '#lib/types/bookings.js';
 
 const RESOURCE_LABELS = {
 	laundry_room: 'Tvättid',

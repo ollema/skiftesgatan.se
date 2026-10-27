@@ -38,8 +38,10 @@
 				class="flex items-start justify-between rounded-sm border border-border-subtle px-4 py-3"
 			>
 				<p class="text-sm text-text-secondary">
-					Aktivera <a
-						href={resolve('/konto')}
+					Aktivera
+
+					<a
+						href={resolve('konto')}
 						class="text-link underline decoration-1 underline-offset-2 hover:text-link-hover"
 						>e-postaviseringar</a
 					> för att få en påminnelse innan din bokning.
@@ -47,7 +49,7 @@
 				<button
 					onclick={dismissReminder}
 					class="ml-3 shrink-0 cursor-pointer text-base text-text-muted hover:text-text-secondary"
-					aria-label="Stäng tips">&#215;</button
+					aria-label="Stäng tips">×</button
 				>
 			</div>
 		{/if}
@@ -57,7 +59,7 @@
 			>
 				<p class="text-sm text-text-secondary">
 					<a
-						href={resolve('/konto')}
+						href={resolve('konto')}
 						class="text-link underline decoration-1 underline-offset-2 hover:text-link-hover"
 						>Prenumerera på dina bokningar</a
 					> i din kalenderapp.
@@ -65,7 +67,7 @@
 				<button
 					onclick={dismissCalendar}
 					class="ml-3 shrink-0 cursor-pointer text-base text-text-muted hover:text-text-secondary"
-					aria-label="Stäng tips">&#215;</button
+					aria-label="Stäng tips">×</button
 				>
 			</div>
 		{/if}

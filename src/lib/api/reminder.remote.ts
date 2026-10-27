@@ -1,9 +1,9 @@
 import * as v from 'valibot';
 import { query, command } from '$app/server';
-import { requireAuth } from '$lib/server/auth';
-import { log } from '$lib/server/log';
-import { reminderSchedule } from '$lib/server/reminder-schedule';
-import { RESOURCES } from '$lib/types/bookings';
+import { requireAuth } from '#lib/server/auth.js';
+import { log } from '#lib/server/log.js';
+import { reminderSchedule } from '#lib/server/reminder-schedule.js';
+import { RESOURCES } from '#lib/types/bookings.js';
 
 export const getPreferences = query(async () => {
 	const user = requireAuth();

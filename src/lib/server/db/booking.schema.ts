@@ -9,7 +9,7 @@ import {
 	unique
 } from 'drizzle-orm/pg-core';
 import { user } from './auth.schema';
-import type { Resource } from '$lib/types/bookings';
+import type { Resource } from '#lib/types/bookings.js';
 
 export const resourceEnum = pgEnum('resource', ['laundry_room', 'outdoor_area']);
 

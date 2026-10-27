@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { reminderPreference } from '$lib/server/db/reminder.schema';
-import { calendarToken } from '$lib/server/db/calendar.schema';
+import { db } from '#lib/server/db/index.js';
+import { reminderPreference } from '#lib/server/db/reminder.schema.js';
+import { calendarToken } from '#lib/server/db/calendar.schema.js';
 
 export async function getSetupStatus(userId: string) {
 	const prefs = await db

@@ -4,19 +4,19 @@ import { admin } from 'better-auth/plugins';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { env } from '$env/dynamic/private';
+import { ORIGIN, BETTER_AUTH_SECRET, LOG_LEVEL } from '$app/env/private';
 import { getRequestEvent } from '$app/server';
-import { db } from '$lib/server/db';
-import { user } from '$lib/server/db/auth.schema';
-import { log } from '$lib/server/log';
-import { sendEmail } from '$lib/server/email';
-import { EMAIL_TEMPLATES } from '$lib/server/email.templates';
-import { PASSWORD_CONFIG, usernamePlugin } from '$lib/server/auth.config';
+import { db } from '#lib/server/db/index.js';
+import { user } from '#lib/server/db/auth.schema.js';
+import { log } from '#lib/server/log.js';
+import { sendEmail } from '#lib/server/email.js';
+import { EMAIL_TEMPLATES } from '#lib/server/email.templates.js';
+import { PASSWORD_CONFIG, usernamePlugin } from '#lib/server/auth.config.js';
 
 export const auth = betterAuth({
-	baseURL: env.ORIGIN,
-	secret: env.BETTER_AUTH_SECRET,
-	logger: env.LOG_LEVEL === 'error' ? { disabled: true } : undefined,
+	baseURL: ORIGIN,
+	secret: BETTER_AUTH_SECRET,
+	logger: LOG_LEVEL === 'error' ? { disabled: true } : undefined,
 	database: drizzleAdapter(db, { provider: 'pg' }),
 	// Better Auth's rate limiter only covers client-initiated requests to
 	// /api/auth/* (e.g. email verification link clicks, direct API hits).

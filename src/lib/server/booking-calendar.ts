@@ -1,8 +1,8 @@
 import { CalendarDate, now, type ZonedDateTime } from '@internationalized/date';
 import { eq, and, gte, lte } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { booking, timeBlock, user } from '$lib/server/db/schema';
-import { TIMEZONE, type Resource, type Slot } from '$lib/types/bookings';
+import { db } from '#lib/server/db/index.js';
+import { booking, timeBlock, user } from '#lib/server/db/schema.js';
+import { TIMEZONE, type Resource, type Slot } from '#lib/types/bookings.js';
 import { isBookingActive } from './booking';
 import { bookingEvents } from './booking-events';
 

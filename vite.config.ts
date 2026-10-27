@@ -1,3 +1,5 @@
+import adapter from '@sveltejs/adapter-node';
+import { relative, sep } from 'node:path';
 import type { Plugin } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import contentCollections from '@content-collections/vite';
@@ -38,7 +40,22 @@ export default defineConfig({
 	plugins: [
 		tailwindcss(),
 		!process.env.VITEST && contentCollections(),
-		sveltekit(),
+		sveltekit({
+			compilerOptions: {
+				// defaults to rune mode for the project, execept for `node_modules`. Can be removed in svelte 6.
+				runes: ({ filename }) => {
+					const relativePath = relative(import.meta.dirname, filename);
+					const pathSegments = relativePath.toLowerCase().split(sep);
+					const isExternalLibrary = pathSegments.includes('node_modules');
+
+					return isExternalLibrary ? undefined : true;
+				},
+				experimental: { async: true }
+			},
+			adapter: adapter(),
+			alias: { 'content-collections': './.content-collections/generated' },
+			experimental: { remoteFunctions: true }
+		}),
 		suppressAdapterWarnings()
 	],
 	server: {

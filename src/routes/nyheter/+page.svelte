@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { MetaTags } from 'svelte-meta-tags';
-	import { metaDefaults, canonical } from '$lib/meta';
+	import { metaDefaults, canonical } from '#lib/meta.js';
 	import { page } from '$app/state';
 	import { allNews } from 'content-collections';
 	import { resolve } from '$app/paths';
 	import { parseDate, DateFormatter } from '@internationalized/date';
-	import { TIMEZONE } from '$lib/types/bookings';
+	import { TIMEZONE } from '#lib/types/bookings.js';
 
 	const sorted = allNews.toSorted((a, b) => parseDate(b.date).compare(parseDate(a.date)));
 

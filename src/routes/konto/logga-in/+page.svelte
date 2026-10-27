@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { MetaTags } from 'svelte-meta-tags';
-	import { metaDefaults } from '$lib/meta';
-	import { login } from '$lib/api/auth.remote';
+	import { metaDefaults } from '#lib/meta.js';
+	import { login } from '#lib/api/auth.remote.js';
 	import { resolve } from '$app/paths';
-	import Button from '$lib/components/Button.svelte';
+	import Button from '#lib/components/Button.svelte';
 </script>
 
 <MetaTags {...metaDefaults} title="Logga in" robots="noindex,nofollow" />
@@ -24,7 +24,9 @@
 		<input {...login.fields._password.as('password')} class="input-field" />
 	</label>
 	<Button>Logga in</Button>
-	<a href={resolve('/konto/glomt-losenord')} class="text-sm">Glömt lösenordet?</a>
+
+	<a href={resolve('konto/glomt-losenord')} class="text-sm">Glömt lösenordet?</a>
+
 	{#each login.fields.allIssues() as issue (issue.message)}
 		<p class="text-sm text-error">{issue.message}</p>
 	{/each}

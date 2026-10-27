@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { MetaTags } from 'svelte-meta-tags';
-	import { metaDefaults } from '$lib/meta';
+	import { metaDefaults } from '#lib/meta.js';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { toast } from 'svelte-sonner';
 	import { Switch } from 'bits-ui';
-	import { getUser } from '$lib/api/auth.remote';
+	import { getUser } from '#lib/api/auth.remote.js';
 	import {
 		getUserByUsername,
 		updateUserName,
@@ -16,11 +16,11 @@
 		createUserCalendarUrl,
 		regenerateUserCalendarUrl,
 		deleteUserCalendarUrl
-	} from '$lib/api/admin.remote';
-	import Button from '$lib/components/Button.svelte';
-	import EditDialog from '$lib/components/EditDialog.svelte';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import type { Resource } from '$lib/types/bookings';
+	} from '#lib/api/admin.remote.js';
+	import Button from '#lib/components/Button.svelte';
+	import EditDialog from '#lib/components/EditDialog.svelte';
+	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+	import type { Resource } from '#lib/types/bookings.js';
 
 	let username = $derived(page.params.username ?? '');
 
@@ -136,7 +136,7 @@
 <MetaTags {...metaDefaults} title="Admin – {username}" robots="noindex,nofollow" />
 
 <a
-	href={resolve('/admin')}
+	href={resolve('admin')}
 	class="mb-4 inline-block text-sm text-link underline decoration-1 underline-offset-3 transition-colors duration-120 hover:text-link-hover"
 >
 	← Lägenheter
@@ -157,6 +157,7 @@
 			() => (confirmRoleChange = true),
 			isSelf
 		)}
+
 		{#if isSelf}
 			<p class="text-xs text-text-muted">Du kan inte ändra din egen roll.</p>
 		{/if}
@@ -208,6 +209,7 @@
 		/>
 		<div class="flex flex-col gap-3">
 			<button class={LINK_CLASS} onclick={() => (confirmRegenerate = true)}>Skapa ny länk</button>
+
 			<button class={LINK_CLASS} onclick={() => (confirmDelete = true)}
 				>Ta bort prenumeration</button
 			>

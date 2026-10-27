@@ -7,9 +7,9 @@ import {
 	today
 } from '@internationalized/date';
 import { eq, and, gt, or, type SQL } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { booking, timeBlock, user } from '$lib/server/db/schema';
-import { TIMEZONE, type Resource } from '$lib/types/bookings';
+import { db } from '#lib/server/db/index.js';
+import { booking, timeBlock, user } from '#lib/server/db/schema.js';
+import { TIMEZONE, type Resource } from '#lib/types/bookings.js';
 
 export function isBookingActive(b: { date: string; endHour: number }, now: ZonedDateTime): boolean {
 	const d = parseDate(b.date);
