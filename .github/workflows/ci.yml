@@ -44,6 +44,10 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-24.04
+    container:
+      # Must match the @playwright/test version in package.json.
+      image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:47b510dd9230bf0b9bfc9b20102241e577ea7a99334ab4c3ca19f19770e9b8ea
+      options: --ipc=host
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -58,30 +62,16 @@ jobs:
           node-version-file: .node-version
 
       - run: pnpm install --frozen-lockfile
-
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(pnpm list @playwright/test --depth=0 --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install chromium --with-deps
-
-      - name: Install Playwright OS deps only
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps chromium
 
       - run: pnpm test:unit
 
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-24.04
+    container:
+      # Must match the @playwright/test version in package.json.
+      image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:47b510dd9230bf0b9bfc9b20102241e577ea7a99334ab4c3ca19f19770e9b8ea
+      options: --ipc=host
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -96,24 +86,6 @@ jobs:
           node-version-file: .node-version
 
       - run: pnpm install --frozen-lockfile
-
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(pnpm list @playwright/test --depth=0 --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install chromium --with-deps
-
-      - name: Install Playwright OS deps only
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps chromium
 
       - run: pnpm test:e2e
         env:

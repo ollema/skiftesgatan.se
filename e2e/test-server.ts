@@ -1,4 +1,10 @@
+import dns from 'node:dns';
 import { spawn, type ChildProcess } from 'node:child_process';
+
+// Playwright's container images resolve `localhost` differently from the host
+// runners (IPv6 first), which leaves the preview servers unreachable over IPv4
+// when the two ends disagree on the address family. Pin both sides to IPv4.
+dns.setDefaultResultOrder('ipv4first');
 
 type SpawnedServer = { proc: ChildProcess; url: string };
 
@@ -12,7 +18,8 @@ const SERVER_ENV = {
 	LOG_LEVEL: 'error',
 	SKIP_ENV_VALIDATION: '1',
 	RATE_LIMIT_DISABLED: '1',
-	BETTER_AUTH_SECRET: TEST_AUTH_SECRET
+	BETTER_AUTH_SECRET: TEST_AUTH_SECRET,
+	NODE_OPTIONS: '--dns-result-order=ipv4first'
 } as const;
 
 export function spawnPreview(port: number, dbPath: string): SpawnedServer {
@@ -29,21 +36,37 @@ export function spawnPreview(port: number, dbPath: string): SpawnedServer {
 	proc.on('error', (e) => {
 		console.error(`[test-server] preview error on :${port}:`, e);
 	});
+	proc.stdout?.on('data', (chunk: Buffer) => {
+		process.stdout.write(`[preview:${port}] ${chunk}`);
+	});
+	proc.stderr?.on('data', (chunk: Buffer) => {
+		process.stderr.write(`[preview:${port}] ${chunk}`);
+	});
+	proc.on('exit', (code, signal) => {
+		if (code !== 0 && signal !== 'SIGTERM') {
+			console.error(`[test-server] preview on :${port} exited (code=${code}, signal=${signal})`);
+		}
+	});
 	return { proc, url };
 }
 
 export async function waitForReady(url: string, timeoutMs = 30_000): Promise<void> {
 	const start = Date.now();
+	let lastError: unknown;
 	while (Date.now() - start < timeoutMs) {
 		try {
 			const res = await fetch(url, { redirect: 'manual' });
 			if (res.status > 0) return;
-		} catch {
-			// connection refused — server not up yet
+		} catch (error) {
+			lastError = error;
 		}
 		await new Promise((r) => setTimeout(r, 200));
 	}
-	throw new Error(`Server at ${url} did not become ready within ${timeoutMs}ms`);
+	throw new Error(
+		`Server at ${url} did not become ready within ${timeoutMs}ms (last error: ${lastError}${
+			lastError instanceof Error && lastError.cause ? `, cause: ${lastError.cause}` : ''
+		})`
+	);
 }
 
 export function runScript(cmd: string, args: string[], env: Record<string, string>): Promise<void> {

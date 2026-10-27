@@ -21,7 +21,7 @@ export const test = base.extend<
 			cpSync('.pglite-test-template', dbPath, { recursive: true });
 
 			const server = spawnPreview(port, dbPath);
-			await waitForReady(server.url, 60_000);
+			await waitForReady(server.url, 45_000);
 			await use({ url: server.url, port });
 			server.proc.kill('SIGTERM');
 			rmSync(dbPath, { recursive: true, force: true });
