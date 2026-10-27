@@ -17,11 +17,12 @@ test.describe('email change flow', () => {
 		await dialog.getByLabel('Ny e-post').fill(newEmail);
 		await dialog.getByRole('button', { name: 'Spara' }).click();
 
-		// Wait for the form to complete (no error shown)
+		// Wait for the form to complete (no error shown); the helper below also
+		// polls until the verification email has been written.
 		await page.waitForLoadState('networkidle');
 
 		// Read verification email sent to the new address and follow the link
-		const verifyUrl = readVerificationUrl(newEmail);
+		const verifyUrl = await readVerificationUrl(newEmail);
 		await page.goto(verifyUrl);
 
 		// Verification complete — navigate to account page to confirm

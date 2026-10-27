@@ -9,20 +9,35 @@ const TEST_EMAILS_DIR = '.test-emails';
 // Better-auth lowercases email addresses before invoking the email send,
 // so the server writes files with lowercase recipients. Lowercase here too
 // so we match on case-sensitive filesystems (Linux CI vs macOS dev).
-function readEmailUrl(templateAlias: string, email: string): string {
+//
+// The file is written by the server before the request completes, but the
+// form submit and the response can race with the assertions that follow, so
+// poll for it instead of reading once.
+async function readEmailUrl(templateAlias: string, email: string): Promise<string> {
 	const recipient = email.toLowerCase().replace(/[@.]/g, '-');
 	const filePath = path.join(TEST_EMAILS_DIR, `${templateAlias}-${recipient}.json`);
-	const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-	const url = data.variables?.URL;
-	if (!url) throw new Error(`No URL variable found in ${filePath}`);
-	return url;
+	const deadline = Date.now() + 15_000;
+
+	for (;;) {
+		try {
+			const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+			const url = data.variables?.URL;
+			if (!url) throw new Error(`No URL variable found in ${filePath}`);
+			return url;
+		} catch (error) {
+			if (Date.now() > deadline) {
+				throw new Error(`Timed out waiting for ${filePath}`, { cause: error });
+			}
+			await new Promise((resolve) => setTimeout(resolve, 100));
+		}
+	}
 }
 
-export function readResetPasswordUrl(email: string): string {
+export function readResetPasswordUrl(email: string): Promise<string> {
 	return readEmailUrl(EMAIL_TEMPLATES.resetPassword.alias, email);
 }
 
-export function readVerificationUrl(email: string): string {
+export function readVerificationUrl(email: string): Promise<string> {
 	return readEmailUrl(EMAIL_TEMPLATES.verifyEmail.alias, email);
 }
 
