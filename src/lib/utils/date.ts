@@ -10,6 +10,12 @@ const dateFormatter = new DateFormatter('sv-SE', {
 	timeZone: TIMEZONE
 });
 
+const shortDateFormatter = new DateFormatter('sv-SE', {
+	day: 'numeric',
+	month: 'numeric',
+	timeZone: TIMEZONE
+});
+
 const dateTimeFormatter = new DateFormatter('sv-SE', {
 	year: 'numeric',
 	month: 'short',
@@ -29,6 +35,10 @@ export function formatDate(d: CalendarDate) {
 
 export function formatDateRange(start: CalendarDate, end: CalendarDate) {
 	return start.compare(end) === 0 ? formatDate(start) : `${formatDate(start)}–${formatDate(end)}`;
+}
+
+export function formatDayMonth(d: CalendarDate) {
+	return shortDateFormatter.format(d.toDate(TIMEZONE));
 }
 
 export function formatHourNum(hour: number) {

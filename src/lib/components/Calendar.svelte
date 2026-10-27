@@ -94,15 +94,13 @@
 											title={closed ? (closed.reason ?? 'Stängt för underhåll') : undefined}
 										>
 											{day.day}
-											<div class="mt-0.5 flex gap-0.5">
-												{#if closed}
-													<span class="box-border size-1.5 bg-border"></span>
-												{:else}
+											{#if !closed}
+												<div class="mt-0.5 flex gap-0.5">
 													{#each bookingCalendar[day.toString()] as slot (slot.start)}
 														<span class="box-border size-1.5 {statusColorMap[slot.status]}"></span>
 													{/each}
-												{/if}
-											</div>
+												</div>
+											{/if}
 										</Calendar.Day>
 									</Calendar.Cell>
 								{/each}

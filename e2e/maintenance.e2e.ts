@@ -70,6 +70,11 @@ test.describe('maintenance closures', () => {
 		// The resident's Booking is gone and the closed day cannot be selected.
 		await residentPage.goto('/tvattstuga');
 		await expect(residentPage.getByText('Du har inte bokat någon tvättid')).toBeVisible();
+		await expect(
+			residentPage.getByText(
+				/Bokningssystemet för tvättstugan är ur funktion .* på grund av: Underhåll av tvättmaskinerna\./
+			)
+		).toBeVisible();
 		await showCalendarMonth(residentPage, target);
 		await expect(
 			residentPage.locator(`[data-calendar-day][data-value="${target}"]`)

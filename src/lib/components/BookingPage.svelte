@@ -6,7 +6,7 @@
 	import { getSetupHints } from '#lib/api/hints.remote.js';
 	import { getBookingData } from '#lib/api/booking.remote.js';
 	import { TIMEZONE, type Resource } from '#lib/types/bookings.js';
-	import { formatDate, formatDateRange, formatHourNum } from '#lib/utils/date.js';
+	import { formatDate, formatDayMonth, formatHourNum } from '#lib/utils/date.js';
 	import { parseDate, today } from '@internationalized/date';
 	const todayDate = today(TIMEZONE);
 
@@ -38,8 +38,14 @@
 		endDate: string;
 		reason: string | null;
 	}): string {
-		const range = formatDateRange(parseDate(closure.startDate), parseDate(closure.endDate));
-		return closure.reason ? `${range} (${closure.reason})` : range;
+		const start = parseDate(closure.startDate);
+		const end = parseDate(closure.endDate);
+		const range =
+			start.compare(end) === 0
+				? formatDayMonth(start)
+				: `${formatDayMonth(start)} till ${formatDayMonth(end)}`;
+		const reason = closure.reason ? ` på grund av: ${closure.reason}` : '';
+		return `Bokningssystemet för ${laundryRoom ? 'tvättstugan' : 'uteplatsen'} är ur funktion ${range}${reason}.`;
 	}
 
 	// derived text
@@ -76,7 +82,7 @@
 {#if closures.length > 0}
 	<div class="mt-3 flex flex-col gap-1 text-sm text-text-secondary">
 		{#each closures as closure (`${closure.startDate}-${closure.endDate}-${closure.reason}`)}
-			<p>Stängt för underhåll: {closureLabel(closure)}</p>
+			<p>{closureLabel(closure)}</p>
 		{/each}
 	</div>
 {/if}
