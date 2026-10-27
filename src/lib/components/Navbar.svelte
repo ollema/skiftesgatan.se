@@ -2,7 +2,7 @@
 	import { NavigationMenu } from 'bits-ui';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { allInformation, allNews } from 'content-collections';
+	import { allInformation, allNews } from '#content-collections';
 	import { parseDate, DateFormatter } from '@internationalized/date';
 	import { TIMEZONE } from '#lib/types/bookings.js';
 

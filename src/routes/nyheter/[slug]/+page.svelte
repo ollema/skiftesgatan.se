@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { MetaTags } from 'svelte-meta-tags';
 	import { metaDefaults, canonical } from '#lib/meta.js';
-	import { allNews } from 'content-collections';
+	import { allNews } from '#content-collections';
 	import { page } from '$app/state';
 	import { error } from '@sveltejs/kit';
 	import { parseDate, DateFormatter } from '@internationalized/date';

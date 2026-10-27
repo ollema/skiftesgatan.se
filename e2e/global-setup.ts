@@ -32,7 +32,9 @@ export default async function globalSetup() {
 		PGLITE_PATH: TEMPLATE_PATH,
 		DATABASE_URL: ''
 	});
-	await runScript('pnpx', ['tsx', 'scripts/db/seed-test.ts'], { PGLITE_PATH: TEMPLATE_PATH });
+	await runScript('pnpm', ['exec', 'tsx', 'scripts/db/seed-test.ts'], {
+		PGLITE_PATH: TEMPLATE_PATH
+	});
 	await runScript('pnpm', ['build'], {});
 
 	await bakeStorageStates();

@@ -7,14 +7,8 @@
 		"src/routes/**/+*.{ts,svelte}",
 		"src/lib/server/reminder.scheduler.ts",
 		"content-collections.ts",
-		"scripts/db/*.ts",
-		"scripts/generate-icons.ts",
-		"scripts/sync-email-templates.ts"
+		"scripts/db/*.ts"
 	],
 	"ignoreDependencies": ["vitest-browser-svelte"],
-	"ignoreUnresolved": ["^\\$app/"],
-	"paths": {
-		"content-collections": ["./.content-collections/generated"],
-		"content-collections/*": ["./.content-collections/generated/*"]
-	}
+	"ignoreUnresolved": ["^\\$app/"]
 }

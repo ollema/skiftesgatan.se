@@ -109,7 +109,6 @@ export default defineConfig({
 				experimental: { async: true }
 			},
 			adapter: adapter(),
-			alias: { 'content-collections': './.content-collections/generated' },
 			experimental: { remoteFunctions: true }
 		}),
 		suppressAdapterWarnings(),

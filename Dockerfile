@@ -9,8 +9,12 @@ COPY pnpm-lock.yaml package.json .npmrc ./
 RUN pnpm fetch
 COPY . .
 RUN pnpm install --frozen-lockfile --offline
-ENV BETTER_AUTH_SECRET="docker-build-placeholder-not-used-at-runtime-only-here-to-satisfy-validation"
-RUN pnpm build
+# Build-time placeholders: env validation only needs these to be non-empty. The
+# real values are supplied at runtime, and keeping them on the RUN line avoids
+# baking them into the image metadata.
+RUN BETTER_AUTH_SECRET="docker-build-placeholder-not-used-at-runtime" \
+    ORIGIN="https://skiftesgatan.se" \
+    pnpm build
 
 FROM base
 WORKDIR /app

@@ -1,5 +1,5 @@
 import * as sitemap from 'super-sitemap/sveltekit';
-import { allNews, allInformation } from 'content-collections';
+import { allNews, allInformation } from '#content-collections';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async () => {

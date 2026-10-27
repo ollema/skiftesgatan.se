@@ -2,7 +2,7 @@
 	import { MetaTags } from 'svelte-meta-tags';
 	import { metaDefaults, canonical } from '#lib/meta.js';
 	import { page } from '$app/state';
-	import { allInformation } from 'content-collections';
+	import { allInformation } from '#content-collections';
 	import { resolve } from '$app/paths';
 
 	const informationPages = allInformation;

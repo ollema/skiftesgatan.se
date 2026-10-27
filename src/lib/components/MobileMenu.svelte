@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { afterNavigate } from '$app/navigation';
-	import { allInformation, allNews } from 'content-collections';
+	import { allInformation, allNews } from '#content-collections';
 	import { parseDate } from '@internationalized/date';
 
 	interface Props {
