@@ -1,5 +1,13 @@
-onlyBuiltDependencies:
-  - '@prisma/client'
-  - better-sqlite3
-  - esbuild
-  - sharp
+# pnpm 11+ quarantines releases for 24h (1440 minutes) by default, which
+# rejects a lockfile that was refreshed minutes ago and would fail CI right
+# after an upgrade. We install from a reviewed lockfile and deploy straight
+# away, so opt out of the quarantine.
+minimumReleaseAge: 0
+
+# Dependencies allowed to run install scripts (replaces onlyBuiltDependencies
+# from pnpm 10). Anything else with a build script fails the install loudly.
+allowBuilds:
+  '@prisma/client': true
+  better-sqlite3: true
+  esbuild: true
+  sharp: true

@@ -1,7 +1,8 @@
 FROM node:24-slim AS base
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+# pnpm's standalone binary from the official image. Corepack is deprecated and
+# runs pnpm through a Node.js shim on every call.
+COPY --from=ghcr.io/pnpm/pnpm:12.15.0 /opt/pnpm /opt/pnpm
+RUN for bin in pnpm pn pnpx pnx; do ln -s "/opt/pnpm/$bin" "/usr/local/bin/$bin"; done
 
 FROM base AS build
 WORKDIR /app
