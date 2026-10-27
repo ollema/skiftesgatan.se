@@ -20,6 +20,8 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"content:build": "tsx scripts/build-content.ts",
+		"playwright:check": "tsx scripts/check-playwright-image.ts",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test:unit": "vitest run",
