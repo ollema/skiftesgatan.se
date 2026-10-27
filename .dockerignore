@@ -26,12 +26,16 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 # Playwright
 test-results
+playwright-report
 
 # PGLite local database
 .pglite*
 
 # Test email tokens
 .test-emails
+
+# Baked E2E sessions
+.auth
 
 # Docker-specific
 Dockerfile
@@ -40,4 +44,11 @@ Dockerfile
 .github
 .vscode
 tests
+e2e
+docs
+*.md
+eslint.config.js
+knip.json
+.prettierrc
+.prettierignore
 playwright.config.ts
