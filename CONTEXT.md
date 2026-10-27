@@ -41,8 +41,12 @@ _Avoid_: Open booking, current booking, future booking (these are vaguer or wron
 The range of dates an Apartment is allowed to book into. Earliest is today; latest is today plus one calendar month (Europe/Stockholm). Slots outside the Booking Window are not bookable, even if visible.
 _Avoid_: 30-day window (incorrect — it's calendar-month, not day-count), advance window, booking horizon, lookahead.
 
+**Closure**:
+A date range during which one Facility cannot be booked. Created by an **Admin Apartment** for maintenance, optionally with a reason. Creating a Closure cancels every **Booking** for that Facility in the range; affected Apartments are not emailed. A Closure is not a **Time Block** and not a **Booking**.
+_Avoid_: maintenance block, blocked day (ambiguous with **Time Block**), reservation block.
+
 **Booking Calendar**:
-What a signed-in Apartment sees for one Facility: every **Slot** in the **Booking Window**, each tagged `free`, `mine`, `other`, or `past`, plus the Apartment's **Active Booking** for that Facility (if any). Updates in real time as other Apartments book or cancel — see ADR-0002. One Booking Calendar per (Apartment, Facility) pair.
+What a signed-in Apartment sees for one Facility: every **Slot** in the **Booking Window**, each tagged `free`, `mine`, `other`, `past`, or `closed`, plus the Apartment's **Active Booking** for that Facility (if any). Slots on a **Closure** are `closed` and cannot be selected. Updates in real time as other Apartments book, cancel, or an **Admin Apartment** creates or removes a Closure — see ADR-0002. One Booking Calendar per (Apartment, Facility) pair.
 _Avoid_: booking grid, booking view, slots view, calendar (ambiguous with **Calendar Subscription**).
 
 **Reminder**:
@@ -88,6 +92,9 @@ _Avoid_: Username (the apartment number is the username), display username, name
 - A **Booking** fills exactly one **Slot** for exactly one **Apartment**
 - An **Apartment** holds at most one **Active Booking** per **Facility**
 - A **Booking** must fall within the **Booking Window** (today through today + 1 month)
+- An **Admin Apartment** may create a **Closure** for one or both **Facilities**
+- A **Closure** makes every **Slot** in its date range non-bookable
+- Creating a **Closure** cancels existing **Bookings** in its date range
 - Each (**Apartment**, **Facility**) pair has one **Booking Calendar**, scoped to the **Booking Window**
 - Replacing a **Booking** is atomic: the old Booking is only cancelled if the new Slot is successfully claimed. An Apartment cannot lose its existing Booking by attempting to grab a Slot that turns out to be taken.
 - An **Apartment** has at most one **Reminder Preference** per **Facility** per offset

@@ -73,6 +73,7 @@ src/
       auth.ts                  # Better Auth server config
       auth.config.ts           # Username plugin, apartment validation
       booking.ts               # Booking queries and business logic
+      closure.ts               # Admin maintenance closures and booking cancellation
       calendar.ts              # iCal feed generation and token management
       reminder.ts              # Reminder preferences and scheduling
       reminder.scheduler.ts    # Periodic worker that sends due reminders
@@ -86,6 +87,7 @@ src/
       auth.remote.ts           # Auth remote functions (login, password reset, etc.)
       booking.remote.ts        # Booking remote functions (get slots, book, cancel)
       admin.remote.ts          # Admin-only remote functions
+      closure.remote.ts        # Admin maintenance-closure remote functions
       calendar.remote.ts       # iCal token regeneration / removal
       contact.remote.ts        # Contact form submission
       hints.remote.ts          # Onboarding-hint state
@@ -107,6 +109,7 @@ src/
     sitemap.xml/               # Generated sitemap
     konto/                     # Account management (profile, password, email)
     admin/                     # Admin dashboard (per-user views)
+    admin/maintenance/         # Admin maintenance closures
     tvattstuga/                # Laundry room booking page
     uteplats/                  # Outdoor area booking page
     kalender/[token].ics/      # Per-user iCal feed

@@ -28,7 +28,9 @@ export function findTimeBlock(resource: Resource, startHour: number): TimeBlock 
 	return block;
 }
 
-export type SlotStatus = 'free' | 'mine' | 'other' | 'past';
+export type SlotStatus = 'free' | 'mine' | 'other' | 'past' | 'closed';
+
+export type ClosedDay = { reason: string | null };
 
 export type Slot = {
 	timeBlockId: number;

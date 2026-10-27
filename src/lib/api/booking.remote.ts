@@ -57,6 +57,7 @@ export const book = command(
 
 		if (result.kind === 'replace_not_found') error(404, 'Befintlig bokning hittades inte');
 		if (result.kind === 'already_booked') error(409, 'Du har redan en kommande bokning');
+		if (result.kind === 'closed') error(409, 'Dagen är stängd på grund av underhåll');
 		if (result.kind === 'slot_taken') {
 			log.warn(
 				`[booking] apartment ${user.username} tried to book ${slotPhrase(resource, date.toString(), result.startHour, result.endHour)} but the slot was already taken`

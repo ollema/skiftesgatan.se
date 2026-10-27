@@ -6,7 +6,7 @@ import { pushSchema } from 'drizzle-kit/api';
 import { and, eq } from 'drizzle-orm';
 import { TIMEZONE, type Resource } from '#lib/types/bookings.js';
 import * as schema from './db/schema';
-import { booking, timeBlock, user } from './db/schema';
+import { booking, facilityClosure, timeBlock, user } from './db/schema';
 import { seedTimeBlocks } from './db/seed-time-blocks';
 import { __getBookingCalendarSnapshot, __watchBookingCalendar } from './booking-calendar';
 import { bookingEvents, __listenerCount } from './booking-events';
@@ -354,6 +354,81 @@ describe('getBookingCalendar', () => {
 		} finally {
 			await client.close();
 		}
+	});
+
+	describe('Facility Closures', () => {
+		it('marks every Slot on a closed day as "closed" and exposes the reason', async () => {
+			const { client, db } = await makeTestDb();
+			try {
+				await seedTimeBlocks(db);
+				await insertUser(db, me.id, 'A1001');
+				const tomorrow = start.add({ days: 1 }).toString();
+
+				await db.insert(facilityClosure).values({
+					resource: 'laundry_room',
+					startDate: tomorrow,
+					endDate: tomorrow,
+					reason: 'Underhåll'
+				});
+
+				const { bookingCalendar, closedDays, closures, activeBooking } =
+					await __getBookingCalendarSnapshot(db, 'laundry_room', me, startOfToday);
+
+				expect(closedDays[tomorrow]).toEqual({ reason: 'Underhåll' });
+				expect(closures).toEqual([
+					expect.objectContaining({
+						startDate: tomorrow,
+						endDate: tomorrow,
+						reason: 'Underhåll'
+					})
+				]);
+				for (const slot of bookingCalendar[tomorrow]) {
+					expect(slot.status).toBe('closed');
+					expect(slot.bookingId).toBeNull();
+					expect(slot.username).toBeNull();
+				}
+				expect(activeBooking).toBeUndefined();
+			} finally {
+				await client.close();
+			}
+		});
+
+		it('hides Booking info on a closed day even if a booking row exists', async () => {
+			const { client, db } = await makeTestDb();
+			try {
+				await seedTimeBlocks(db);
+				await insertUser(db, me.id, 'A1001');
+				const tbId = await timeBlockId(db, 'laundry_room', 7, 10);
+				const tomorrow = start.add({ days: 1 }).toString();
+				const bookingId = await insertBooking(db, {
+					userId: me.id,
+					timeBlockId: tbId,
+					resource: 'laundry_room',
+					date: tomorrow
+				});
+				await db.insert(facilityClosure).values({
+					resource: 'laundry_room',
+					startDate: tomorrow,
+					endDate: tomorrow
+				});
+
+				const { bookingCalendar, activeBooking } = await __getBookingCalendarSnapshot(
+					db,
+					'laundry_room',
+					me,
+					startOfToday
+				);
+
+				const slot = bookingCalendar[tomorrow][0];
+				expect(slot.status).toBe('closed');
+				expect(slot.bookingId).not.toBe(bookingId);
+				expect(slot.bookingId).toBeNull();
+				expect(slot.username).toBeNull();
+				expect(activeBooking).toBeUndefined();
+			} finally {
+				await client.close();
+			}
+		});
 	});
 
 	describe('past-end slots on today (slot-end-grain)', () => {

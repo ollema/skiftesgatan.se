@@ -1,8 +1,8 @@
-import { CalendarDate, now, type ZonedDateTime } from '@internationalized/date';
+import { CalendarDate, now, parseDate, type ZonedDateTime } from '@internationalized/date';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.js';
-import { booking, timeBlock, user } from '#lib/server/db/schema.js';
-import { TIMEZONE, type Resource, type Slot } from '#lib/types/bookings.js';
+import { booking, facilityClosure, timeBlock, user } from '#lib/server/db/schema.js';
+import { TIMEZONE, type ClosedDay, type Resource, type Slot } from '#lib/types/bookings.js';
 import { isBookingActive } from './booking';
 import { bookingEvents } from './booking-events';
 
@@ -18,8 +18,16 @@ type BookingCalendarRow = {
 
 type Database = typeof db;
 
+type ClosureSummary = {
+	startDate: string;
+	endDate: string;
+	reason: string | null;
+};
+
 type BookingCalendarPayload = {
 	bookingCalendar: Record<string, Slot[]>;
+	closedDays: Record<string, ClosedDay>;
+	closures: ClosureSummary[];
 	activeBooking: Slot | undefined;
 };
 
@@ -62,8 +70,32 @@ async function readBookingCalendarRows(
 		.orderBy(timeBlock.startHour);
 }
 
+async function readClosureRows(
+	database: Database,
+	resource: Resource,
+	now: ZonedDateTime
+): Promise<ClosureSummary[]> {
+	const { start, end } = bookingWindow(now);
+	return await database
+		.select({
+			startDate: facilityClosure.startDate,
+			endDate: facilityClosure.endDate,
+			reason: facilityClosure.reason
+		})
+		.from(facilityClosure)
+		.where(
+			and(
+				eq(facilityClosure.resource, resource),
+				lte(facilityClosure.startDate, end.toString()),
+				gte(facilityClosure.endDate, start.toString())
+			)
+		)
+		.orderBy(facilityClosure.startDate);
+}
+
 function assemblePayload(
 	rawRows: BookingCalendarRow[],
+	closureRows: ClosureSummary[],
 	caller: { id: string } | null,
 	now: ZonedDateTime
 ): BookingCalendarPayload {
@@ -96,12 +128,25 @@ function assemblePayload(
 	// today remain visible as a non-interactive 'past' status.
 	const { start, end } = bookingWindow(now);
 
+	const closedDays: Record<string, ClosedDay> = {};
+	for (const closure of closureRows) {
+		let day = parseDate(closure.startDate);
+		const last = parseDate(closure.endDate);
+		while (day.compare(last) <= 0) {
+			if (day.compare(start) >= 0 && day.compare(end) <= 0) {
+				closedDays[day.toString()] = { reason: closure.reason };
+			}
+			day = day.add({ days: 1 });
+		}
+	}
+
 	const bookingCalendar: Record<string, Slot[]> = {};
 	let activeBooking: Slot | undefined = undefined;
 
 	let current = start;
 	while (current.compare(end) <= 0) {
 		const dateStr = current.toString();
+		const closed = closedDays[dateStr] !== undefined;
 		const slots: Slot[] = [];
 
 		for (const [tid, tb] of timeBlocks) {
@@ -109,15 +154,17 @@ function assemblePayload(
 			const slotActive = isBookingActive({ date: dateStr, endHour: tb.endHour }, now);
 			const status: Slot['status'] = !slotActive
 				? 'past'
-				: b === undefined
-					? 'free'
-					: b.userId === caller?.id
-						? 'mine'
-						: 'other';
+				: closed
+					? 'closed'
+					: b === undefined
+						? 'free'
+						: b.userId === caller?.id
+							? 'mine'
+							: 'other';
 
 			// Past-end slots: Historical Bookings are invisible on user-facing
 			// surfaces. The cell stays in the grid but exposes no Booking info.
-			const exposeBooking = slotActive && b !== undefined;
+			const exposeBooking = slotActive && !closed && b !== undefined;
 
 			slots.push({
 				timeBlockId: tid,
@@ -129,7 +176,13 @@ function assemblePayload(
 				username: exposeBooking && caller ? (b.username ?? null) : null
 			});
 
-			if (activeBooking === undefined && slotActive && b !== undefined && b.userId === caller?.id) {
+			if (
+				activeBooking === undefined &&
+				slotActive &&
+				!closed &&
+				b !== undefined &&
+				b.userId === caller?.id
+			) {
 				activeBooking = {
 					timeBlockId: tid,
 					date: current,
@@ -146,7 +199,7 @@ function assemblePayload(
 		current = current.add({ days: 1 });
 	}
 
-	return { bookingCalendar, activeBooking };
+	return { bookingCalendar, closedDays, closures: closureRows, activeBooking };
 }
 
 /**
@@ -164,8 +217,11 @@ export async function __getBookingCalendarSnapshot(
 	caller: { id: string } | null,
 	now: ZonedDateTime
 ): Promise<BookingCalendarPayload> {
-	const rows = await readBookingCalendarRows(database, resource, now);
-	return assemblePayload(rows, caller, now);
+	const [rows, closures] = await Promise.all([
+		readBookingCalendarRows(database, resource, now),
+		readClosureRows(database, resource, now)
+	]);
+	return assemblePayload(rows, closures, caller, now);
 }
 
 /**

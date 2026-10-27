@@ -6,7 +6,7 @@ Real-time updates to the booking calendar (so all 32 Apartments see Bookings app
 
 The booking pages need to reflect Bookings made by other Apartments without a manual reload. SvelteKit's `query.live` provides the transport (server-side `AsyncIterable`, SSE-ish to the client), but does not provide the signal — the server has to know when to yield. That signal source is what this ADR pins down.
 
-The system writes Bookings from exactly two places (`book`, `cancelBooking`); there are no out-of-band writers (no admin UI, no cron). The deployment target is one Node instance behind `@sveltejs/adapter-node`. Dev/test uses PGlite via `PGLITE_PATH`.
+The system writes Bookings from exactly three places: the `book` and `cancelBooking` commands, and admin **Closure** creation, which deletes Bookings in the closed range (see ADR-0005). There are no other out-of-band writers (no cron). The deployment target is one Node instance behind `@sveltejs/adapter-node`. Dev/test uses PGlite via `PGLITE_PATH`.
 
 ## Considered options
 
@@ -18,5 +18,5 @@ The system writes Bookings from exactly two places (`book`, `cancelBooking`); th
 ## Consequences
 
 - **Single-instance is now load-bearing.** If we ever run more than one Node instance, an Apartment on instance 1 booking a Slot will not be reflected on instance 2 until the second instance happens to re-yield for some other reason. Swap the bus for a `LISTEN/NOTIFY`-backed implementation at that point — the call sites (`bookingEvents.emit` / `bookingEvents.on`) don't have to change.
-- **Out-of-band writes don't propagate.** Any future code path that writes to the `booking` table without going through `book`/`cancelBooking` must also `bookingEvents.emit('change', resource)`, or live clients won't see the change until they reconnect. The DB-trigger option would have been resilient to this; the chosen design is not.
+- **Out-of-band writes don't propagate.** Any future code path that writes to the `booking` table without going through `book`/`cancelBooking` must also `bookingEvents.emit(resource)`, or live clients won't see the change until they reconnect. The DB-trigger option would have been resilient to this; the chosen design is not. Admin Closure creation and deletion follow this rule.
 - **The actor's own update goes through `query.live().reconnect()` from inside the command** (single-flight mutation), in addition to the bus emit. Other Apartments learn via the bus. This keeps the click→update path synchronous with the mutation response and independent of bus latency.

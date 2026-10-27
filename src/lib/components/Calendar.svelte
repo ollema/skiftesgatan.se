@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Calendar } from 'bits-ui';
 	import { type CalendarDate, type DateValue } from '@internationalized/date';
-	import { type Slot, type SlotStatus } from '#lib/types/bookings.js';
+	import { type ClosedDay, type Slot, type SlotStatus } from '#lib/types/bookings.js';
 	import { formatMonth } from '#lib/utils/date.js';
 
 	interface Props {
@@ -9,16 +9,22 @@
 		minValue: CalendarDate;
 		maxValue: CalendarDate;
 		bookingCalendar: Record<string, Slot[]>;
+		closedDays: Record<string, ClosedDay>;
 	}
 
-	let { date = $bindable(), minValue, maxValue, bookingCalendar }: Props = $props();
+	let { date = $bindable(), minValue, maxValue, bookingCalendar, closedDays }: Props = $props();
 
 	const statusColorMap: Record<SlotStatus, string> = {
 		free: 'border border-border',
 		mine: 'bg-slot-mine',
 		other: 'bg-slot-occupied',
-		past: 'border border-border opacity-50'
+		past: 'border border-border opacity-50',
+		closed: 'bg-border'
 	};
+
+	function isClosed(value: DateValue): boolean {
+		return closedDays[value.toString()] !== undefined;
+	}
 
 	function onValueChange(newValue: DateValue | undefined) {
 		if (newValue) {
@@ -38,6 +44,7 @@
 		weekdayFormat="short"
 		fixedWeeks
 		disableDaysOutsideMonth={false}
+		isDateDisabled={isClosed}
 	>
 		{#snippet children({ months, weekdays })}
 			<Calendar.Header class="flex items-center justify-center gap-1 pb-2">
@@ -77,18 +84,24 @@
 							<Calendar.GridRow class="contents">
 								{#each week as day (day.toString())}
 									<Calendar.Cell date={day} month={month.value} class="p-0">
+										{@const closed = closedDays[day.toString()]}
 										<Calendar.Day
 											class="inline-flex h-12 w-full flex-col items-center justify-center py-1 text-sm
 												hover:bg-bg-alt
 												data-disabled:cursor-not-allowed data-disabled:text-text-disabled data-disabled:hover:bg-transparent
 												data-selected:ring-2 data-selected:ring-text-primary/20 data-selected:ring-inset
 												data-today:font-semibold sm:py-2.5"
+											title={closed ? (closed.reason ?? 'Stängt för underhåll') : undefined}
 										>
 											{day.day}
 											<div class="mt-0.5 flex gap-0.5">
-												{#each bookingCalendar[day.toString()] as slot (slot.start)}
-													<span class="box-border size-1.5 {statusColorMap[slot.status]}"></span>
-												{/each}
+												{#if closed}
+													<span class="box-border size-1.5 bg-border"></span>
+												{:else}
+													{#each bookingCalendar[day.toString()] as slot (slot.start)}
+														<span class="box-border size-1.5 {statusColorMap[slot.status]}"></span>
+													{/each}
+												{/if}
 											</div>
 										</Calendar.Day>
 									</Calendar.Cell>

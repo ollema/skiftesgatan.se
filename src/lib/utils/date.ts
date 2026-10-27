@@ -27,6 +27,10 @@ export function formatDate(d: CalendarDate) {
 	return dateFormatter.format(d.toDate(TIMEZONE));
 }
 
+export function formatDateRange(start: CalendarDate, end: CalendarDate) {
+	return start.compare(end) === 0 ? formatDate(start) : `${formatDate(start)}–${formatDate(end)}`;
+}
+
 export function formatHourNum(hour: number) {
 	return `${hour.toString().padStart(2, '0')}:00`;
 }

@@ -9,6 +9,7 @@ import {
 import { eq, and, gt, or, type SQL } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.js';
 import { booking, timeBlock, user } from '#lib/server/db/schema.js';
+import { findClosureForDate } from '#lib/server/closure.js';
 import { TIMEZONE, type Resource } from '#lib/types/bookings.js';
 
 export function isBookingActive(b: { date: string; endHour: number }, now: ZonedDateTime): boolean {
@@ -131,10 +132,11 @@ type BookSlotResult =
 	  }
 	| { kind: 'replace_not_found'; startHour: number; endHour: number }
 	| { kind: 'already_booked'; startHour: number; endHour: number }
-	| { kind: 'slot_taken'; startHour: number; endHour: number };
+	| { kind: 'slot_taken'; startHour: number; endHour: number }
+	| { kind: 'closed'; startHour: number; endHour: number };
 
 class BookSlotConflict extends Error {
-	constructor(public kind: 'replace_not_found' | 'already_booked' | 'slot_taken') {
+	constructor(public kind: 'replace_not_found' | 'already_booked' | 'slot_taken' | 'closed') {
 		super(kind);
 	}
 }
@@ -146,14 +148,30 @@ export async function bookSlot(params: {
 	date: CalendarDate;
 	replaceBookingId?: number;
 	now: ZonedDateTime;
+	/** Test seam: drive the transaction against an isolated PGlite handle. */
+	database?: typeof db;
 }): Promise<BookSlotResult> {
-	const target = await getTimeBlockHours(params.timeBlockId);
+	const database = params.database ?? db;
+	// Only pass an explicit handle in tests; production reads the shared cache.
+	const target = await getTimeBlockHours(params.timeBlockId, params.database);
 	try {
-		return await db.transaction(async (tx) => {
+		return await database.transaction(async (tx) => {
 			// Serialize concurrent booking attempts by the same user. Without this lock,
 			// two requests can both pass the existing-booking check and both insert,
 			// breaking the one-active-booking-per-user-per-resource rule.
 			await tx.select({ id: user.id }).from(user).where(eq(user.id, params.userId)).for('update');
+
+			// Closure creation takes the same lock, so a Closure can never be inserted
+			// between this check and the insert below. Check before the replace-delete:
+			// moving a Booking into a closed day must leave the original Booking intact.
+			await tx
+				.select({ id: timeBlock.id })
+				.from(timeBlock)
+				.where(eq(timeBlock.resource, params.resource))
+				.orderBy(timeBlock.id)
+				.for('update');
+			const closure = await findClosureForDate(tx, params.resource, params.date.toString());
+			if (closure) throw new BookSlotConflict('closed');
 
 			const activeWhere = activeBookingWhere(params.now);
 			let cancelled: CancelledSlot | null = null;

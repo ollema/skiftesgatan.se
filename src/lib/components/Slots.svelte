@@ -115,6 +115,15 @@
 			>
 				{formatHourNumShort(slot.start)}&ndash;{formatHourNumShort(slot.end)}
 			</button>
+		{:else if slot.status === 'closed'}
+			<button
+				data-slot-status="closed"
+				aria-label={`Stängt ${timeRange} på grund av underhåll`}
+				class="cursor-not-allowed rounded-sm border border-border bg-bg-alt px-2 py-1.5 text-center text-xs whitespace-nowrap text-text-secondary sm:text-sm"
+				disabled
+			>
+				Stängt
+			</button>
 		{:else}
 			<button
 				data-slot-status="booked"

@@ -66,9 +66,17 @@
 <MetaTags {...metaDefaults} title="Admin" robots="noindex,nofollow" />
 
 <h1 class="mb-2 font-heading text-2xl font-normal">Lägenheter</h1>
-<p class="mb-8 text-sm text-text-secondary">
-	Hantera kontouppgifter, aviseringar och kalenderprenumerationer.
-</p>
+<div class="mb-8 flex flex-wrap items-baseline justify-between gap-2">
+	<p class="text-sm text-text-secondary">
+		Hantera kontouppgifter, aviseringar och kalenderprenumerationer.
+	</p>
+	<a
+		href={resolve('admin/maintenance')}
+		class="text-sm text-link underline decoration-1 underline-offset-3 transition-colors duration-120 hover:text-link-hover"
+	>
+		Stängda dagar →
+	</a>
+</div>
 
 <div class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
 	<table class="w-full border-collapse text-sm">
