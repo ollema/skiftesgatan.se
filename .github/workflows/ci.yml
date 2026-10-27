@@ -49,10 +49,13 @@ jobs:
         with:
           persist-credentials: false
 
+      # Only the lint job saves the store; the container jobs restore it, so
+      # they don't race each other for the same cache key.
       - name: Install pnpm and Node.js
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           cache: true
+          save-cache: false
           require-lockfile: true
 
       - run: pnpm test:unit
@@ -73,6 +76,7 @@ jobs:
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           cache: true
+          save-cache: false
           require-lockfile: true
 
       - run: pnpm test:e2e
