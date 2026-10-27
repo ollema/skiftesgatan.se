@@ -42,7 +42,7 @@ There is no self-registration. Accounts are pre-created by an admin. Each reside
 
 ## Getting Started
 
-**Prerequisites:** Node.js 22, pnpm, access to the public dev/test Postgres host.
+**Prerequisites:** Node.js 24, pnpm, access to the public dev/test Postgres host.
 
 ```sh
 pnpm install
