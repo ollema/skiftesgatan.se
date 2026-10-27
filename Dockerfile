@@ -19,10 +19,13 @@ RUN BETTER_AUTH_SECRET="docker-build-placeholder-not-used-at-runtime" \
 
 FROM base
 WORKDIR /app
-COPY --from=build /app/build build/
-COPY package.json .
+# adapter-node bundles its dependencies, and all runtime state lives in
+# Postgres, so the server only ever reads from /app and does not need root.
+COPY --from=build --chown=node:node /app/build build/
+COPY --chown=node:node package.json .
 EXPOSE 3000
 ENV NODE_ENV=production
 ENV TZ=Europe/Stockholm
+USER node
 
 CMD ["node", "build"]
