@@ -1,5 +1,7 @@
 # skiftesgatan.se
 
+[![CI](https://github.com/ollema/skiftesgatan.se/actions/workflows/ci.yml/badge.svg)](https://github.com/ollema/skiftesgatan.se/actions/workflows/ci.yml)
+
 Website for BRF Skiftesgatan 4, a housing association with 32 apartments in Gothenburg. The building has 4 stairwells (A-D), each with 4 floors and 2 apartments per floor.
 
 Residents log in with their apartment number to book shared facilities, read association news, and access member information such as bylaws, finances, renovation plans, and board details.
@@ -162,7 +164,19 @@ Copy `.env.example` to `.env` and fill in values. The same shape applies whether
 
 **E2E tests** (Playwright, 4 workers): each worker gets its own PGlite database file cloned from a freshly-built `.pglite-test-template`. Every `pnpm test:e2e` run rebuilds the template from scratch — no separate reset ritual, no committed fixtures. globalSetup pushes the schema, seeds 32 apartments, then bakes per-user storage state into `.auth/` for the suite to reuse. `RESEND_API_KEY` is empty so emails are captured as files in `.test-emails/`.
 
-**CI pipeline** (GitHub Actions): lint + typecheck + knip, unit tests, E2E tests with artifact upload on failure.
+**CI pipeline** (GitHub Actions, `.github/workflows/ci.yml`): five jobs run in parallel on every push to `main` and every pull request. A `Deploy to CapRover` job then needs all of them to pass, and only runs on `main`:
+
+| Job              | What it does                                                                               |
+| ---------------- | ------------------------------------------------------------------------------------------ |
+| Security Scan    | [zizmor](https://github.com/zizmorcore/zizmor) audits the workflow files themselves        |
+| Lint & Typecheck | generates the content collections, then `pnpm lint`, `pnpm knip`, `pnpm check`             |
+| Unit Tests       | Vitest, inside the pinned Playwright container (the client project drives a real Chromium) |
+| E2E Tests        | full Playwright suite; traces and the HTML report are uploaded as artifacts                |
+| Build and push   | multi-stage Docker build, pushed to GHCR as `ghcr.io/<repo>:sha-<commit>`                  |
+
+`pnpm playwright:check` guards the one thing that cannot be expressed in YAML: the Playwright container image tag in the workflow must match `@playwright/test` in `package.json`. Bump both together.
+
+Images are tagged by commit only, never `latest`, so a deploy can neither race ahead of nor resurrect an untested build. `main` runs do not cancel each other, which keeps deploys in commit order.
 
 ## Production Database
 
