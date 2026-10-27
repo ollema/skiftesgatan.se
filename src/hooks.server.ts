@@ -21,7 +21,7 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 	// Workaround for sveltejs/kit#15790: nginx buffers query.live (application/x-ndjson)
 	// streams until they time out. X-Accel-Buffering: no opts the response out of buffering;
 	// non-nginx proxies ignore it.
-	if (response.headers.get('content-type')?.includes('application/x-ndjson')) {
+	if (response.headers.get('content-type')?.includes('text/event-stream')) {
 		response.headers.set('X-Accel-Buffering', 'no');
 	}
 

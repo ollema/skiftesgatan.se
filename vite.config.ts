@@ -63,6 +63,35 @@ function copyPgliteRuntimeAssets(): Plugin {
 	};
 }
 
+/**
+ * Vite preview compresses text responses, which buffers the incremental events
+ * of `text/event-stream` responses. Opt SSE requests out of compression so live
+ * query updates reach the browser (production is handled by X-Accel-Buffering).
+ */
+function disablePreviewSseCompression(): Plugin {
+	return {
+		name: 'disable-preview-sse-compression',
+		configurePreviewServer(server) {
+			return () => {
+				const stack = (server.middlewares as unknown as { stack: unknown[] }).stack;
+				stack.unshift({
+					route: '',
+					handle(
+						req: { headers: Record<string, string | string[] | undefined> },
+						_res: unknown,
+						next: () => void
+					) {
+						if (String(req.headers.accept ?? '').includes('text/event-stream')) {
+							delete req.headers['accept-encoding'];
+						}
+						next();
+					}
+				});
+			};
+		}
+	};
+}
+
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
@@ -84,7 +113,8 @@ export default defineConfig({
 			experimental: { remoteFunctions: true }
 		}),
 		suppressAdapterWarnings(),
-		copyPgliteRuntimeAssets()
+		copyPgliteRuntimeAssets(),
+		disablePreviewSseCompression()
 	],
 	server: {
 		fs: {

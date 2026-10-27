@@ -14,5 +14,9 @@
 		"scripts/sync-email-templates.ts"
 	],
 	"ignoreDependencies": ["vitest-browser-svelte"],
-	"ignoreUnresolved": ["^\\$app/"]
+	"ignoreUnresolved": ["^\\$app/"],
+	"paths": {
+		"content-collections": ["./.content-collections/generated"],
+		"content-collections/*": ["./.content-collections/generated/*"]
+	}
 }

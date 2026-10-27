@@ -234,7 +234,7 @@
 		})}
 		class="flex flex-col gap-4"
 	>
-		<input type="hidden" name="username" value={target.username} />
+		<input {...updateUserName.fields.username.as('hidden', target.username ?? '')} />
 		<label class="flex flex-col gap-1 text-sm text-text-secondary">
 			Nytt visningsnamn
 			<input {...updateUserName.fields.name.as('text')} class="input-field" />
@@ -260,7 +260,7 @@
 		})}
 		class="flex flex-col gap-4"
 	>
-		<input type="hidden" name="username" value={target.username} />
+		<input {...updateUserEmail.fields.username.as('hidden', target.username ?? '')} />
 		<label class="flex flex-col gap-1 text-sm text-text-secondary">
 			Ny e-post
 			<input {...updateUserEmail.fields.email.as('email')} class="input-field" />

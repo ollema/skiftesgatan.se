@@ -22,7 +22,7 @@
 {:else}
 	<h1 class="mb-4 font-heading text-2xl font-normal">Återställ ditt lösenord</h1>
 	<form {...resetPassword} class="mb-6 flex max-w-sm flex-col gap-4">
-		<input type="hidden" name="token" value={token} />
+		<input {...resetPassword.fields.token.as('hidden', token ?? '')} />
 		<label class="flex flex-col gap-1 text-sm text-text-secondary">
 			Nytt lösenord
 			<input {...resetPassword.fields._newPassword.as('password')} class="input-field" />
