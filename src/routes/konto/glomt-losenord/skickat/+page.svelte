@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { MetaTags } from 'svelte-meta-tags';
-	import { metaDefaults } from '$lib/meta';
+	import { metaDefaults } from '#lib/meta.js';
 	import { resolve } from '$app/paths';
 </script>
 
@@ -11,4 +11,4 @@
 	Om det finns ett konto kopplat till den lägenheten har vi skickat en länk för att återställa
 	lösenordet till den registrerade e-postadressen.
 </p>
-<a href={resolve('/konto/logga-in')} class="text-sm">Tillbaka till inloggning</a>
+<a href={resolve('konto/logga-in')} class="text-sm">Tillbaka till inloggning</a>

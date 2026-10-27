@@ -1,4 +1,4 @@
-import { TIMEZONE } from '$lib/types/bookings';
+import { TIMEZONE } from '#lib/types/bookings.js';
 import { type CalendarDate, DateFormatter, type DateValue } from '@internationalized/date';
 
 const monthFormatter = new DateFormatter('sv-SE', { month: 'long', timeZone: TIMEZONE });

@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { now } from '@internationalized/date';
-import { getUserIdByToken, generateCalendarFeed } from '$lib/server/calendar';
-import { TIMEZONE } from '$lib/types/bookings';
+import { getUserIdByToken, generateCalendarFeed } from '#lib/server/calendar.js';
+import { TIMEZONE } from '#lib/types/bookings.js';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ params }) => {

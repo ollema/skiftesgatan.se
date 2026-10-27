@@ -2,13 +2,13 @@ import * as v from 'valibot';
 import { invalid, redirect } from '@sveltejs/kit';
 import { getRequestEvent, query, form } from '$app/server';
 import { eq } from 'drizzle-orm';
-import { auth, requireAuth, getAuthUser } from '$lib/server/auth';
-import { apartmentSchema } from '$lib/server/auth.config';
-import { db } from '$lib/server/db';
-import { user as userTable } from '$lib/server/db/auth.schema';
+import { auth, requireAuth, getAuthUser } from '#lib/server/auth.js';
+import { apartmentSchema } from '#lib/server/auth.config.js';
+import { db } from '#lib/server/db/index.js';
+import { user as userTable } from '#lib/server/db/auth.schema.js';
 import { APIError } from 'better-auth/api';
-import { log } from '$lib/server/log';
-import { checkRateLimit } from '$lib/server/rate-limit';
+import { log } from '#lib/server/log.js';
+import { checkRateLimit } from '#lib/server/rate-limit.js';
 
 function rateLimitMinutes(seconds: number): number {
 	return Math.max(1, Math.ceil(seconds / 60));

@@ -3,7 +3,7 @@ import { CalendarDateTime, toZoned, today } from '@internationalized/date';
 import { PGlite } from '@electric-sql/pglite';
 import { drizzle } from 'drizzle-orm/pglite';
 import { pushSchema } from 'drizzle-kit/api';
-import { TIMEZONE, TIME_BLOCKS } from '$lib/types/bookings';
+import { TIMEZONE, TIME_BLOCKS } from '#lib/types/bookings.js';
 import * as schema from './db/schema';
 import { timeBlock } from './db/booking.schema';
 import { seedTimeBlocks } from './db/seed-time-blocks';

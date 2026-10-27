@@ -1,5 +1,5 @@
 import { type CalendarDate, parseDate, today, getDayOfWeek } from '@internationalized/date';
-import { TIMEZONE, type Resource } from '$lib/types/bookings';
+import { TIMEZONE, type Resource } from '#lib/types/bookings.js';
 
 const BRAND = 'BRF Skiftesgatan 4';
 

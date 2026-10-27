@@ -1,12 +1,17 @@
 import { query, command } from '$app/server';
-import { env } from '$env/dynamic/private';
-import { requireAuth } from '$lib/server/auth';
-import { log } from '$lib/server/log';
-import { getExistingToken, createToken, regenerateToken, deleteToken } from '$lib/server/calendar';
-import { getSetupHints } from '$lib/api/hints.remote';
+import { ORIGIN } from '$app/env/private';
+import { requireAuth } from '#lib/server/auth.js';
+import { log } from '#lib/server/log.js';
+import {
+	getExistingToken,
+	createToken,
+	regenerateToken,
+	deleteToken
+} from '#lib/server/calendar.js';
+import { getSetupHints } from '#lib/api/hints.remote.js';
 
 function buildCalendarUrl(token: string): string {
-	return `${env.ORIGIN}/kalender/${token}.ics`;
+	return `${ORIGIN}/kalender/${token}.ics`;
 }
 
 export const getCalendarUrl = query(async () => {

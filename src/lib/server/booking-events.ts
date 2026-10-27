@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import type { Resource } from '$lib/types/bookings';
+import type { Resource } from '#lib/types/bookings.js';
 
 const emitter = new EventEmitter();
 emitter.setMaxListeners(256);

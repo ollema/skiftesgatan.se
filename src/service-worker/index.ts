@@ -1,26 +1,26 @@
-// Disables access to DOM typings like `HTMLElement` which are not available
-// inside a service worker and instantiates the correct globals
-/// <reference no-default-lib="true"/>
-/// <reference lib="esnext" />
-/// <reference lib="webworker" />
-
-// Ensures that the `$service-worker` import has proper type definitions
-/// <reference types="@sveltejs/kit" />
-
-// Only necessary if you have an import from `$env/static/public`
-/// <reference types="../.svelte-kit/ambient.d.ts" />
-
-import { build, files, version } from '$service-worker';
-
-// This gives `self` the correct types
-const self = globalThis.self as unknown as ServiceWorkerGlobalScope;
+/**
+ * Cache-first service worker for the app shell and static assets.
+ *
+ * The service worker runs in its own TypeScript project (see
+ * `src/service-worker/tsconfig.json`), which is why the root tsconfig excludes
+ * this directory.
+ */
+import { self } from '$app/service-worker';
+import { version } from '$app/env';
+import { assets, immutable } from '$app/manifest';
+import { resolve } from '$app/paths';
+import type { Path } from '$app/types';
 
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;
 
-const ASSETS = [
-	...build, // the app itself
-	...files // everything in `static`
+// `immutable`/`assets` paths from `$app/manifest` are relative to the base
+// path, so resolve them to absolute pathnames that can be matched against
+// `url.pathname` in the fetch handler. The manifest types only guarantee
+// `string` here, hence the cast.
+const ASSETS: string[] = [
+	...immutable.map(({ path }) => resolve(path as Path)), // the Vite output
+	...assets.map(({ path }) => resolve(path as Path)) // everything in `static`
 ];
 
 self.addEventListener('install', (event) => {
@@ -52,7 +52,7 @@ self.addEventListener('fetch', (event) => {
 		const url = new URL(event.request.url);
 		const cache = await caches.open(CACHE);
 
-		// `build`/`files` can always be served from the cache
+		// `immutable`/`assets` can always be served from the cache
 		if (ASSETS.includes(url.pathname)) {
 			const response = await cache.match(url.pathname);
 

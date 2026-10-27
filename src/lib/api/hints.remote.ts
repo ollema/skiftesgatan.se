@@ -1,6 +1,6 @@
 import { getRequestEvent, query } from '$app/server';
-import { getAuthUser } from '$lib/server/auth';
-import { getSetupStatus } from '$lib/server/hints';
+import { getAuthUser } from '#lib/server/auth.js';
+import { getSetupStatus } from '#lib/server/hints.js';
 
 export const getSetupHints = query(async () => {
 	const user = getAuthUser();

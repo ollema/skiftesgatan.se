@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { MetaTags } from 'svelte-meta-tags';
-	import { metaDefaults } from '$lib/meta';
-	import { requestPasswordReset } from '$lib/api/auth.remote';
+	import { metaDefaults } from '#lib/meta.js';
+	import { requestPasswordReset } from '#lib/api/auth.remote.js';
 	import { resolve } from '$app/paths';
-	import Button from '$lib/components/Button.svelte';
+	import Button from '#lib/components/Button.svelte';
 </script>
 
 <MetaTags {...metaDefaults} title="Glömt lösenord" robots="noindex,nofollow" />
@@ -29,4 +29,4 @@
 	{/each}
 </form>
 
-<a href={resolve('/konto/logga-in')} class="text-sm">Tillbaka till inloggning</a>
+<a href={resolve('konto/logga-in')} class="text-sm">Tillbaka till inloggning</a>

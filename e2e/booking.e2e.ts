@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures';
 import { today } from '@internationalized/date';
-import { TIMEZONE } from '$lib/types/bookings';
+import { TIMEZONE } from '#lib/types/bookings.js';
 import { selectCalendarDate, confirmCancelDialog } from './helpers';
 
 const now = today(TIMEZONE);

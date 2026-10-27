@@ -4,7 +4,7 @@
 	import { page } from '$app/state';
 	import { allInformation, allNews } from 'content-collections';
 	import { parseDate, DateFormatter } from '@internationalized/date';
-	import { TIMEZONE } from '$lib/types/bookings';
+	import { TIMEZONE } from '#lib/types/bookings.js';
 
 	const informationPages = allInformation;
 
@@ -42,10 +42,8 @@
 							stroke="currentColor"
 							stroke-width="2"
 							stroke-linecap="round"
-							stroke-linejoin="round"
+							stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg
 						>
-							<polyline points="6 9 12 15 18 9" />
-						</svg>
 					</NavigationMenu.Trigger>
 					<NavigationMenu.Content
 						class="absolute top-full left-0 mt-1.5 w-72 border border-border bg-surface p-4 shadow-md"
@@ -54,7 +52,7 @@
 							{#each latestNews as item (item._meta.path)}
 								<li>
 									<NavigationMenu.Link
-										href={resolve(`/nyheter/${item._meta.path}` as `/nyheter/${string}`)}
+										href={resolve('/nyheter/[slug]', { slug: item._meta.path })}
 										class="block rounded-sm p-2 no-underline transition-colors duration-120 hover:bg-bg"
 									>
 										<time
@@ -70,7 +68,7 @@
 						</ul>
 						<div class="mt-2 border-t border-border-subtle pt-2">
 							<NavigationMenu.Link
-								href={resolve('/nyheter')}
+								href={resolve('nyheter')}
 								class="block rounded-sm p-2 text-sm text-text-secondary no-underline transition-colors duration-120 hover:bg-bg hover:text-text-primary"
 							>
 								Alla nyheter
@@ -91,10 +89,8 @@
 							stroke="currentColor"
 							stroke-width="2"
 							stroke-linecap="round"
-							stroke-linejoin="round"
+							stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg
 						>
-							<polyline points="6 9 12 15 18 9" />
-						</svg>
 					</NavigationMenu.Trigger>
 					<NavigationMenu.Content
 						class="absolute top-full left-0 mt-1.5 w-56 border border-border bg-surface p-4 shadow-md"
@@ -103,9 +99,7 @@
 							{#each informationPages as infoPage (infoPage._meta.path)}
 								<li>
 									<NavigationMenu.Link
-										href={resolve(
-											`/information/${infoPage._meta.path}` as `/information/${string}`
-										)}
+										href={resolve('/information/[...slug]', { slug: infoPage._meta.path })}
 										class="block rounded-sm p-2 text-sm text-text-secondary no-underline transition-colors duration-120 hover:bg-bg hover:text-text-primary"
 									>
 										{infoPage.title}
@@ -119,7 +113,7 @@
 				<!-- Simple links -->
 				<NavigationMenu.Item>
 					<NavigationMenu.Link
-						href={resolve('/tvattstuga')}
+						href={resolve('tvattstuga')}
 						active={page.url.pathname.startsWith('/tvattstuga')}
 						class={linkClass}
 					>
@@ -129,7 +123,7 @@
 
 				<NavigationMenu.Item>
 					<NavigationMenu.Link
-						href={resolve('/uteplats')}
+						href={resolve('uteplats')}
 						active={page.url.pathname.startsWith('/uteplats')}
 						class={linkClass}
 					>
@@ -139,7 +133,7 @@
 
 				<NavigationMenu.Item>
 					<NavigationMenu.Link
-						href={resolve('/kontakt')}
+						href={resolve('kontakt')}
 						active={page.url.pathname.startsWith('/kontakt')}
 						class={linkClass}
 					>

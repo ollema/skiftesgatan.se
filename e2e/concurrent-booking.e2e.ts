@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures';
 import { today } from '@internationalized/date';
-import { TIMEZONE } from '$lib/types/bookings';
+import { TIMEZONE } from '#lib/types/bookings.js';
 import { selectCalendarDate } from './helpers';
 
 // Use 3 days out to avoid collisions with other test files that book on "tomorrow"

@@ -14,7 +14,9 @@
 
 	let open = $state(false);
 
-	afterNavigate(() => {
+	afterNavigate(({ shallow, type }) => {
+		if (shallow && type === 'goto') return;
+
 		open = false;
 	});
 
@@ -47,9 +49,9 @@
 			stroke-linecap="round"
 			stroke-linejoin="round"
 		>
-			<line x1="3" y1="6" x2="21" y2="6" />
-			<line x1="3" y1="12" x2="21" y2="12" />
-			<line x1="3" y1="18" x2="21" y2="18" />
+			<line x1="3" y1="6" x2="21" y2="6"></line>
+			<line x1="3" y1="12" x2="21" y2="12"></line>
+			<line x1="3" y1="18" x2="21" y2="18"></line>
 		</svg>
 	</Dialog.Trigger>
 
@@ -75,8 +77,8 @@
 					stroke-linecap="round"
 					stroke-linejoin="round"
 				>
-					<line x1="18" y1="6" x2="6" y2="18" />
-					<line x1="6" y1="6" x2="18" y2="18" />
+					<line x1="18" y1="6" x2="6" y2="18"></line>
+					<line x1="6" y1="6" x2="18" y2="18"></line>
 				</svg>
 			</Dialog.Close>
 
@@ -84,7 +86,7 @@
 				<!-- Nyheter -->
 				<div class="flex flex-col gap-2">
 					<a
-						href={resolve('/nyheter')}
+						href={resolve('nyheter')}
 						class={linkClass}
 						class:text-text-primary={page.url.pathname === '/nyheter'}
 					>
@@ -93,7 +95,7 @@
 					<div class="flex flex-col gap-1.5 pl-3">
 						{#each latestNews as item (item._meta.path)}
 							<a
-								href={resolve(`/nyheter/${item._meta.path}` as `/nyheter/${string}`)}
+								href={resolve('/nyheter/[slug]', { slug: item._meta.path })}
 								class={subLinkClass}
 								class:text-text-primary={page.url.pathname === `/nyheter/${item._meta.path}`}
 							>
@@ -106,7 +108,7 @@
 				<!-- Information -->
 				<div class="flex flex-col gap-2">
 					<a
-						href={resolve('/information')}
+						href={resolve('information')}
 						class={linkClass}
 						class:text-text-primary={page.url.pathname === '/information'}
 					>
@@ -115,7 +117,7 @@
 					<div class="flex flex-col gap-1.5 pl-3">
 						{#each informationPages as infoPage (infoPage._meta.path)}
 							<a
-								href={resolve(`/information/${infoPage._meta.path}` as `/information/${string}`)}
+								href={resolve('/information/[...slug]', { slug: infoPage._meta.path })}
 								class={subLinkClass}
 								class:text-text-primary={page.url.pathname ===
 									`/information/${infoPage._meta.path}`}
@@ -128,21 +130,21 @@
 
 				<!-- Simple links -->
 				<a
-					href={resolve('/tvattstuga')}
+					href={resolve('tvattstuga')}
 					class={linkClass}
 					class:text-text-primary={page.url.pathname.startsWith('/tvattstuga')}
 				>
 					Tvättstuga
 				</a>
 				<a
-					href={resolve('/uteplats')}
+					href={resolve('uteplats')}
 					class={linkClass}
 					class:text-text-primary={page.url.pathname.startsWith('/uteplats')}
 				>
 					Uteplats
 				</a>
 				<a
-					href={resolve('/kontakt')}
+					href={resolve('kontakt')}
 					class={linkClass}
 					class:text-text-primary={page.url.pathname.startsWith('/kontakt')}
 				>
@@ -154,7 +156,7 @@
 				{#if user}
 					{#if user.role === 'admin'}
 						<a
-							href={resolve('/admin')}
+							href={resolve('admin')}
 							class={linkClass}
 							class:text-text-primary={page.url.pathname.startsWith('/admin')}
 						>
@@ -162,14 +164,14 @@
 						</a>
 					{/if}
 					<a
-						href={resolve('/konto')}
+						href={resolve('konto')}
 						class={linkClass}
 						class:text-text-primary={page.url.pathname.startsWith('/konto')}
 					>
 						{user.username}
 					</a>
 				{:else}
-					<a href={resolve('/konto/logga-in')} class={linkClass}>Logga in</a>
+					<a href={resolve('konto/logga-in')} class={linkClass}>Logga in</a>
 				{/if}
 			</div>
 		</Dialog.Content>

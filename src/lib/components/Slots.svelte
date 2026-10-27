@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { CalendarDate } from '@internationalized/date';
 	import { toast } from 'svelte-sonner';
-	import { book, cancelBooking } from '$lib/api/booking.remote';
-	import { getOptionalUser } from '$lib/api/auth.remote';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import { type Slot, type Resource } from '$lib/types/bookings';
-	import { formatDate, formatHourNumShort } from '$lib/utils/date';
+	import { book, cancelBooking } from '#lib/api/booking.remote.js';
+	import { getOptionalUser } from '#lib/api/auth.remote.js';
+	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+	import { type Slot, type Resource } from '#lib/types/bookings.js';
+	import { formatDate, formatHourNumShort } from '#lib/utils/date.js';
 
 	interface Props {
 		resource: Resource;

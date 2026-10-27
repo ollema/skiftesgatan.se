@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { MetaTags } from 'svelte-meta-tags';
-	import { metaDefaults, canonical } from '$lib/meta';
+	import { metaDefaults, canonical } from '#lib/meta.js';
 	import { page } from '$app/state';
 	import { allNews } from 'content-collections';
 	import { resolve } from '$app/paths';
 	import { parseDate, DateFormatter } from '@internationalized/date';
-	import { TIMEZONE } from '$lib/types/bookings';
+	import { TIMEZONE } from '#lib/types/bookings.js';
 
 	const sorted = allNews.toSorted((a, b) => parseDate(b.date).compare(parseDate(a.date)));
 
@@ -28,10 +28,7 @@
 
 <div class="flex flex-col gap-10">
 	{#each sorted as item (item._meta.path)}
-		<a
-			href={resolve(`/nyheter/${item._meta.path}` as `/nyheter/${string}`)}
-			class="block no-underline"
-		>
+		<a href={resolve('/nyheter/[slug]', { slug: item._meta.path })} class="block no-underline">
 			<time
 				class="mb-2 block text-xs tracking-widest text-text-muted uppercase"
 				datetime={item.date}

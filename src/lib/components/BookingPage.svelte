@@ -1,12 +1,12 @@
 <script lang="ts">
-	import SetupHints from '$lib/components/SetupHints.svelte';
-	import Calendar from '$lib/components/Calendar.svelte';
-	import Slots from '$lib/components/Slots.svelte';
-	import { getOptionalUser } from '$lib/api/auth.remote';
-	import { getSetupHints } from '$lib/api/hints.remote';
-	import { getBookingData } from '$lib/api/booking.remote';
-	import { TIMEZONE, type Resource } from '$lib/types/bookings';
-	import { formatDate, formatHourNum } from '$lib/utils/date';
+	import SetupHints from '#lib/components/SetupHints.svelte';
+	import Calendar from '#lib/components/Calendar.svelte';
+	import Slots from '#lib/components/Slots.svelte';
+	import { getOptionalUser } from '#lib/api/auth.remote.js';
+	import { getSetupHints } from '#lib/api/hints.remote.js';
+	import { getBookingData } from '#lib/api/booking.remote.js';
+	import { TIMEZONE, type Resource } from '#lib/types/bookings.js';
+	import { formatDate, formatHourNum } from '#lib/utils/date.js';
 	import { today } from '@internationalized/date';
 	const todayDate = today(TIMEZONE);
 

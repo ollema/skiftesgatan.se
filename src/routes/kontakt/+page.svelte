@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { MetaTags } from 'svelte-meta-tags';
-	import { metaDefaults, canonical } from '$lib/meta';
+	import { metaDefaults, canonical } from '#lib/meta.js';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { getContactInfo } from '$lib/api/contact.remote';
+	import { getContactInfo } from '#lib/api/contact.remote.js';
 
 	let contact = $derived(await getContactInfo());
 </script>
@@ -46,7 +46,8 @@
 			{/if}
 		{:else}
 			<p class="text-text-muted">
-				<a href={resolve('/konto/logga-in')}>Logga in</a> för att se kontaktuppgifter.
+				<a href={resolve('konto/logga-in')}>Logga in</a>
+				för att se kontaktuppgifter.
 			</p>
 		{/if}
 	</section>

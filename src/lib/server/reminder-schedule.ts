@@ -7,11 +7,11 @@ import {
 	now
 } from '@internationalized/date';
 import { eq, and, gte, inArray } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { reminderPreference, bookingReminder } from '$lib/server/db/reminder.schema';
-import { booking } from '$lib/server/db/booking.schema';
-import { getTimeBlockHours } from '$lib/server/booking';
-import { TIMEZONE, type Resource } from '$lib/types/bookings';
+import { db } from '#lib/server/db/index.js';
+import { reminderPreference, bookingReminder } from '#lib/server/db/reminder.schema.js';
+import { booking } from '#lib/server/db/booking.schema.js';
+import { getTimeBlockHours } from '#lib/server/booking.js';
+import { TIMEZONE, type Resource } from '#lib/types/bookings.js';
 
 type Db = typeof db;
 

@@ -9,6 +9,6 @@ export const metaDefaults = {
 	}
 } satisfies MetaTagsProps;
 
-export function canonical(url: URL): string {
+export function canonical(url: { origin: string; pathname: string }): string {
 	return `${url.origin}${url.pathname}`;
 }

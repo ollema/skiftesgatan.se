@@ -2,9 +2,9 @@
 	import './layout.css';
 	import { resolve } from '$app/paths';
 	import { Toaster } from 'svelte-sonner';
-	import { getOptionalUser } from '$lib/api/auth.remote';
-	import Navbar from '$lib/components/Navbar.svelte';
-	import MobileMenu from '$lib/components/MobileMenu.svelte';
+	import { getOptionalUser } from '#lib/api/auth.remote.js';
+	import Navbar from '#lib/components/Navbar.svelte';
+	import MobileMenu from '#lib/components/MobileMenu.svelte';
 
 	let { children } = $props();
 
@@ -27,21 +27,21 @@
 					{#if user}
 						{#if user.role === 'admin'}
 							<a
-								href={resolve('/admin')}
+								href={resolve('admin')}
 								class="hidden text-sm text-bg/70 no-underline transition-colors duration-120 hover:text-bg lg:block"
 							>
 								Admin
 							</a>
 						{/if}
 						<a
-							href={resolve('/konto')}
+							href={resolve('konto')}
 							class="hidden text-sm text-bg/70 no-underline transition-colors duration-120 hover:text-bg lg:block"
 						>
 							{user.username}
 						</a>
 					{:else}
 						<a
-							href={resolve('/konto/logga-in')}
+							href={resolve('konto/logga-in')}
 							class="hidden text-sm text-bg/70 no-underline transition-colors duration-120 hover:text-bg lg:block"
 						>
 							Logga in

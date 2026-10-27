@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { MetaTags } from 'svelte-meta-tags';
-	import { metaDefaults, canonical } from '$lib/meta';
+	import { metaDefaults, canonical } from '#lib/meta.js';
 	import { page } from '$app/state';
 	import { allNews } from 'content-collections';
 	import { resolve } from '$app/paths';
 	import { parseDate, DateFormatter } from '@internationalized/date';
-	import { TIMEZONE } from '$lib/types/bookings';
+	import { TIMEZONE } from '#lib/types/bookings.js';
 
 	const latestNews = allNews
 		.toSorted((a, b) => parseDate(b.date).compare(parseDate(a.date)))
@@ -47,7 +47,8 @@
 		Göteborg. Huset uppfördes 1939 och totalrenoverades 2011/2012. Föreningen utökades 2022 från 24
 		till 32 lägenheter genom nyproduktion på vindsvåningen.
 	</p>
-	<a href={resolve('/information/om')} class="mt-4 inline-block text-sm"> Läs mer om föreningen </a>
+
+	<a href={resolve('information/om')} class="mt-4 inline-block text-sm">Läs mer om föreningen</a>
 </section>
 
 <!-- Latest News -->
@@ -55,10 +56,7 @@
 	<h2 class="mb-6 font-heading text-xl font-normal">Nyheter</h2>
 	<div class="flex flex-col gap-10">
 		{#each latestNews as item (item._meta.path)}
-			<a
-				href={resolve(`/nyheter/${item._meta.path}` as `/nyheter/${string}`)}
-				class="block no-underline"
-			>
+			<a href={resolve('/nyheter/[slug]', { slug: item._meta.path })} class="block no-underline">
 				<time
 					class="mb-2 block text-xs tracking-widest text-text-muted uppercase"
 					datetime={item.date}
@@ -70,7 +68,8 @@
 			</a>
 		{/each}
 	</div>
-	<a href={resolve('/nyheter')} class="mt-6 inline-block text-sm">Alla nyheter</a>
+
+	<a href={resolve('nyheter')} class="mt-6 inline-block text-sm">Alla nyheter</a>
 </section>
 
 <!-- Resident Services -->
@@ -78,28 +77,28 @@
 	<h2 class="mb-8 font-heading text-xl font-normal">För boende</h2>
 	<div class="grid gap-6 sm:grid-cols-2">
 		<a
-			href={resolve('/tvattstuga')}
+			href={resolve('tvattstuga')}
 			class="block bg-bg-alt p-8 no-underline transition-colors duration-120 hover:bg-border-subtle"
 		>
 			<h3 class="mb-2 font-heading text-xl font-normal text-text-primary">Tvättstuga</h3>
 			<p class="text-sm text-text-secondary">Boka en tid i tvättstugan.</p>
 		</a>
 		<a
-			href={resolve('/uteplats')}
+			href={resolve('uteplats')}
 			class="block bg-bg-alt p-8 no-underline transition-colors duration-120 hover:bg-border-subtle"
 		>
 			<h3 class="mb-2 font-heading text-xl font-normal text-text-primary">Uteplats</h3>
 			<p class="text-sm text-text-secondary">Boka den gemensamma uteplatsen.</p>
 		</a>
 		<a
-			href={resolve('/information')}
+			href={resolve('information')}
 			class="block bg-bg-alt p-8 no-underline transition-colors duration-120 hover:bg-border-subtle"
 		>
 			<h3 class="mb-2 font-heading text-xl font-normal text-text-primary">Information</h3>
 			<p class="text-sm text-text-secondary">Stadgar, ekonomi, styrelsen och mer.</p>
 		</a>
 		<a
-			href={resolve('/kontakt')}
+			href={resolve('kontakt')}
 			class="block bg-bg-alt p-8 no-underline transition-colors duration-120 hover:bg-border-subtle"
 		>
 			<h3 class="mb-2 font-heading text-xl font-normal text-text-primary">Kontakt</h3>
@@ -115,5 +114,6 @@
 		Har du frågor? Kontakta styrelsen på
 		<a href="mailto:styrelsen@skiftesgatan.se">styrelsen@skiftesgatan.se</a>.
 	</p>
-	<a href={resolve('/kontakt')} class="mt-4 inline-block text-sm">Alla kontaktuppgifter</a>
+
+	<a href={resolve('kontakt')} class="mt-4 inline-block text-sm">Alla kontaktuppgifter</a>
 </section>
