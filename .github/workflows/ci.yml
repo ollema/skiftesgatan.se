@@ -8,7 +8,9 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Superseded PR runs are cancelled; main runs finish in order so a deploy is
+  # never cancelled halfway and production always ends on the newest commit.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -17,6 +19,7 @@ jobs:
   lint:
     name: Lint & Typecheck
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -40,6 +43,7 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     container:
       # Must match the @playwright/test version in package.json.
       image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:47b510dd9230bf0b9bfc9b20102241e577ea7a99334ab4c3ca19f19770e9b8ea
@@ -63,6 +67,7 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     container:
       # Must match the @playwright/test version in package.json.
       image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:47b510dd9230bf0b9bfc9b20102241e577ea7a99334ab4c3ca19f19770e9b8ea
@@ -90,3 +95,67 @@ jobs:
           name: e2e-test-results
           path: test-results/
           retention-days: 7
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
+        with:
+          token: ${{ github.token }}
+
+  build:
+    name: Build and push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Built in parallel with the tests to keep the pipeline short, but it is
+      # only tagged by commit; `deploy` decides whether it goes live.
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to CapRover
+    needs: [build, lint, unit-tests, e2e-tests, security-scan]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: production
+    permissions: {}
+    steps:
+      - uses: caprover/deploy-from-github@058a3e0d8fb21bfc0ce207b79b1fc757d765a009 # v2.0.0
+        with:
+          server: ${{ secrets.CAPROVER_SERVER }}
+          app: ${{ secrets.CAPROVER_APP_NAME }}
+          token: ${{ secrets.CAPROVER_APP_TOKEN }}
+          image: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
