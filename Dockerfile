@@ -34,8 +34,12 @@ RUN pnpm install --frozen-lockfile --prod
 
 FROM base
 WORKDIR /app
-# The only writable state is the SQLite file, which lives on a CapRover
-# persistent directory mounted at /data.
+# curl is only needed by the container health check below.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+# The only writable state is the SQLite file, which lives on a persistent
+# directory mounted at /data.
 RUN mkdir -p /data && chown node:node /data
 COPY --from=build --chown=node:node /app/build build/
 COPY --from=prod-deps --chown=node:node /app/node_modules node_modules/
@@ -45,5 +49,8 @@ ENV NODE_ENV=production
 ENV TZ=Europe/Stockholm
 ENV SQLITE_PATH=/data/skiftesgatan.db
 USER node
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl --fail --silent --show-error http://127.0.0.1:3000/ || exit 1
 
 CMD ["node", "build"]
