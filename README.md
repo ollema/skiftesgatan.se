@@ -19,14 +19,13 @@ There is no self-registration. Accounts are pre-created by an admin. Each reside
 - [Testing](#testing)
 - [Production Database](#production-database)
 - [Design](#design)
-- [TODO](#todo)
 
 ## Features
 
 - **Closed user system** -- no self-registration; accounts are provisioned by admin for each of the 32 apartments. Username is the apartment number (e.g. A1001). Supports password reset via email, email address changes with re-verification, and customizable display names.
-- **Laundry room booking** -- calendar with 5 daily 3-hour blocks (07-22), one active booking per user
-- **Outdoor area booking** -- calendar with 1 all-day slot (07-22), one active booking per user
-- **Booking constraints** -- 30-day advance window, concurrent booking protection via database unique constraint, replace-or-cancel flow
+- **Laundry room booking** -- calendar with 5 daily 3-hour blocks (07-22), one active booking per apartment
+- **Outdoor area booking** -- calendar with 1 all-day slot (07-22), one active booking per apartment
+- **Booking constraints** -- one-calendar-month advance window, concurrent booking protection via database unique constraint, replace-or-cancel flow
 - **Calendar subscription** -- per-user iCal feed URL (`/kalender/{token}.ics`) that syncs bookings to iPhone Calendar or any app supporting webcal subscriptions; manage from account page
 - **Member information** -- markdown pages for bylaws (stadgar), finances, renovations, and board members, compiled at build time
 - **News** -- markdown articles for association updates, shown on the home page and in a dedicated listing
@@ -191,17 +190,3 @@ Production uses a single SQLite file at `/data/skiftesgatan.db`, on a CapRover p
 ## Design
 
 See [DESIGN.md](DESIGN.md) for the full design system: color palette, typography, spacing layout rules, booking calendar colors, and anti-patterns.
-
-## TODO
-
-Code quality improvements identified during codebase review, ordered by impact.
-
-### High
-
-- [ ] **PWA readyness** -- add manifest.json, icons, and service worker for offline support and installability.
-
-- [ ] **Theming** -- favicons and PWA theme colors or whatever those attributes are called should match the new color scheme.
-
-### Low
-
-- [ ] **Auto-refresh booking calendar** -- if a user leaves the tab open, slot availability can go stale. Consider periodic re-fetch or visibility-change refresh. Better yet, let's use SSE!

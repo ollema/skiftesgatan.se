@@ -8,7 +8,7 @@ type TimeBlock = { startHour: number; endHour: number };
 
 // The current Time Block schedule. Source of truth for live decisions
 // (current grid, log prose, seed). Historic Time Block rows in the DB may not
-// appear here — see ADR-0004.
+// appear here, so resolve hours for an existing Booking via getTimeBlockHours.
 export const TIME_BLOCKS: Record<Resource, ReadonlyArray<TimeBlock>> = {
 	laundry_room: [
 		{ startHour: 7, endHour: 10 },

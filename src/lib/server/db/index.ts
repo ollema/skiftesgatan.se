@@ -26,7 +26,7 @@ function makeDb(): Db {
 }
 
 // Lazy so importing server modules during a build never creates or opens the
-// database file. See ADR-0006 for the single-writer assumptions.
+// database file. Single-writer assumptions: keep the app at one process.
 let _db: Db | undefined;
 export const db = new Proxy({} as Db, {
 	get(_, prop, receiver) {

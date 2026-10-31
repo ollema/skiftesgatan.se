@@ -6,8 +6,8 @@ function pad2(n: number): string {
 
 // Renders the date + time range of a Slot — "2026-05-04 10:00-13:00". Hours
 // are passed in rather than looked up: callers already hold them (from the
-// booking command's result, the cancel result, or a join). Per ADR-0004, hours
-// for an existing Booking must come from the cache (`getTimeBlockHours`) or a
+// booking command's result, the cancel result, or a join). Hours for an
+// existing Booking must come from the cache (`getTimeBlockHours`) or a
 // join, never from `findTimeBlock` (constant lookup) — historic Bookings
 // reference Time Block rows that the current `TIME_BLOCKS` no longer covers.
 export function slotTimeRange(date: string, startHour: number, endHour: number): string {
@@ -16,7 +16,7 @@ export function slotTimeRange(date: string, startHour: number, endHour: number):
 
 // Renders a Slot in the canonical prose form used in server logs:
 // "the laundry_room 2026-05-04 10:00-13:00". Snake_case enum values stay
-// literal — see ADR-0003.
+// literal.
 export function slotPhrase(
 	resource: Resource,
 	date: string,

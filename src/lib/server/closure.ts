@@ -45,7 +45,7 @@ function normalizeResources(resources: Resource[]): Resource[] {
 /**
  * Synchronous lookup so it can run inside a better-sqlite3 transaction. SQLite
  * has no `SELECT ... FOR UPDATE`; the surrounding synchronous transaction is
- * the serialization point (see ADR-0006).
+ * the serialization point.
  */
 export function findClosureForDate(
 	database: Pick<typeof db, 'select'>,
@@ -137,7 +137,7 @@ export async function createClosure(
 	return database.transaction((tx) => {
 		// Synchronous transactions plus a single app process replace Postgres row
 		// locks: no other request can interleave between this check and the
-		// deletes/inserts below (ADR-0006).
+		// deletes/inserts below.
 		const cancelled = affectedBookingQuery(tx, resources, input.startDate, input.endDate).all();
 
 		if (cancelled.length > 0) {

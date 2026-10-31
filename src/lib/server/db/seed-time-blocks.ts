@@ -2,8 +2,8 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { TIME_BLOCKS, type Resource } from '#lib/types/bookings.js';
 import { timeBlock } from './booking.schema';
 
-// Idempotent + additive: onConflictDoNothing leaves historic rows untouched.
-// See ADR-0004 for why historic time_block rows are load-bearing.
+// Idempotent + additive: onConflictDoNothing leaves historic rows untouched,
+// which is required because existing Bookings reference them.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function seedTimeBlocks(db: BetterSQLite3Database<any>): Promise<void> {
 	const rows = (

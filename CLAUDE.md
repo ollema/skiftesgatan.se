@@ -64,16 +64,8 @@ Documentation server for the Resend email API. Use when working on email deliver
 
 Search Resend documentation for topics like sending emails, templates, domains, and API usage.
 
-## Agent skills
+## Database and real-time invariants
 
-### Issue tracker
-
-Issues live as GitHub issues in `ollema/skiftesgatan.se`. See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Five canonical roles using default label strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+- **Transactions must be synchronous.** Never `await` inside a `db.transaction()` callback — better-sqlite3 commits when the callback returns, so an async callback silently commits early. Synchronous transactions are the only concurrency control (SQLite has no `SELECT … FOR UPDATE`).
+- **`time_block` rows are a historical record.** Never delete or mutate a row referenced by a Booking. A schedule change is additive: insert the new rows, update `TIME_BLOCKS`, and leave historic rows alone. Resolve hours for an existing Booking via `getTimeBlockHours` or a join, never `findTimeBlock`.
+- **Emit booking changes.** Any code that writes to `booking` outside `bookSlot` / `cancelBooking` must call `bookingEvents.emit(resource)` for each affected Facility, or live booking calendars won't refresh.

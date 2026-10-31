@@ -50,8 +50,8 @@ function isUniqueViolation(e: unknown): boolean {
 type TimeBlockHours = { resource: Resource; startHour: number; endHour: number };
 
 // Module-private lazy cache. Concurrent callers race the synchronous `??=`
-// assignment and end up sharing the same in-flight Promise — see ADR-0004 for
-// why historic time_block rows must resolve through this cache.
+// assignment and end up sharing the same in-flight Promise. Historic time_block
+// rows must resolve through this cache.
 let timeBlockCachePromise: Promise<Map<number, TimeBlockHours>> | undefined;
 
 export async function __buildTimeBlockMap(
@@ -72,8 +72,8 @@ export async function __buildTimeBlockMap(
 
 /**
  * Resolves a `time_block_id` to its `(resource, startHour, endHour)` via a
- * lazy module-level cache. Per ADR-0004 the cache covers historic rows
- * (whose `(resource, startHour)` may no longer be in `TIME_BLOCKS`), which a
+ * lazy module-level cache. The cache covers historic rows (whose
+ * `(resource, startHour)` may no longer be in `TIME_BLOCKS`), which a
  * `findTimeBlock` constant lookup cannot.
  *
  * The optional `database` handle bypasses the cache and queries it directly —
@@ -160,7 +160,7 @@ export async function bookSlot(params: {
 	try {
 		// Synchronous callback: better-sqlite3 commits when it returns, so every
 		// statement below must stay synchronous. This transaction is also the
-		// serialization point that replaces Postgres row locks (ADR-0006).
+		// serialization point that replaces Postgres row locks.
 		return database.transaction((tx) => {
 			// Check the closure before the replace-delete: moving a Booking into a
 			// closed day must leave the original Booking intact.
