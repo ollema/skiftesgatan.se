@@ -61,13 +61,15 @@ if (existingUsers > 0) {
 
 const source = postgres(sourceUrl, { max: 1 });
 
-async function copyTable<T extends Record<string, unknown>>(
+function copyTable<T extends Record<string, unknown>>(
 	name: string,
 	rows: T[],
-	insert: (chunk: T[]) => void
-): Promise<number> {
+	insert: (chunk: T[]) => { run: () => unknown }
+): number {
 	for (let i = 0; i < rows.length; i += 200) {
-		insert(rows.slice(i, i + 200));
+		// better-sqlite3 transactions are synchronous, so execute each chunk
+		// explicitly rather than awaiting a query builder inside the callback.
+		insert(rows.slice(i, i + 200)).run();
 	}
 	console.log(`  ${name}: ${rows.length}`);
 	return rows.length;
@@ -217,7 +219,14 @@ try {
 		);
 
 		copyTable('time_block', timeBlocks, (chunk) =>
-			tx.insert(schema.timeBlock).values(chunk as never)
+			tx.insert(schema.timeBlock).values(
+				chunk.map((t) => ({
+					id: t.id,
+					startHour: t.start_hour,
+					endHour: t.end_hour,
+					resource: t.resource
+				})) as never
+			)
 		);
 
 		copyTable('booking', bookings, (chunk) =>
