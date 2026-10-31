@@ -27,9 +27,23 @@ Scripts, environment variables, and project layout live in `package.json`, `.env
 
 ## Production
 
-Production uses a single SQLite file at `/data/skiftesgatan.db` on a CapRover persistent volume. Run exactly one replica: SQLite allows one writer, and the booking code relies on synchronous transactions within one process for serialization. Back up with whole-VM snapshots — never copy the `.db` file while the app is running, because the `-wal`/`-shm` sidecars matter.
+Production runs as a single container on a Hetzner server (Debian 13) managed by Coolify. The Coolify dashboard is only reachable over Tailscale.
 
-Deploys run from `main` after CI passes, as commit-tagged images (`sha-<commit>`); there is no `latest`. To start from an empty database, create the file and run `SQLITE_PATH=/path/to/file pnpm db:push`.
+| Setting              | Value                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| Image                | `ghcr.io/ollema/skiftesgatan.se:sha-<commit>`                                          |
+| Container port       | `3000`                                                                                 |
+| Domains              | `https://skiftesgatan.se`, `https://www.skiftesgatan.se` (`www` redirects to the apex) |
+| Persistent directory | `/srv/skiftesgatan/data` on the host, mounted at `/data`                               |
+| SQLite file          | `/data/skiftesgatan.db`                                                                |
+| Container naming     | Fixed name, no rolling updates                                                         |
+| Health check         | Image `HEALTHCHECK` requests `http://127.0.0.1:3000/`                                  |
+
+Run exactly one container: SQLite allows one writer, and the booking code relies on synchronous transactions within one process for serialization. For the same reason, keep Coolify's container naming on **Consistent name (no rolling updates)** so the old container stops before the new one starts.
+
+Back up with whole-VM snapshots — never copy the `.db` file while the app is running, because the `-wal`/`-shm` sidecars matter.
+
+Deploys run from `main` after CI passes, as commit-tagged images (`sha-<commit>`); there is no `latest`. The deploy job in `.github/workflows/ci.yml` joins the tailnet with the Tailscale GitHub Action, points Coolify at the new image tag, and triggers the deployment. To start from an empty database, create the file and run `SQLITE_PATH=/path/to/file pnpm db:push`.
 
 ## Design
 
