@@ -1,5 +1,5 @@
 import { test as base, type BrowserContext, type Page } from '@playwright/test';
-import { cpSync, rmSync } from 'node:fs';
+import { copyFileSync, rmSync } from 'node:fs';
 import { uniqueUser, adminUser } from './helpers';
 import { spawnPreview, waitForReady } from './test-server';
 
@@ -16,15 +16,19 @@ export const test = base.extend<
 		// eslint-disable-next-line no-empty-pattern
 		async ({}, use, workerInfo) => {
 			const port = 4173 + workerInfo.workerIndex;
-			const dbPath = `.pglite-test-w${workerInfo.workerIndex}`;
-			rmSync(dbPath, { recursive: true, force: true });
-			cpSync('.pglite-test-template', dbPath, { recursive: true });
+			const dbPath = `.sqlite-test-w${workerInfo.workerIndex}.db`;
+			for (const path of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`]) {
+				rmSync(path, { force: true });
+			}
+			copyFileSync('.sqlite-test-template.db', dbPath);
 
 			const server = spawnPreview(port, dbPath);
 			await waitForReady(server.url, 45_000);
 			await use({ url: server.url, port });
 			server.proc.kill('SIGTERM');
-			rmSync(dbPath, { recursive: true, force: true });
+			for (const path of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`]) {
+				rmSync(path, { force: true });
+			}
 		},
 		{ scope: 'worker', timeout: 60_000 }
 	],

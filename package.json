@@ -30,7 +30,6 @@
 		"db:push": "tsx scripts/db/push.ts",
 		"db:reset": "tsx scripts/db/reset-dev.ts",
 		"db:studio": "tsx scripts/db/studio.ts",
-		"db:tunnel": "tsx scripts/db/tunnel.ts",
 		"auth:schema": "pnpm dlx auth@latest generate --config src/lib/server/auth.ts --output src/lib/server/db/auth.schema.ts -y && pnpm format",
 		"knip": "knip",
 		"icons": "tsx scripts/generate-icons.ts",
@@ -41,7 +40,6 @@
 		"@content-collections/core": "^0.15.3",
 		"@content-collections/markdown": "^0.1.4",
 		"@content-collections/vite": "^0.3.1",
-		"@electric-sql/pglite": "^0.5.12",
 		"@eslint/compat": "^2.1.1",
 		"@eslint/js": "^10.0.1",
 		"@internationalized/date": "^3.12.4",
@@ -53,6 +51,7 @@
 		"@tailwindcss/forms": "^0.5.11",
 		"@tailwindcss/typography": "^0.5.20",
 		"@tailwindcss/vite": "^4.3.3",
+		"@types/better-sqlite3": "^9.6.0",
 		"@types/node": "^24.19.2",
 		"@vitest/browser-playwright": "^5.0.5",
 		"better-auth": "~1.7.14",
@@ -87,5 +86,8 @@
 		"vite": "^8.3.5",
 		"vitest": "^5.0.5",
 		"vitest-browser-svelte": "^3.1.0"
+	},
+	"dependencies": {
+		"better-sqlite3": "^13.0.3"
 	}
 }

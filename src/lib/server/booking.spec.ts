@@ -1,10 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { CalendarDateTime, toZoned, today } from '@internationalized/date';
-import { PGlite } from '@electric-sql/pglite';
-import { drizzle } from 'drizzle-orm/pglite';
-import { pushSchema } from 'drizzle-kit/api';
 import { TIMEZONE, TIME_BLOCKS } from '#lib/types/bookings.js';
-import * as schema from './db/schema';
+import { makeTestDb } from './db/testing';
 import { timeBlock } from './db/booking.schema';
 import { seedTimeBlocks } from './db/seed-time-blocks';
 import {
@@ -16,14 +13,8 @@ import {
 
 describe('TIME_BLOCKS drift', () => {
 	it('seedTimeBlocks inserts every entry of TIME_BLOCKS as a time_block row', async () => {
-		const client = new PGlite();
-		const db = drizzle(client, { schema });
+		const { client, db } = await makeTestDb();
 		try {
-			// pushSchema's type signature is restrictive about the db generic; the
-			// runtime behaviour is correct, so cast through `unknown` here.
-			const pushed = await pushSchema(schema, db as unknown as Parameters<typeof pushSchema>[1]);
-			await pushed.apply();
-
 			await seedTimeBlocks(db);
 
 			const rows = await db.select().from(timeBlock);
@@ -42,19 +33,13 @@ describe('TIME_BLOCKS drift', () => {
 				}
 			}
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
 	it('preserves historic time_block rows that are not in the current TIME_BLOCKS (inclusion, not equality)', async () => {
-		const client = new PGlite();
-		const db = drizzle(client, { schema });
+		const { client, db } = await makeTestDb();
 		try {
-			// pushSchema's type signature is restrictive about the db generic; the
-			// runtime behaviour is correct, so cast through `unknown` here.
-			const pushed = await pushSchema(schema, db as unknown as Parameters<typeof pushSchema>[1]);
-			await pushed.apply();
-
 			// Pre-insert a historic row whose (resource, startHour) is not in the current schedule.
 			await db.insert(timeBlock).values({ resource: 'laundry_room', startHour: 8, endHour: 11 });
 
@@ -67,19 +52,15 @@ describe('TIME_BLOCKS drift', () => {
 				])
 			);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 });
 
 describe('time block cache', () => {
 	it('builds a map from time_block id to (resource, startHour, endHour) covering the current schedule', async () => {
-		const client = new PGlite();
-		const db = drizzle(client, { schema });
+		const { client, db } = await makeTestDb();
 		try {
-			const pushed = await pushSchema(schema, db as unknown as Parameters<typeof pushSchema>[1]);
-			await pushed.apply();
-
 			await seedTimeBlocks(db);
 
 			const map = await __buildTimeBlockMap(db);
@@ -112,17 +93,13 @@ describe('time block cache', () => {
 				}
 			}
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
 	it('resolves a historic time_block row whose (resource, startHour) is not in the current TIME_BLOCKS', async () => {
-		const client = new PGlite();
-		const db = drizzle(client, { schema });
+		const { client, db } = await makeTestDb();
 		try {
-			const pushed = await pushSchema(schema, db as unknown as Parameters<typeof pushSchema>[1]);
-			await pushed.apply();
-
 			const [historic] = await db
 				.insert(timeBlock)
 				.values({ resource: 'laundry_room', startHour: 8, endHour: 11 })
@@ -138,7 +115,7 @@ describe('time block cache', () => {
 				endHour: 11
 			});
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 });

@@ -166,9 +166,20 @@ jobs:
     environment: production
     permissions: {}
     steps:
+      - name: Show deploy target
+        env:
+          APP_NAME: ${{ vars.CAPROVER_APP_NAME }}
+          IMAGE: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+        run: |
+          if [ -z "$APP_NAME" ]; then
+            echo "::error::CAPROVER_APP_NAME environment variable is not set"
+            exit 1
+          fi
+          echo "Deploying $IMAGE to $APP_NAME"
+
       - uses: caprover/deploy-from-github@058a3e0d8fb21bfc0ce207b79b1fc757d765a009 # v2.0.0
         with:
           server: ${{ secrets.CAPROVER_SERVER }}
-          app: ${{ secrets.CAPROVER_APP_NAME }}
+          app: ${{ vars.CAPROVER_APP_NAME }}
           token: ${{ secrets.CAPROVER_APP_TOKEN }}
           image: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}

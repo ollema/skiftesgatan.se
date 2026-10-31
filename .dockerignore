@@ -28,8 +28,9 @@ vite.config.ts.timestamp-*
 test-results
 playwright-report
 
-# PGLite local database
-.pglite*
+# Local SQLite database and WAL sidecars
+.data
+.sqlite*
 
 # Test email tokens
 .test-emails

@@ -8,7 +8,7 @@ import {
 } from '@internationalized/date';
 import { eq, and, gt, or, type SQL } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.js';
-import { booking, timeBlock, user } from '#lib/server/db/schema.js';
+import { booking, timeBlock } from '#lib/server/db/schema.js';
 import { findClosureForDate } from '#lib/server/closure.js';
 import { TIMEZONE, type Resource } from '#lib/types/bookings.js';
 
@@ -38,10 +38,13 @@ export function activeBookingWhere(now: ZonedDateTime): SQL {
 	) as SQL;
 }
 
-const PG_UNIQUE_VIOLATION = '23505';
-
 function isUniqueViolation(e: unknown): boolean {
-	return e instanceof Error && 'code' in e && e.code === PG_UNIQUE_VIOLATION;
+	if (!(e instanceof Error) || !('code' in e)) return false;
+	return (
+		e.code === 'SQLITE_CONSTRAINT_UNIQUE' ||
+		e.code === 'SQLITE_CONSTRAINT_PRIMARYKEY' ||
+		(e.code === 'SQLITE_CONSTRAINT' && e.message.includes('UNIQUE constraint failed'))
+	);
 }
 
 type TimeBlockHours = { resource: Resource; startHour: number; endHour: number };
@@ -74,7 +77,7 @@ export async function __buildTimeBlockMap(
  * `findTimeBlock` constant lookup cannot.
  *
  * The optional `database` handle bypasses the cache and queries it directly —
- * a test seam for PGlite-backed tests that need lookups against an isolated
+ * a test seam for SQLite-backed tests that need lookups against an isolated
  * handle. A drizzle handle that exposes `.select()` qualifies (top-level `db`
  * or a transaction `tx`).
  */
@@ -148,36 +151,27 @@ export async function bookSlot(params: {
 	date: CalendarDate;
 	replaceBookingId?: number;
 	now: ZonedDateTime;
-	/** Test seam: drive the transaction against an isolated PGlite handle. */
+	/** Test seam: drive the transaction against an isolated SQLite handle. */
 	database?: typeof db;
 }): Promise<BookSlotResult> {
 	const database = params.database ?? db;
 	// Only pass an explicit handle in tests; production reads the shared cache.
 	const target = await getTimeBlockHours(params.timeBlockId, params.database);
 	try {
-		return await database.transaction(async (tx) => {
-			// Serialize concurrent booking attempts by the same user. Without this lock,
-			// two requests can both pass the existing-booking check and both insert,
-			// breaking the one-active-booking-per-user-per-resource rule.
-			await tx.select({ id: user.id }).from(user).where(eq(user.id, params.userId)).for('update');
-
-			// Closure creation takes the same lock, so a Closure can never be inserted
-			// between this check and the insert below. Check before the replace-delete:
-			// moving a Booking into a closed day must leave the original Booking intact.
-			await tx
-				.select({ id: timeBlock.id })
-				.from(timeBlock)
-				.where(eq(timeBlock.resource, params.resource))
-				.orderBy(timeBlock.id)
-				.for('update');
-			const closure = await findClosureForDate(tx, params.resource, params.date.toString());
+		// Synchronous callback: better-sqlite3 commits when it returns, so every
+		// statement below must stay synchronous. This transaction is also the
+		// serialization point that replaces Postgres row locks (ADR-0006).
+		return database.transaction((tx) => {
+			// Check the closure before the replace-delete: moving a Booking into a
+			// closed day must leave the original Booking intact.
+			const closure = findClosureForDate(tx, params.resource, params.date.toString());
 			if (closure) throw new BookSlotConflict('closed');
 
 			const activeWhere = activeBookingWhere(params.now);
 			let cancelled: CancelledSlot | null = null;
 
 			if (params.replaceBookingId !== undefined) {
-				const [info] = await tx
+				const info = tx
 					.select({
 						resource: booking.resource,
 						date: booking.date,
@@ -193,19 +187,21 @@ export async function bookSlot(params: {
 							activeWhere
 						)
 					)
-					.limit(1);
+					.limit(1)
+					.get();
 
 				if (!info) throw new BookSlotConflict('replace_not_found');
 
-				const deleted = await tx
+				const deleted = tx
 					.delete(booking)
 					.where(and(eq(booking.id, params.replaceBookingId), eq(booking.userId, params.userId)))
-					.returning();
+					.returning()
+					.all();
 
 				if (deleted.length === 0) throw new BookSlotConflict('replace_not_found');
 				cancelled = info;
 			} else {
-				const existing = await tx
+				const existing = tx
 					.select({ id: booking.id })
 					.from(booking)
 					.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
@@ -216,13 +212,15 @@ export async function bookSlot(params: {
 							activeWhere
 						)
 					)
-					.limit(1);
+					.limit(1)
+					.get();
 
-				if (existing.length > 0) throw new BookSlotConflict('already_booked');
+				if (existing) throw new BookSlotConflict('already_booked');
 			}
 
+			let created: typeof booking.$inferSelect;
 			try {
-				const [created] = await tx
+				created = tx
 					.insert(booking)
 					.values({
 						userId: params.userId,
@@ -230,19 +228,20 @@ export async function bookSlot(params: {
 						resource: params.resource,
 						date: params.date.toString()
 					})
-					.returning();
-
-				return {
-					kind: 'ok',
-					booking: created,
-					startHour: target.startHour,
-					endHour: target.endHour,
-					cancelled
-				};
+					.returning()
+					.get();
 			} catch (e) {
 				if (isUniqueViolation(e)) throw new BookSlotConflict('slot_taken');
 				throw e;
 			}
+
+			return {
+				kind: 'ok',
+				booking: created,
+				startHour: target.startHour,
+				endHour: target.endHour,
+				cancelled
+			} as const;
 		});
 	} catch (e) {
 		if (e instanceof BookSlotConflict) {
@@ -258,22 +257,26 @@ export async function cancelBooking(
 	now: ZonedDateTime
 ): Promise<CancelledSlot | null> {
 	const activeWhere = activeBookingWhere(now);
-	const [info] = await db
-		.select({
-			resource: booking.resource,
-			date: booking.date,
-			startHour: timeBlock.startHour,
-			endHour: timeBlock.endHour
-		})
-		.from(booking)
-		.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
-		.where(and(eq(booking.id, bookingId), eq(booking.userId, userId), activeWhere))
-		.limit(1);
-	if (!info) return null;
-	const result = await db
-		.delete(booking)
-		.where(and(eq(booking.id, bookingId), eq(booking.userId, userId)))
-		.returning();
-	if (result.length === 0) return null;
-	return info;
+	return db.transaction((tx) => {
+		const info = tx
+			.select({
+				resource: booking.resource,
+				date: booking.date,
+				startHour: timeBlock.startHour,
+				endHour: timeBlock.endHour
+			})
+			.from(booking)
+			.innerJoin(timeBlock, eq(booking.timeBlockId, timeBlock.id))
+			.where(and(eq(booking.id, bookingId), eq(booking.userId, userId), activeWhere))
+			.limit(1)
+			.get();
+		if (!info) return null;
+		const result = tx
+			.delete(booking)
+			.where(and(eq(booking.id, bookingId), eq(booking.userId, userId)))
+			.returning()
+			.all();
+		if (result.length === 0) return null;
+		return info;
+	});
 }

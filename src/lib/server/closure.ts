@@ -43,28 +43,16 @@ function normalizeResources(resources: Resource[]): Resource[] {
 }
 
 /**
- * Locks every time_block row for the given Facilities. Closure creation and
- * booking both take this lock so a Booking can never slip in after a Closure
- * has checked for (and deleted) Bookings on the same dates.
+ * Synchronous lookup so it can run inside a better-sqlite3 transaction. SQLite
+ * has no `SELECT ... FOR UPDATE`; the surrounding synchronous transaction is
+ * the serialization point (see ADR-0006).
  */
-async function lockTimeBlocks(
-	database: Pick<typeof db, 'select'>,
-	resources: Resource[]
-): Promise<void> {
-	await database
-		.select({ id: timeBlock.id })
-		.from(timeBlock)
-		.where(inArray(timeBlock.resource, resources))
-		.orderBy(timeBlock.resource, timeBlock.id)
-		.for('update');
-}
-
-export async function findClosureForDate(
+export function findClosureForDate(
 	database: Pick<typeof db, 'select'>,
 	resource: Resource,
 	date: string
 ) {
-	const [row] = await database
+	const row = database
 		.select({ id: facilityClosure.id, reason: facilityClosure.reason })
 		.from(facilityClosure)
 		.where(
@@ -74,7 +62,8 @@ export async function findClosureForDate(
 				gte(facilityClosure.endDate, date)
 			)
 		)
-		.limit(1);
+		.limit(1)
+		.get();
 	return row ?? null;
 }
 
@@ -145,23 +134,26 @@ export async function createClosure(
 	const dateError = validateClosureRange(input.startDate, input.endDate);
 	if (dateError) throw new Error(`invalid Closure range: ${dateError}`);
 
-	return database.transaction(async (tx) => {
-		await lockTimeBlocks(tx, resources);
-
-		const cancelled = await affectedBookingQuery(tx, resources, input.startDate, input.endDate);
+	return database.transaction((tx) => {
+		// Synchronous transactions plus a single app process replace Postgres row
+		// locks: no other request can interleave between this check and the
+		// deletes/inserts below (ADR-0006).
+		const cancelled = affectedBookingQuery(tx, resources, input.startDate, input.endDate).all();
 
 		if (cancelled.length > 0) {
-			await tx.delete(booking).where(
-				inArray(
-					booking.id,
-					cancelled.map((b) => b.bookingId)
+			tx.delete(booking)
+				.where(
+					inArray(
+						booking.id,
+						cancelled.map((b) => b.bookingId)
+					)
 				)
-			);
+				.run();
 		}
 
 		const closures: (typeof facilityClosure.$inferSelect)[] = [];
 		for (const resource of resources) {
-			const [row] = await tx
+			const [row] = tx
 				.insert(facilityClosure)
 				.values({
 					resource,
@@ -171,7 +163,8 @@ export async function createClosure(
 					cancelledCount: cancelled.filter((b) => b.resource === resource).length,
 					createdBy: input.createdBy
 				})
-				.returning();
+				.returning()
+				.all();
 			closures.push(row);
 		}
 

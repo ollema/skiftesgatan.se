@@ -207,7 +207,7 @@ function assemblePayload(
  * every Slot in the Booking Window (today through today + 1 month), each
  * tagged `free` / `mine` / `other` / `past`, plus the Active Booking if any.
  *
- * Test seam: accepts an explicit database handle so PGlite-backed integration
+ * Test seam: accepts an explicit database handle so SQLite-backed integration
  * tests can drive the read directly. Production callers go through
  * `watchBookingCalendar` and never see this entry point.
  */
@@ -240,7 +240,7 @@ export function watchBookingCalendar(
 
 /**
  * Test seam for `watchBookingCalendar`: same iteration semantics but accepts
- * an explicit database handle and a clock so PGlite-backed integration tests
+ * an explicit database handle and a clock so SQLite-backed integration tests
  * can drive the live iterable deterministically.
  */
 export function __watchBookingCalendar(

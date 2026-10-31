@@ -1,13 +1,13 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { PGlite } from '@electric-sql/pglite';
+import Database from 'better-sqlite3';
 import { betterAuth } from 'better-auth/minimal';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { drizzle } from 'drizzle-orm/pglite';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { PASSWORD_CONFIG, usernamePlugin } from '../src/lib/server/auth.config.js';
 import * as schema from '../src/lib/server/db/schema.js';
 import { runScript, TEST_AUTH_SECRET } from './test-server';
 
-const TEMPLATE_PATH = '.pglite-test-template';
+const TEMPLATE_PATH = '.sqlite-test-template.db';
 const AUTH_DIR = '.auth';
 
 const APARTMENTS: string[] = [];
@@ -21,34 +21,35 @@ for (const block of ['A', 'B', 'C', 'D']) {
 
 export default async function globalSetup() {
 	rmSync(TEMPLATE_PATH, { recursive: true, force: true });
+	rmSync(`${TEMPLATE_PATH}-wal`, { force: true });
+	rmSync(`${TEMPLATE_PATH}-shm`, { force: true });
 	rmSync(AUTH_DIR, { recursive: true, force: true });
 	rmSync('.test-emails', { recursive: true, force: true });
 	mkdirSync(AUTH_DIR);
 
-	// drizzle.config.ts switches drivers on `!DATABASE_URL`. Local `.env` may
-	// have DATABASE_URL set for dev — scrub it so drizzle-kit pushes into the
-	// PGlite template, not into the dev Postgres.
 	await runScript('pnpm', ['exec', 'drizzle-kit', 'push', '--force'], {
-		PGLITE_PATH: TEMPLATE_PATH,
-		DATABASE_URL: ''
+		SQLITE_PATH: TEMPLATE_PATH
 	});
 	await runScript('pnpm', ['exec', 'tsx', 'scripts/db/seed-test.ts'], {
-		PGLITE_PATH: TEMPLATE_PATH
+		SQLITE_PATH: TEMPLATE_PATH
 	});
-	await runScript('pnpm', ['build'], {});
+	await runScript('pnpm', ['build'], {
+		BETTER_AUTH_SECRET: TEST_AUTH_SECRET,
+		ORIGIN: 'http://localhost'
+	});
 
 	await bakeStorageStates();
 }
 
 async function bakeStorageStates() {
-	const client = new PGlite(TEMPLATE_PATH);
+	const client = new Database(TEMPLATE_PATH);
 	try {
 		const db = drizzle(client, { schema });
 		const auth = betterAuth({
 			baseURL: 'http://localhost',
 			secret: TEST_AUTH_SECRET,
 			logger: { disabled: true },
-			database: drizzleAdapter(db, { provider: 'pg' }),
+			database: drizzleAdapter(db, { provider: 'sqlite' }),
 			emailAndPassword: {
 				enabled: true,
 				requireEmailVerification: false,
@@ -70,7 +71,7 @@ async function bakeStorageStates() {
 			writeFileSync(`${AUTH_DIR}/${username}.json`, JSON.stringify({ cookies, origins: [] }));
 		}
 	} finally {
-		await client.close();
+		client.close();
 	}
 }
 

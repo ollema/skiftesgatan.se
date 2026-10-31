@@ -1,25 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { CalendarDateTime, toZoned, today } from '@internationalized/date';
-import { PGlite } from '@electric-sql/pglite';
-import { drizzle } from 'drizzle-orm/pglite';
-import { pushSchema } from 'drizzle-kit/api';
 import { and, eq } from 'drizzle-orm';
 import { TIMEZONE, type Resource } from '#lib/types/bookings.js';
-import * as schema from './db/schema';
+import { makeTestDb, type TestDb } from './db/testing';
 import { booking, facilityClosure, timeBlock, user } from './db/schema';
 import { seedTimeBlocks } from './db/seed-time-blocks';
 import { __getBookingCalendarSnapshot, __watchBookingCalendar } from './booking-calendar';
 import { bookingEvents, __listenerCount } from './booking-events';
-
-type TestDb = ReturnType<typeof drizzle<typeof schema>>;
-
-async function makeTestDb(): Promise<{ client: PGlite; db: TestDb }> {
-	const client = new PGlite();
-	const db = drizzle(client, { schema });
-	const pushed = await pushSchema(schema, db as unknown as Parameters<typeof pushSchema>[1]);
-	await pushed.apply();
-	return { client, db };
-}
 
 async function insertUser(db: TestDb, id: string, username: string): Promise<void> {
 	await db.insert(user).values({
@@ -109,7 +96,7 @@ describe('getBookingCalendar', () => {
 			}
 			expect(activeBooking).toBeUndefined();
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -138,7 +125,7 @@ describe('getBookingCalendar', () => {
 			}
 			expect(activeBooking).toBeUndefined();
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -173,7 +160,7 @@ describe('getBookingCalendar', () => {
 			expect(activeBooking?.status).toBe('mine');
 			expect(activeBooking?.date.toString()).toBe(tomorrow);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -205,7 +192,7 @@ describe('getBookingCalendar', () => {
 			expect(slot.username).toBe('B2002');
 			expect(activeBooking).toBeUndefined();
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -236,7 +223,7 @@ describe('getBookingCalendar', () => {
 			expect(slot.username).toBeNull();
 			expect(activeBooking).toBeUndefined();
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -307,7 +294,7 @@ describe('getBookingCalendar', () => {
 			expect(activeBooking?.bookingId).toBe(midBookingId);
 			expect(activeBooking?.date.toString()).toBe(midStr);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -352,7 +339,7 @@ describe('getBookingCalendar', () => {
 			expect(activeBooking?.bookingId).toBe(earlyId);
 			expect(activeBooking?.date.toString()).toBe(tomorrow);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -389,7 +376,7 @@ describe('getBookingCalendar', () => {
 				}
 				expect(activeBooking).toBeUndefined();
 			} finally {
-				await client.close();
+				client.close();
 			}
 		});
 
@@ -426,7 +413,7 @@ describe('getBookingCalendar', () => {
 				expect(slot.username).toBeNull();
 				expect(activeBooking).toBeUndefined();
 			} finally {
-				await client.close();
+				client.close();
 			}
 		});
 	});
@@ -470,7 +457,7 @@ describe('getBookingCalendar', () => {
 				expect(todaySlots[3].status).toBe('free');
 				expect(todaySlots[4].status).toBe('free');
 			} finally {
-				await client.close();
+				client.close();
 			}
 		});
 
@@ -498,7 +485,7 @@ describe('getBookingCalendar', () => {
 				expect(bookingCalendar[startStr][1].bookingId).toBeNull();
 				expect(activeBooking).toBeUndefined();
 			} finally {
-				await client.close();
+				client.close();
 			}
 		});
 
@@ -534,7 +521,7 @@ describe('getBookingCalendar', () => {
 				expect(activeBooking?.bookingId).toBe(futureId);
 				expect(activeBooking?.date.toString()).toBe(tomorrowStr);
 			} finally {
-				await client.close();
+				client.close();
 			}
 		});
 	});
@@ -569,7 +556,7 @@ describe('watchBookingCalendar', () => {
 				await iter.return?.();
 			}
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -602,7 +589,7 @@ describe('watchBookingCalendar', () => {
 				await iter.return?.();
 			}
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -624,7 +611,7 @@ describe('watchBookingCalendar', () => {
 				await iter.return?.();
 			}
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -650,7 +637,7 @@ describe('watchBookingCalendar', () => {
 				await iter.return?.();
 			}
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -669,7 +656,7 @@ describe('watchBookingCalendar', () => {
 			await iter.return?.();
 			expect(__listenerCount()).toBe(baseline);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 });

@@ -5,26 +5,18 @@ import {
 	toZoned,
 	type ZonedDateTime
 } from '@internationalized/date';
-import { PGlite } from '@electric-sql/pglite';
-import { drizzle } from 'drizzle-orm/pglite';
-import { pushSchema } from 'drizzle-kit/api';
 import { and, eq } from 'drizzle-orm';
 import { TIMEZONE, type Resource } from '#lib/types/bookings.js';
-import * as schema from './db/schema';
+import { makeTestDb as makeBaseTestDb, type TestDb } from './db/testing';
 import { booking, timeBlock, user } from './db/schema';
 import { reminderPreference, bookingReminder } from './db/reminder.schema';
 import { seedTimeBlocks } from './db/seed-time-blocks';
 import { createReminderSchedule } from './reminder-schedule';
 
-type TestDb = ReturnType<typeof drizzle<typeof schema>>;
-
-async function makeTestDb(): Promise<{ client: PGlite; db: TestDb }> {
-	const client = new PGlite();
-	const db = drizzle(client, { schema });
-	const pushed = await pushSchema(schema, db as unknown as Parameters<typeof pushSchema>[1]);
-	await pushed.apply();
-	await seedTimeBlocks(db);
-	return { client, db };
+async function makeTestDb() {
+	const result = await makeBaseTestDb();
+	await seedTimeBlocks(result.db);
+	return result;
 }
 
 async function insertUser(db: TestDb, id: string, username: string): Promise<void> {
@@ -109,7 +101,7 @@ describe('reminderSchedule.extendForBooking', () => {
 				.where(eq(bookingReminder.userId, apartmentId));
 			expect(rows).toEqual([]);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -152,7 +144,7 @@ describe('reminderSchedule.extendForBooking', () => {
 			const rows = await db.select().from(bookingReminder);
 			expect(rows).toEqual([]);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -200,7 +192,7 @@ describe('reminderSchedule.extendForBooking', () => {
 			expect(rows).toHaveLength(1);
 			expect(rows[0].status).toBe('pending');
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -247,7 +239,7 @@ describe('reminderSchedule.extendForBooking', () => {
 				.where(eq(bookingReminder.bookingId, b.id));
 			expect(rows).toEqual([{ offsetMinutes: 60 }]);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 });
@@ -282,7 +274,7 @@ describe('reminderSchedule.setPreference', () => {
 			const rows = await db.select().from(bookingReminder);
 			expect(rows).toEqual([]);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -310,7 +302,7 @@ describe('reminderSchedule.setPreference', () => {
 			expect(rows).toHaveLength(1);
 			expect(rows[0].offsetMinutes).toBe(60);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -353,7 +345,7 @@ describe('reminderSchedule.setPreference', () => {
 			const rows = await db.select().from(bookingReminder);
 			expect(rows).toEqual([]);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -387,7 +379,7 @@ describe('reminderSchedule.setPreference', () => {
 				.where(eq(bookingReminder.userId, apartmentId));
 			expect(reminder.notifyAt.toISOString()).toBe('2026-03-28T05:00:00.000Z');
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 });

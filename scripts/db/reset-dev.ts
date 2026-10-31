@@ -1,29 +1,27 @@
 import 'dotenv/config';
 import { execSync } from 'child_process';
+import { existsSync, mkdirSync, rmSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { confirm, log, intro, outro, isCancel } from '@clack/prompts';
-import postgres from 'postgres';
 import { today } from '@internationalized/date';
+import Database from 'better-sqlite3';
 import { betterAuth } from 'better-auth/minimal';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { eq } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/postgres-js';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { PASSWORD_CONFIG, usernamePlugin } from '../../src/lib/server/auth.config.js';
 import { user } from '../../src/lib/server/db/auth.schema.js';
 import { booking, timeBlock } from '../../src/lib/server/db/booking.schema.js';
 import * as schema from '../../src/lib/server/db/schema.js';
 import { seedTimeBlocks } from '../../src/lib/server/db/seed-time-blocks.js';
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
-	console.error('DATABASE_URL is not set. Add it to .env or override inline.');
-	process.exit(1);
-}
+const sqlitePath = process.env.SQLITE_PATH || '.data/skiftesgatan.db';
 
 const skipConfirm = process.argv.slice(2).some((a) => a === '-y' || a === '--yes');
 
 if (!skipConfirm) {
 	intro('db:reset');
-	log.warn(`DATABASE_URL: ${databaseUrl}`);
+	log.warn(`SQLITE_PATH: ${sqlitePath}`);
 	const ok = await confirm({
 		message: 'Reset this database? (drops all data, re-seeds dev fixtures)'
 	});
@@ -33,17 +31,16 @@ if (!skipConfirm) {
 	}
 }
 
-{
-	const sql = postgres(databaseUrl, { max: 1 });
-	try {
-		await sql.unsafe('DROP SCHEMA public CASCADE');
-		await sql.unsafe('CREATE SCHEMA public');
-	} finally {
-		await sql.end();
-	}
+// Remove the database and any WAL sidecars so drizzle-kit starts from scratch.
+for (const path of [sqlitePath, `${sqlitePath}-wal`, `${sqlitePath}-shm`]) {
+	if (existsSync(path)) rmSync(path, { force: true });
 }
+mkdirSync(dirname(sqlitePath), { recursive: true });
 
-execSync('pnpm exec drizzle-kit push --force', { stdio: 'inherit', env: process.env });
+execSync(`pnpm exec drizzle-kit push --force`, {
+	stdio: 'inherit',
+	env: { ...process.env, SQLITE_PATH: sqlitePath }
+});
 
 const APARTMENTS: string[] = [];
 for (const block of ['A', 'B', 'C', 'D']) {
@@ -99,7 +96,8 @@ function randomFutureDate() {
 		.toString();
 }
 
-const client = postgres(databaseUrl);
+const client = new Database(sqlitePath);
+client.pragma('foreign_keys = ON');
 try {
 	const db = drizzle(client, { schema });
 
@@ -107,7 +105,7 @@ try {
 		baseURL: 'http://localhost',
 		secret: 'xK9mP2vQ7nR4sT8wF3jL6hG1dA5cB0eY',
 		logger: { disabled: true },
-		database: drizzleAdapter(db, { provider: 'pg' }),
+		database: drizzleAdapter(db, { provider: 'sqlite' }),
 		emailAndPassword: { enabled: true, requireEmailVerification: false, ...PASSWORD_CONFIG },
 		emailVerification: { sendVerificationEmail: async () => {}, sendOnSignUp: false },
 		plugins: [usernamePlugin()]
@@ -165,7 +163,7 @@ try {
 		}
 	}
 } finally {
-	await client.end();
+	client.close();
 }
 
 console.log('✓ reset complete');

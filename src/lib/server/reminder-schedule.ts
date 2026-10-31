@@ -10,7 +10,7 @@ import { eq, and, gte, inArray } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.js';
 import { reminderPreference, bookingReminder } from '#lib/server/db/reminder.schema.js';
 import { booking } from '#lib/server/db/booking.schema.js';
-import { getTimeBlockHours } from '#lib/server/booking.js';
+import { getTimeBlockHours, __buildTimeBlockMap } from '#lib/server/booking.js';
 import { TIMEZONE, type Resource } from '#lib/types/bookings.js';
 
 type Db = typeof db;
@@ -74,9 +74,12 @@ export function createReminderSchedule(deps: {
 			let scheduled = 0;
 			let cancelled = 0;
 
-			await deps.db.transaction(async (tx) => {
-				await tx
-					.insert(reminderPreference)
+			// Resolve time-block hours before the transaction: better-sqlite3
+			// transactions are synchronous and cannot await inside the callback.
+			const timeBlocks = await __buildTimeBlockMap(deps.db);
+
+			deps.db.transaction((tx) => {
+				tx.insert(reminderPreference)
 					.values({ userId: apartmentId, resource: facility, enabled, offsetMinutes })
 					.onConflictDoUpdate({
 						target: [
@@ -85,10 +88,11 @@ export function createReminderSchedule(deps: {
 							reminderPreference.offsetMinutes
 						],
 						set: { enabled }
-					});
+					})
+					.run();
 
 				if (enabled) {
-					const futureBookings = await tx
+					const futureBookings = tx
 						.select({
 							bookingId: booking.id,
 							date: booking.date,
@@ -101,16 +105,20 @@ export function createReminderSchedule(deps: {
 								eq(booking.resource, facility),
 								gte(booking.date, today)
 							)
-						);
+						)
+						.all();
 
 					for (const b of futureBookings) {
-						const { startHour } = await getTimeBlockHours(b.timeBlockId, tx);
+						const startHour = timeBlocks.get(b.timeBlockId)?.startHour;
+						if (startHour === undefined) {
+							throw new Error(`unknown time block id ${b.timeBlockId}`);
+						}
 						const notifyAt = computeNotifyAt(parseDate(b.date), startHour, offsetMinutes);
 						// Skip Bookings whose reminder window has already closed — sending a
 						// reminder for a Slot that starts imminently (or has started) is noise,
 						// not a reminder.
 						if (notifyAt.getTime() <= nowMs) continue;
-						const inserted = await tx
+						const inserted = tx
 							.insert(bookingReminder)
 							.values({
 								bookingId: b.bookingId,
@@ -119,7 +127,8 @@ export function createReminderSchedule(deps: {
 								notifyAt
 							})
 							.onConflictDoNothing()
-							.returning();
+							.returning()
+							.all();
 						scheduled += inserted.length;
 					}
 				} else {
@@ -134,7 +143,7 @@ export function createReminderSchedule(deps: {
 							)
 						);
 
-					const deleted = await tx
+					const deleted = tx
 						.delete(bookingReminder)
 						.where(
 							and(
@@ -143,7 +152,8 @@ export function createReminderSchedule(deps: {
 								eq(bookingReminder.status, 'pending')
 							)
 						)
-						.returning();
+						.returning()
+						.all();
 					cancelled = deleted.length;
 				}
 			});
@@ -156,33 +166,37 @@ export function createReminderSchedule(deps: {
 			const nowMs = currentNow.toDate().getTime();
 			const { startHour } = await getTimeBlockHours(timeBlockId, deps.db);
 
-			const prefs = await deps.db
-				.select({ offsetMinutes: reminderPreference.offsetMinutes })
-				.from(reminderPreference)
-				.where(
-					and(
-						eq(reminderPreference.userId, apartmentId),
-						eq(reminderPreference.resource, facility),
-						eq(reminderPreference.enabled, true)
-					)
-				);
-
 			let scheduled = 0;
-			for (const pref of prefs) {
-				const notifyAt = computeNotifyAt(date, startHour, pref.offsetMinutes);
-				if (notifyAt.getTime() <= nowMs) continue;
-				const inserted = await deps.db
-					.insert(bookingReminder)
-					.values({
-						bookingId,
-						userId: apartmentId,
-						offsetMinutes: pref.offsetMinutes,
-						notifyAt
-					})
-					.onConflictDoNothing()
-					.returning();
-				scheduled += inserted.length;
-			}
+			deps.db.transaction((tx) => {
+				const prefs = tx
+					.select({ offsetMinutes: reminderPreference.offsetMinutes })
+					.from(reminderPreference)
+					.where(
+						and(
+							eq(reminderPreference.userId, apartmentId),
+							eq(reminderPreference.resource, facility),
+							eq(reminderPreference.enabled, true)
+						)
+					)
+					.all();
+
+				for (const pref of prefs) {
+					const notifyAt = computeNotifyAt(date, startHour, pref.offsetMinutes);
+					if (notifyAt.getTime() <= nowMs) continue;
+					const inserted = tx
+						.insert(bookingReminder)
+						.values({
+							bookingId,
+							userId: apartmentId,
+							offsetMinutes: pref.offsetMinutes,
+							notifyAt
+						})
+						.onConflictDoNothing()
+						.returning()
+						.all();
+					scheduled += inserted.length;
+				}
+			});
 
 			return { scheduled };
 		}

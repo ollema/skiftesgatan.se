@@ -1,13 +1,11 @@
-import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { TIME_BLOCKS, type Resource } from '#lib/types/bookings.js';
 import { timeBlock } from './booking.schema';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyPgDatabase = PgDatabase<PgQueryResultHKT, any, any>;
-
 // Idempotent + additive: onConflictDoNothing leaves historic rows untouched.
 // See ADR-0004 for why historic time_block rows are load-bearing.
-export async function seedTimeBlocks(db: AnyPgDatabase): Promise<void> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function seedTimeBlocks(db: BetterSQLite3Database<any>): Promise<void> {
 	const rows = (
 		Object.entries(TIME_BLOCKS) as [Resource, (typeof TIME_BLOCKS)[Resource]][]
 	).flatMap(([resource, blocks]) =>
