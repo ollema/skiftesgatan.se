@@ -28,7 +28,7 @@ export function spawnPreview(port: number, dbPath: string): SpawnedServer {
 		env: {
 			...process.env,
 			...SERVER_ENV,
-			PGLITE_PATH: dbPath,
+			SQLITE_PATH: dbPath,
 			ORIGIN: url
 		},
 		stdio: 'pipe'

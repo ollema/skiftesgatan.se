@@ -1,16 +1,16 @@
+import Database from 'better-sqlite3';
 import { betterAuth } from 'better-auth/minimal';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { eq } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/pglite';
-import { PGlite } from '@electric-sql/pglite';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { PASSWORD_CONFIG, usernamePlugin } from '../../src/lib/server/auth.config.js';
 import { user } from '../../src/lib/server/db/auth.schema.js';
 import * as schema from '../../src/lib/server/db/schema.js';
 import { seedTimeBlocks } from '../../src/lib/server/db/seed-time-blocks.js';
 
-const pglitePath = process.env.PGLITE_PATH;
-if (!pglitePath) {
-	console.error('PGLITE_PATH is required for seed-test');
+const sqlitePath = process.env.SQLITE_PATH;
+if (!sqlitePath) {
+	console.error('SQLITE_PATH is required for seed-test');
 	process.exit(1);
 }
 
@@ -61,14 +61,16 @@ const DEV_NAMES = [
 	'Mikael Fransson'
 ];
 
-const client = new PGlite(pglitePath);
+const client = new Database(sqlitePath);
+client.pragma('foreign_keys = ON');
+client.pragma('journal_mode = WAL');
 const db = drizzle(client, { schema });
 
 const seedAuth = betterAuth({
 	baseURL: 'http://localhost',
 	secret: 'ci-dummy-secret-not-for-production',
 	logger: { disabled: true },
-	database: drizzleAdapter(db, { provider: 'pg' }),
+	database: drizzleAdapter(db, { provider: 'sqlite' }),
 	emailAndPassword: { enabled: true, requireEmailVerification: false, ...PASSWORD_CONFIG },
 	emailVerification: { sendVerificationEmail: async () => {}, sendOnSignUp: false },
 	plugins: [usernamePlugin()]
@@ -95,5 +97,8 @@ for (let i = 0; i < APARTMENTS.length; i++) {
 await db.update(user).set({ emailVerified: true }).where(eq(user.emailVerified, false));
 await db.update(user).set({ role: 'admin' }).where(eq(user.username, 'B1001'));
 
-await client.close();
+// Checkpoint the WAL into the main file and close cleanly so the template can
+// be copied per worker without sidecar files.
+client.pragma('wal_checkpoint(TRUNCATE)');
+client.close();
 console.log('✓ test seeded');

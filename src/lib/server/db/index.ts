@@ -1,23 +1,32 @@
-import { drizzle as drizzlePg } from 'drizzle-orm/postgres-js';
-import { drizzle as drizzlePglite } from 'drizzle-orm/pglite';
-import postgres from 'postgres';
-import { PGlite } from '@electric-sql/pglite';
-import { PGLITE_PATH, DATABASE_URL } from '$app/env/private';
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
+import Database from 'better-sqlite3';
+import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { SQLITE_PATH } from '$app/env/private';
 import * as schema from './schema';
 
-type Db =
-	ReturnType<typeof drizzlePg<typeof schema>> | ReturnType<typeof drizzlePglite<typeof schema>>;
+type Db = BetterSQLite3Database<typeof schema>;
+
+const DEFAULT_PATH = '.data/skiftesgatan.db';
 
 function makeDb(): Db {
-	if (PGLITE_PATH) {
-		return drizzlePglite(new PGlite(PGLITE_PATH), { schema });
-	}
-	if (DATABASE_URL) {
-		return drizzlePg(postgres(DATABASE_URL), { schema });
-	}
-	throw new Error('DATABASE_URL or PGLITE_PATH required');
+	const path = SQLITE_PATH || DEFAULT_PATH;
+	mkdirSync(dirname(path), { recursive: true });
+
+	const client = new Database(path);
+	// Per-connection pragmas: foreign keys are off by default in SQLite, so
+	// every cascade in the schema depends on this. WAL keeps readers from
+	// blocking the single writer, and busy_timeout absorbs short lock waits.
+	client.pragma('journal_mode = WAL');
+	client.pragma('foreign_keys = ON');
+	client.pragma('busy_timeout = 5000');
+	client.pragma('synchronous = NORMAL');
+
+	return drizzle(client, { schema });
 }
 
+// Lazy so importing server modules during a build never creates or opens the
+// database file. See ADR-0006 for the single-writer assumptions.
 let _db: Db | undefined;
 export const db = new Proxy({} as Db, {
 	get(_, prop, receiver) {

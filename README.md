@@ -34,7 +34,7 @@ There is no self-registration. Accounts are pre-created by an admin. Each reside
 ## Tech Stack
 
 - **Svelte 5 + SvelteKit 2** -- runes, async, remote functions, node adapter
-- **Drizzle ORM** -- PostgreSQL for dev and prod; PGlite in-process for E2E tests
+- **Drizzle ORM** -- SQLite via `better-sqlite3`; one database file per environment
 - **Better Auth** -- email/password with custom username plugin for apartment-based login, sign-up disabled
 - **Tailwind CSS 4** -- with Bits UI for headless components (dialogs, menus)
 - **Content Collections** -- markdown to HTML at build time for news and information pages
@@ -44,16 +44,16 @@ There is no self-registration. Accounts are pre-created by an admin. Each reside
 
 ## Getting Started
 
-**Prerequisites:** Node.js 24, pnpm, access to the public dev/test Postgres host.
+**Prerequisites:** Node.js 24, pnpm.
 
 ```sh
 pnpm install
 cp .env.example .env
-pnpm db:reset       # drop schema, push, seed dev fixtures
+pnpm db:reset       # delete the dev database, push schema, seed fixtures
 pnpm dev
 ```
 
-Every `db:*` command prints the target `DATABASE_URL` and asks for confirmation before doing anything. Pass `-- -y` to skip the gate (e.g. `pnpm db:reset -- -y`). Re-run `db:reset` whenever you want fresh dev bookings -- the fixtures use `today + N days` so they stale out as time passes.
+Dev uses a single SQLite file at `.data/skiftesgatan.db` by default; set `SQLITE_PATH` to point elsewhere. Every `db:*` command prints the target path and asks for confirmation before doing anything. Pass `-- -y` to skip the gate (e.g. `pnpm db:reset -- -y`). Re-run `db:reset` whenever you want fresh dev bookings -- the fixtures use `today + N days` so they stale out as time passes.
 
 Dev accounts use apartment numbers A1001 through D1302. Password for each is `password-{username}`, e.g. `password-A1001`. Each dev account has a fictional display name that can be changed on the /konto page. `B1001` is admin.
 
@@ -69,7 +69,7 @@ src/
         calendar.schema.ts     # iCal subscription tokens
         reminder.schema.ts     # Reminder preferences and scheduled reminders
         schema.ts              # Re-exports all schemas for Drizzle
-        index.ts               # Database client (postgres.js for dev/prod, PGlite for E2E)
+        index.ts               # SQLite client (better-sqlite3 + pragmas)
       auth.ts                  # Better Auth server config
       auth.config.ts           # Username plugin, apartment validation
       booking.ts               # Booking queries and business logic
@@ -120,7 +120,7 @@ content/
   news/                        # Markdown news articles
   information/                 # Markdown info pages (stadgar, ekonomi, styrelsen, etc.)
 scripts/
-  db/                          # db:push, db:reset (dev only), db:studio, db:tunnel
+  db/                          # db:push, db:reset (dev only), db:studio, one-off PG migration
   generate-icons.ts            # Generates favicons / PWA icons
   sync-email-templates.ts      # Syncs email templates to Resend
 e2e/                           # Playwright E2E tests
@@ -128,33 +128,32 @@ e2e/                           # Playwright E2E tests
 
 ## Scripts
 
-| Script             | Description                                                       |
-| ------------------ | ----------------------------------------------------------------- |
-| `pnpm dev`         | Start dev server                                                  |
-| `pnpm build`       | Production build                                                  |
-| `pnpm preview`     | Preview production build                                          |
-| `pnpm check`       | SvelteKit sync + svelte-check                                     |
-| `pnpm lint`        | Prettier + ESLint                                                 |
-| `pnpm format`      | Auto-format code                                                  |
-| `pnpm knip`        | Detect unused files/dependencies                                  |
-| `pnpm test`        | Run all tests (unit + E2E)                                        |
-| `pnpm test:unit`   | Vitest (unit + integration)                                       |
-| `pnpm test:e2e`    | Playwright E2E tests                                              |
-| `pnpm db:push`     | Apply schema changes interactively (against `DATABASE_URL`)       |
-| `pnpm db:reset`    | Drop schema, push, and seed dev fixtures (dev only; reset-dev.ts) |
-| `pnpm db:studio`   | Open Drizzle Studio (against `DATABASE_URL`)                      |
-| `pnpm db:tunnel`   | Open SSH tunnel to the production database host                   |
-| `pnpm auth:schema` | Generate Better Auth schema                                       |
-| `pnpm icons`       | Generate favicons and PWA icons                                   |
-| `pnpm email:sync`  | Sync email templates to Resend                                    |
+| Script             | Description                                                 |
+| ------------------ | ----------------------------------------------------------- |
+| `pnpm dev`         | Start dev server                                            |
+| `pnpm build`       | Production build                                            |
+| `pnpm preview`     | Preview production build                                    |
+| `pnpm check`       | SvelteKit sync + svelte-check                               |
+| `pnpm lint`        | Prettier + ESLint                                           |
+| `pnpm format`      | Auto-format code                                            |
+| `pnpm knip`        | Detect unused files/dependencies                            |
+| `pnpm test`        | Run all tests (unit + E2E)                                  |
+| `pnpm test:unit`   | Vitest (unit + integration)                                 |
+| `pnpm test:e2e`    | Playwright E2E tests                                        |
+| `pnpm db:push`     | Apply schema changes interactively (against `SQLITE_PATH`)  |
+| `pnpm db:reset`    | Delete the database, push, and seed dev fixtures (dev only) |
+| `pnpm db:studio`   | Open Drizzle Studio (against `SQLITE_PATH`)                 |
+| `pnpm auth:schema` | Generate Better Auth schema                                 |
+| `pnpm icons`       | Generate favicons and PWA icons                             |
+| `pnpm email:sync`  | Sync email templates to Resend                              |
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill in values. The same shape applies whether you point at dev or prod -- to run a command against prod, open `pnpm db:tunnel` and override `DATABASE_URL` inline.
+Copy `.env.example` to `.env` and fill in values. `SQLITE_PATH` is optional locally (defaults to `.data/skiftesgatan.db`) and required in production.
 
 | Variable             | Required | Description                                           |
 | -------------------- | -------- | ----------------------------------------------------- |
-| `DATABASE_URL`       | Yes      | Postgres connection string                            |
+| `SQLITE_PATH`        | Prod     | Path to the SQLite database file                      |
 | `ORIGIN`             | Yes      | Application origin URL (e.g. `http://localhost:5173`) |
 | `BETTER_AUTH_SECRET` | Yes      | 32-character high-entropy secret for session signing  |
 | `RESEND_API_KEY`     | Prod     | Resend API key for email delivery (file mock in dev)  |
@@ -163,9 +162,9 @@ Copy `.env.example` to `.env` and fill in values. The same shape applies whether
 
 ## Testing
 
-**Unit & integration tests** (Vitest): booking validation logic, database operations with in-memory PGLite.
+**Unit & integration tests** (Vitest): booking validation logic and database operations against an in-memory SQLite database.
 
-**E2E tests** (Playwright, 4 workers): each worker gets its own PGlite database file cloned from a freshly-built `.pglite-test-template`. Every `pnpm test:e2e` run rebuilds the template from scratch — no separate reset ritual, no committed fixtures. globalSetup pushes the schema, seeds 32 apartments, then bakes per-user storage state into `.auth/` for the suite to reuse. `RESEND_API_KEY` is empty so emails are captured as files in `.test-emails/`.
+**E2E tests** (Playwright, 4 workers): each worker gets its own copy of a freshly-built `.sqlite-test-template.db` (SQLite database file plus WAL sidecars). Every `pnpm test:e2e` run rebuilds the template from scratch — no separate reset ritual, no committed fixtures. globalSetup pushes the schema, seeds 32 apartments, then bakes per-user storage state into `.auth/` for the suite to reuse. `RESEND_API_KEY` is empty so emails are captured as files in `.test-emails/`.
 
 **CI pipeline** (GitHub Actions, `.github/workflows/ci.yml`): five jobs run in parallel on every push to `main` and every pull request. A `Deploy to CapRover` job then needs all of them to pass, and only runs on `main`:
 
@@ -183,22 +182,13 @@ Images are tagged by commit only, never `latest`, so a deploy can neither race a
 
 ## Production Database
 
-Production runs the [CapRover Postgres one-click app](https://raw.githubusercontent.com/caprover/one-click-apps/refs/heads/master/public/v4/apps/postgres.yml), which provisions `user=postgres` / `db=postgres` with a password set at deploy time. The instance is not publicly reachable; you connect via SSH tunnel.
+Production uses a single SQLite file at `/data/skiftesgatan.db`, on a CapRover persistent directory mounted at `/data`. The app must run as exactly one replica: SQLite allows one writer, and the code relies on synchronous transactions within one process for serialization. Whole-VM snapshots are the backup mechanism; do not copy the file while the app is running because of the `-wal`/`-shm` sidecars.
 
-**Day-to-day:**
+**Day-to-day:** run `pnpm db:push` or `pnpm db:studio` with `SQLITE_PATH` pointing at the file you want (locally that defaults to `.data/skiftesgatan.db`). Every `db:*` command prints the target and asks for confirmation before running. `db:push` is also interactive on destructive diffs (drizzle-kit's own prompt). `db:reset` is dev-only -- the file `scripts/db/reset-dev.ts` makes that explicit -- and never appropriate against prod.
 
-```sh
-# Terminal 1
-pnpm db:tunnel
+**Starting from scratch:** create an empty file, then run `SQLITE_PATH=/path/to/file pnpm db:push`. That's the whole sequence.
 
-# Terminal 2 -- anything against prod is just DATABASE_URL override
-DATABASE_URL=postgres://postgres:<password>@localhost:5432/postgres pnpm db:studio
-DATABASE_URL=postgres://postgres:<password>@localhost:5432/postgres pnpm db:push
-```
-
-Every `db:*` command prints the target `DATABASE_URL` and asks for confirmation before running. `db:push` is also interactive on destructive diffs (drizzle-kit's own prompt). `db:reset` is dev-only -- the file `scripts/db/reset-dev.ts` makes that explicit -- and never appropriate against prod.
-
-**Starting from scratch:** redeploy the Postgres one-click app, point `DATABASE_URL` at the new instance, and run `pnpm db:push`. That's the whole sequence.
+**Migrating from Postgres:** `scripts/db/migrate-pg-to-sqlite.ts` copies users, password hashes, bookings, time blocks, closures, calendar tokens, and reminders from `SOURCE_DATABASE_URL` into an already-pushed `SQLITE_PATH`. Sessions and verification rows are dropped, so everyone logs in again.
 
 ## Design
 

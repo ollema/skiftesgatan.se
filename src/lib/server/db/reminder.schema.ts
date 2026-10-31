@@ -1,31 +1,21 @@
-import {
-	pgTable,
-	pgEnum,
-	serial,
-	integer,
-	text,
-	boolean,
-	timestamp,
-	unique,
-	index
-} from 'drizzle-orm/pg-core';
+import { index, integer, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
 import { user } from './auth.schema';
-import { booking, resourceEnum } from './booking.schema';
+import { booking, resource } from './booking.schema';
 
-export const reminderStatusEnum = pgEnum('reminder_status', ['pending', 'sent', 'failed']);
+export const REMINDER_STATUS_VALUES = ['pending', 'sent', 'failed'] as const;
 
-export const reminderPreference = pgTable(
+export const reminderPreference = sqliteTable(
 	'reminder_preference',
 	{
-		id: serial('id').primaryKey(),
+		id: integer('id').primaryKey({ autoIncrement: true }),
 		userId: text('user_id')
 			.notNull()
 			.references(() => user.id, { onDelete: 'cascade' }),
-		resource: resourceEnum().notNull(),
-		enabled: boolean('enabled').default(true).notNull(),
+		resource: resource().notNull(),
+		enabled: integer('enabled', { mode: 'boolean' }).default(true).notNull(),
 		offsetMinutes: integer('offset_minutes').default(1440).notNull(),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at')
+		createdAt: integer('created_at', { mode: 'timestamp_ms' }).defaultNow().notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
 			.defaultNow()
 			.$onUpdate(() => /* @__PURE__ */ new Date())
 			.notNull()
@@ -39,10 +29,10 @@ export const reminderPreference = pgTable(
 	]
 );
 
-export const bookingReminder = pgTable(
+export const bookingReminder = sqliteTable(
 	'booking_reminder',
 	{
-		id: serial('id').primaryKey(),
+		id: integer('id').primaryKey({ autoIncrement: true }),
 		bookingId: integer('booking_id')
 			.notNull()
 			.references(() => booking.id, { onDelete: 'cascade' }),
@@ -50,12 +40,12 @@ export const bookingReminder = pgTable(
 			.notNull()
 			.references(() => user.id, { onDelete: 'cascade' }),
 		offsetMinutes: integer('offset_minutes').notNull(),
-		notifyAt: timestamp('notify_at').notNull(),
-		status: reminderStatusEnum().default('pending').notNull(),
-		sentAt: timestamp('sent_at'),
+		notifyAt: integer('notify_at', { mode: 'timestamp_ms' }).notNull(),
+		status: text('status', { enum: REMINDER_STATUS_VALUES }).default('pending').notNull(),
+		sentAt: integer('sent_at', { mode: 'timestamp_ms' }),
 		failReason: text('fail_reason'),
 		resendId: text('resend_id'),
-		createdAt: timestamp('created_at').defaultNow().notNull()
+		createdAt: integer('created_at', { mode: 'timestamp_ms' }).defaultNow().notNull()
 	},
 	(table) => [
 		unique('booking_reminder_booking_offset_unique').on(table.bookingId, table.offsetMinutes),

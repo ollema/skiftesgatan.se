@@ -1,6 +1,5 @@
 import adapter from '@sveltejs/adapter-node';
-import { copyFileSync, existsSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { relative, sep } from 'node:path';
 import type { Plugin } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import contentCollections from '@content-collections/vite';
@@ -32,32 +31,6 @@ function suppressAdapterWarnings(): Plugin {
 					if (SUPPRESSED.some((s) => String(chunk).includes(s))) return true;
 					return origWrite(chunk, encodingOrCb as BufferEncoding, cb);
 				};
-			}
-		}
-	};
-}
-
-/**
- * PGlite loads its runtime files with `new URL('./pglite.data', import.meta.url)`.
- * Vite does not emit those assets for SSR builds, so copy them next to the
- * server chunks that reference them (preview output and adapter-node output).
- */
-function copyPgliteRuntimeAssets(): Plugin {
-	const assets = ['pglite.data', 'pglite.wasm', 'initdb.wasm'];
-	const source = join('node_modules', '@electric-sql', 'pglite', 'dist');
-
-	return {
-		name: 'copy-pglite-runtime-assets',
-		apply: 'build',
-		closeBundle: {
-			order: 'post',
-			handler() {
-				for (const dir of ['.svelte-kit/output/server/chunks', 'build/server/chunks']) {
-					if (!existsSync(dir)) continue;
-					for (const asset of assets) {
-						copyFileSync(join(source, asset), join(dir, asset));
-					}
-				}
 			}
 		}
 	};
@@ -112,7 +85,6 @@ export default defineConfig({
 			experimental: { remoteFunctions: true }
 		}),
 		suppressAdapterWarnings(),
-		copyPgliteRuntimeAssets(),
 		disablePreviewSseCompression()
 	],
 	server: {
@@ -126,9 +98,6 @@ export default defineConfig({
 				pluginTimings: false
 			}
 		}
-	},
-	optimizeDeps: {
-		exclude: ['@electric-sql/pglite']
 	},
 	test: {
 		expect: { requireAssertions: true },
@@ -155,10 +124,7 @@ export default defineConfig({
 					include: ['src/**/*.{test,spec}.{js,ts}'],
 					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}'],
 					setupFiles: ['src/lib/server/test-setup.ts'],
-					env: { LOG_LEVEL: 'error' },
-					// PGlite cold-start in CI eats ~4–5s on the first makeTestDb() call
-					// in each spec file; the default 5000ms is too tight.
-					testTimeout: 15000
+					env: { LOG_LEVEL: 'error' }
 				}
 			}
 		]

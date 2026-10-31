@@ -16,7 +16,7 @@ The association needs to take a Facility out of service for maintenance — for 
 
 ## Race safety
 
-Closure creation and `bookSlot` both lock the `time_block` rows for the affected Facility `FOR UPDATE`. Closure creation takes the lock, deletes affected Bookings, and inserts the Closure in one transaction; a concurrent booking waits, then sees the Closure and fails with `closed`. The closure check happens before the replace-booking delete, so a failed move into a closed day never removes the Apartment's original Booking.
+Closure creation and `bookSlot` both run inside synchronous better-sqlite3 transactions. Because the app is a single process and the transaction callback runs to completion without yielding, no other request can interleave between the closure check, the deletes, and the inserts. A concurrent booking therefore either runs entirely before (and is deleted by the Closure) or entirely after (and sees the Closure and fails with `closed`). The closure check happens before the replace-booking delete, so a failed move into a closed day never removes the Apartment's original Booking. See ADR-0006.
 
 ## Consequences
 

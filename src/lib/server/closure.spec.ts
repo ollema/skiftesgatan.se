@@ -1,11 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { today } from '@internationalized/date';
-import { PGlite } from '@electric-sql/pglite';
-import { drizzle } from 'drizzle-orm/pglite';
-import { pushSchema } from 'drizzle-kit/api';
 import { and, eq } from 'drizzle-orm';
 import { TIMEZONE, type Resource } from '#lib/types/bookings.js';
-import * as schema from './db/schema';
+import { makeTestDb, type TestDb } from './db/testing';
 import { booking, bookingReminder, facilityClosure, timeBlock, user } from './db/schema';
 import { seedTimeBlocks } from './db/seed-time-blocks';
 import {
@@ -15,16 +12,6 @@ import {
 	previewClosure,
 	validateClosureRange
 } from './closure';
-
-type TestDb = ReturnType<typeof drizzle<typeof schema>>;
-
-async function makeTestDb(): Promise<{ client: PGlite; db: TestDb }> {
-	const client = new PGlite();
-	const db = drizzle(client, { schema });
-	const pushed = await pushSchema(schema, db as unknown as Parameters<typeof pushSchema>[1]);
-	await pushed.apply();
-	return { client, db };
-}
 
 async function insertUser(db: TestDb, id: string, username: string): Promise<void> {
 	await db.insert(user).values({
@@ -144,7 +131,7 @@ describe('createClosure', () => {
 			const remaining = await db.select({ id: booking.id }).from(booking).orderBy(booking.id);
 			expect(remaining.map((b) => b.id)).toEqual([otherFacility, outsideRange]);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -165,7 +152,7 @@ describe('createClosure', () => {
 				'outdoor_area'
 			]);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -197,7 +184,7 @@ describe('createClosure', () => {
 			const reminders = await db.select().from(bookingReminder);
 			expect(reminders).toHaveLength(0);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -214,7 +201,7 @@ describe('createClosure', () => {
 			expect(result.cancelled).toEqual([]);
 			expect(result.closures[0].cancelledCount).toBe(0);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 });
@@ -250,7 +237,7 @@ describe('previewClosure', () => {
 			]);
 			expect(await db.select().from(booking)).toHaveLength(1);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 });
@@ -281,7 +268,7 @@ describe('listUpcomingClosures / deleteClosure', () => {
 			expect(deleted?.id).toBe(closures[0].id);
 			expect(await listUpcomingClosures(db)).toEqual([]);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -298,7 +285,7 @@ describe('listUpcomingClosures / deleteClosure', () => {
 
 			expect(await listUpcomingClosures(db)).toEqual([]);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 });

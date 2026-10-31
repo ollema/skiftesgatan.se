@@ -1,25 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { CalendarDateTime, toZoned, today } from '@internationalized/date';
-import { PGlite } from '@electric-sql/pglite';
-import { drizzle } from 'drizzle-orm/pglite';
-import { pushSchema } from 'drizzle-kit/api';
 import { and, eq } from 'drizzle-orm';
 import { TIMEZONE, type Resource } from '#lib/types/bookings.js';
-import * as schema from './db/schema';
+import { makeTestDb, type TestDb } from './db/testing';
 import { booking, timeBlock, user } from './db/schema';
 import { seedTimeBlocks } from './db/seed-time-blocks';
 import { createClosure } from './closure';
 import { bookSlot } from './booking';
-
-type TestDb = ReturnType<typeof drizzle<typeof schema>>;
-
-async function makeTestDb(): Promise<{ client: PGlite; db: TestDb }> {
-	const client = new PGlite();
-	const db = drizzle(client, { schema });
-	const pushed = await pushSchema(schema, db as unknown as Parameters<typeof pushSchema>[1]);
-	await pushed.apply();
-	return { client, db };
-}
 
 async function insertUser(db: TestDb, id: string, username: string): Promise<void> {
 	await db.insert(user).values({
@@ -96,7 +83,7 @@ describe('bookSlot with a Facility Closure', () => {
 			expect(result).toEqual({ kind: 'closed', startHour: 7, endHour: 10 });
 			expect(await db.select().from(booking)).toHaveLength(0);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -124,7 +111,7 @@ describe('bookSlot with a Facility Closure', () => {
 			expect(result.kind).toBe('ok');
 			expect(await db.select().from(booking)).toHaveLength(1);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 
@@ -165,7 +152,7 @@ describe('bookSlot with a Facility Closure', () => {
 			const remaining = await db.select({ date: booking.date }).from(booking);
 			expect(remaining).toEqual([{ date: laterStr }]);
 		} finally {
-			await client.close();
+			client.close();
 		}
 	});
 });
