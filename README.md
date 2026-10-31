@@ -188,8 +188,6 @@ Production uses a single SQLite file at `/data/skiftesgatan.db`, on a CapRover p
 
 **Starting from scratch:** create an empty file, then run `SQLITE_PATH=/path/to/file pnpm db:push`. That's the whole sequence.
 
-**Migrating from Postgres:** `scripts/db/migrate-pg-to-sqlite.ts` copies users, password hashes, bookings, time blocks, closures, calendar tokens, and reminders from `SOURCE_DATABASE_URL` into an already-pushed `SQLITE_PATH`. Sessions and verification rows are dropped, so everyone logs in again.
-
 ## Design
 
 See [DESIGN.md](DESIGN.md) for the full design system: color palette, typography, spacing layout rules, booking calendar colors, and anti-patterns.
