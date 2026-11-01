@@ -164,7 +164,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     environment: production
-    permissions: {}
+    permissions:
+      # Lets the Tailscale action request a signed OIDC token from GitHub.
+      id-token: write
     env:
       # Coolify is reachable as a Tailscale Service, not as a host port. Pin the
       # VIP so the job does not depend on MagicDNS resolving .ts.net on a runner.
@@ -174,7 +176,7 @@ jobs:
         uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4.4.0
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          audience: ${{ secrets.TS_AUDIENCE }}
           tags: tag:ci
           ping: 100.113.236.18
 
