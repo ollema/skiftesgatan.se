@@ -36,7 +36,7 @@ FROM base
 WORKDIR /app
 # curl is only needed by the container health check below.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
+    && apt-get install -y --no-install-recommends curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 # The only writable state is the SQLite file, which lives on a persistent
 # directory mounted at /data.
