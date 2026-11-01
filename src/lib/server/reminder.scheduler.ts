@@ -67,18 +67,37 @@ export async function processReminders(): Promise<number> {
 	return due.length;
 }
 
+let timer: NodeJS.Timeout | undefined;
+const inFlight = new Set<Promise<void>>();
+
+async function runOnce(): Promise<void> {
+	try {
+		await processReminders();
+	} catch (e) {
+		log.error('[scheduler] unexpected error', e);
+	}
+}
+
+function scheduleRun(): void {
+	const run = runOnce();
+	inFlight.add(run);
+	void run.finally(() => inFlight.delete(run));
+}
+
 export function startScheduler(): void {
+	if (timer) return;
+
 	log.info('[scheduler] started (interval 60s)');
+	scheduleRun();
+	timer = setInterval(scheduleRun, 60_000);
+}
 
-	processReminders().catch((e) => {
-		log.error('[scheduler] initial run failed', e);
-	});
+/** Stop the interval and let an in-flight reminder pass finish before exit. */
+export async function stopScheduler(): Promise<void> {
+	if (!timer) return;
 
-	setInterval(async () => {
-		try {
-			await processReminders();
-		} catch (e) {
-			log.error('[scheduler] unexpected error', e);
-		}
-	}, 60_000);
+	clearInterval(timer);
+	timer = undefined;
+	await Promise.allSettled([...inFlight]);
+	log.info('[scheduler] stopped');
 }

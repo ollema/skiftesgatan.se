@@ -9,6 +9,9 @@ type Db = BetterSQLite3Database<typeof schema>;
 
 const DEFAULT_PATH = '.data/skiftesgatan.db';
 
+let _client: InstanceType<typeof Database> | undefined;
+let _db: Db | undefined;
+
 function makeDb(): Db {
 	const path = SQLITE_PATH || DEFAULT_PATH;
 	mkdirSync(dirname(path), { recursive: true });
@@ -22,15 +25,23 @@ function makeDb(): Db {
 	client.pragma('busy_timeout = 5000');
 	client.pragma('synchronous = NORMAL');
 
+	_client = client;
 	return drizzle(client, { schema });
 }
 
 // Lazy so importing server modules during a build never creates or opens the
 // database file. Single-writer assumptions: keep the app at one process.
-let _db: Db | undefined;
 export const db = new Proxy({} as Db, {
 	get(_, prop, receiver) {
 		if (!_db) _db = makeDb();
 		return Reflect.get(_db, prop, receiver);
 	}
 });
+
+/** Close SQLite during graceful shutdown so the WAL is checkpointed cleanly. */
+export function closeDb(): void {
+	if (!_client) return;
+	_client.close();
+	_client = undefined;
+	_db = undefined;
+}
