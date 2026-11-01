@@ -165,6 +165,10 @@ jobs:
     timeout-minutes: 10
     environment: production
     permissions: {}
+    env:
+      # Coolify is reachable as a Tailscale Service, not as a host port. Pin the
+      # VIP so the job does not depend on MagicDNS resolving .ts.net on a runner.
+      COOLIFY_RESOLVE: coolify.thresher-wyrm.ts.net:443:100.66.239.205
     steps:
       - name: Connect to Tailscale
         uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4.4.0
@@ -181,7 +185,7 @@ jobs:
           APP_UUID: ${{ vars.COOLIFY_APP_UUID }}
           IMAGE_TAG: sha-${{ github.sha }}
         run: |
-          curl --fail-with-body -sS -X PATCH \
+          curl --fail-with-body -sS --resolve "$COOLIFY_RESOLVE" -X PATCH \
             "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
             -H "Authorization: Bearer $COOLIFY_WRITE_TOKEN" \
             -H "Content-Type: application/json" \
@@ -193,7 +197,7 @@ jobs:
           COOLIFY_DEPLOY_TOKEN: ${{ secrets.COOLIFY_DEPLOY_TOKEN }}
           APP_UUID: ${{ vars.COOLIFY_APP_UUID }}
         run: |
-          curl --fail-with-body -sS -X POST \
+          curl --fail-with-body -sS --resolve "$COOLIFY_RESOLVE" -X POST \
             "$COOLIFY_URL/api/v1/deploy" \
             -H "Authorization: Bearer $COOLIFY_DEPLOY_TOKEN" \
             -H "Content-Type: application/json" \
